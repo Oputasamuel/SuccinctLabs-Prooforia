@@ -48,7 +48,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           username: discordUser.username,
           discordId: discordUser.id,
           discordUsername: discordUser.username,
-          discordAvatar: discordUser.avatar,
+          discordAvatar: discordUser.avatar || null,
           walletAddress: wallet.address,
           walletPrivateKey: encryptedPrivateKey,
           walletPublicKey: wallet.publicKey,

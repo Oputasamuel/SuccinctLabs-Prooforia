@@ -18,7 +18,7 @@ export interface IStorage {
     username: string;
     discordId: string;
     discordUsername: string;
-    discordAvatar?: string;
+    discordAvatar?: string | null;
     walletAddress: string;
     walletPrivateKey: string;
     walletPublicKey: string;
@@ -332,7 +332,7 @@ export class DatabaseStorage implements IStorage {
     username: string;
     discordId: string;
     discordUsername: string;
-    discordAvatar?: string;
+    discordAvatar?: string | null;
     walletAddress: string;
     walletPrivateKey: string;
     walletPublicKey: string;

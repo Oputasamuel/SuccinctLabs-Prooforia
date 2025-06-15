@@ -127,6 +127,25 @@ export default function UploadSection({ currentUser }: UploadSectionProps) {
       return;
     }
 
+    const mintingCost = 10;
+    if (currentUser.testTokenBalance < mintingCost) {
+      toast({
+        title: "Insufficient Balance",
+        description: `You need at least ${mintingCost} test tokens to mint an NFT.`,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (currentUser.delegatedCredits < 1) {
+      toast({
+        title: "Insufficient SP1 Credits",
+        description: "You need at least 1 SP1 credit to generate a proof for minting.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     mintMutation.mutate({
       file: selectedFile,
       metadata: {
@@ -163,6 +182,27 @@ export default function UploadSection({ currentUser }: UploadSectionProps) {
           <p className="text-gray-600 mt-4">
             Upload your artwork and mint it with zero-knowledge proof verification
           </p>
+          
+          {/* User Wallet Info */}
+          <div className="mt-6 bg-gray-50 rounded-lg p-4 max-w-md mx-auto">
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-sm font-medium text-gray-700">Connected as {currentUser.discordUsername}</span>
+              <Badge variant="secondary" className="bg-green-100 text-green-600">
+                <ShieldCheck className="w-3 h-3 mr-1" />
+                Verified
+              </Badge>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="text-center">
+                <div className="text-lg font-bold text-blue-600">{currentUser.testTokenBalance}</div>
+                <div className="text-xs text-gray-600">Test Tokens</div>
+              </div>
+              <div className="text-center">
+                <div className="text-lg font-bold text-purple-600">{currentUser.delegatedCredits}</div>
+                <div className="text-xs text-gray-600">SP1 Credits</div>
+              </div>
+            </div>
+          </div>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-8">

@@ -109,6 +109,10 @@ The application uses a PostgreSQL database with the following core entities:
 - **June 15, 2025**: Implemented custom theme with #FE11C5 hot pink primary color
 - **June 15, 2025**: Fixed Select component validation errors and CSS compilation issues
 - **June 15, 2025**: Application successfully deployed with full functionality
+- **June 15, 2025**: Implemented Discord OAuth2 authentication system with automatic wallet generation
+- **June 15, 2025**: Added SP1 zero-knowledge proof integration for minting and verification
+- **June 15, 2025**: Integrated Ethereum wallet creation with encrypted private key storage
+- **June 15, 2025**: Enhanced NFT minting with blockchain transactions and proof generation
 
 ## Changelog
 - June 15, 2025. Initial setup and theme customization complete
