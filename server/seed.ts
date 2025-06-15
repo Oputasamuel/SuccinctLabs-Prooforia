@@ -12,23 +12,53 @@ export async function seedDatabase() {
 
     console.log("Seeding database with initial data...");
 
-    // Create sample users
+    // Import wallet service for generating wallets
+    const { walletService } = await import("./services/wallet-service");
+    
+    // Generate wallets for sample users
+    const wallet1 = walletService.generateWallet();
+    const wallet2 = walletService.generateWallet();
+    const wallet3 = walletService.generateWallet();
+
+    // Create sample users with email/password authentication
     const [artist1] = await db.insert(users).values({
       username: "ArtistCRN",
+      email: "artist@example.com",
       password: "password123",
-      discordId: null,
+      walletAddress: wallet1.address,
+      walletPrivateKey: walletService.encryptPrivateKey(wallet1.privateKey),
+      walletPublicKey: wallet1.publicKey,
+      credits: 25,
+      discordConnected: true,
+      discordUsername: "ArtistCRN#1234",
+      xConnected: false,
     }).returning();
 
     const [artist2] = await db.insert(users).values({
       username: "Artist234", 
+      email: "digital@example.com",
       password: "password123",
-      discordId: null,
+      walletAddress: wallet2.address,
+      walletPrivateKey: walletService.encryptPrivateKey(wallet2.privateKey),
+      walletPublicKey: wallet2.publicKey,
+      credits: 20,
+      discordConnected: false,
+      xConnected: true,
+      xUsername: "@DigitalArtist",
     }).returning();
 
     const [artist3] = await db.insert(users).values({
       username: "ZKArtist",
-      password: "password123", 
-      discordId: null,
+      email: "creator@example.com",
+      password: "password123",
+      walletAddress: wallet3.address,
+      walletPrivateKey: walletService.encryptPrivateKey(wallet3.privateKey),
+      walletPublicKey: wallet3.publicKey,
+      credits: 30,
+      discordConnected: true,
+      discordUsername: "ZKArtist#5678",
+      xConnected: true,
+      xUsername: "@ZKArtist",
     }).returning();
 
     // Create sample NFTs

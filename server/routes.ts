@@ -1,179 +1,52 @@
 import type { Express, Request } from "express";
 import { createServer, type Server } from "http";
 import multer from "multer";
-
-interface MulterRequest extends Request {
-  file?: Express.Multer.File;
-}
 import { storage } from "./storage";
 import { insertNftSchema } from "@shared/schema";
 import { sp1Service } from "./services/sp1-service";
 import { ipfsService } from "./services/ipfs-service";
-import { discordService } from "./services/discord-service";
-import { walletService } from "./services/wallet-service";
+import { setupAuth } from "./auth";
+
+interface MulterRequest extends Request {
+  file?: Express.Multer.File;
+}
 
 const upload = multer({ storage: multer.memoryStorage() });
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Demo Authentication Route (for testing)
-  app.post("/api/auth/demo", async (req, res) => {
-    try {
-      const { username } = req.body;
-      
-      if (!username) {
-        return res.status(400).json({ message: "Username is required" });
-      }
+  // Setup authentication
+  setupAuth(app);
 
-      // Check if demo user already exists
-      let user = await storage.getUserByUsername(username);
-      
-      if (!user) {
-        // Generate new wallet for demo user
-        const wallet = walletService.generateWallet();
-        const encryptedPrivateKey = walletService.encryptPrivateKey(wallet.privateKey);
-        
-        // Create demo user with wallet
-        user = await storage.createDiscordUser({
-          username: username,
-          discordId: `demo_${Date.now()}`,
-          discordUsername: username,
-          discordAvatar: null,
-          walletAddress: wallet.address,
-          walletPrivateKey: encryptedPrivateKey,
-          walletPublicKey: wallet.publicKey,
-        });
-        
-        // Delegate initial credits
-        await walletService.delegateCredits(wallet.address, 10);
-      }
-      
-      const publicUser = {
-        id: user.id,
-        username: user.username,
-        discordUsername: user.discordUsername,
-        discordAvatar: user.discordAvatar,
-        walletAddress: user.walletAddress,
-        testTokenBalance: user.testTokenBalance,
-        delegatedCredits: user.delegatedCredits,
-      };
-      
-      res.json({ success: true, user: publicUser });
-    } catch (error) {
-      console.error("Demo auth error:", error);
-      res.status(500).json({ message: "Authentication failed" });
-    }
-  });
-
-  // Discord Authentication Routes
-  app.get("/api/auth/discord", (req, res) => {
-    const authUrl = discordService.getAuthUrl();
-    res.redirect(authUrl);
-  });
-
-  app.get("/api/auth/discord/callback", async (req, res) => {
-    try {
-      const { code } = req.query;
-      
-      if (!code || typeof code !== 'string') {
-        return res.status(400).json({ message: "Missing authorization code" });
-      }
-
-      // Exchange code for access token
-      const tokenData = await discordService.exchangeCodeForToken(code);
-      
-      // Get user info from Discord
-      const discordUser = await discordService.getUserInfo(tokenData.access_token);
-      
-      // Check if user already exists
-      let user = await storage.getUserByDiscordId(discordUser.id);
-      
-      if (!user) {
-        // Generate new wallet for the user
-        const wallet = walletService.generateWallet();
-        const encryptedPrivateKey = walletService.encryptPrivateKey(wallet.privateKey);
-        
-        // Create new user with Discord info and wallet
-        user = await storage.createDiscordUser({
-          username: discordUser.username,
-          discordId: discordUser.id,
-          discordUsername: discordUser.username,
-          discordAvatar: discordUser.avatar || null,
-          walletAddress: wallet.address,
-          walletPrivateKey: encryptedPrivateKey,
-          walletPublicKey: wallet.publicKey,
-        });
-        
-        // Delegate initial credits to the new wallet
-        await walletService.delegateCredits(wallet.address, 10);
-      }
-      
-      // In production, set up proper session management
-      // For now, redirect to frontend with user info
-      res.redirect(`/?auth=success&userId=${user.id}`);
-      
-    } catch (error) {
-      console.error("Discord auth callback error:", error);
-      res.redirect("/?auth=error");
-    }
-  });
-
-  app.get("/api/auth/user/:id", async (req, res) => {
-    try {
-      const userId = parseInt(req.params.id);
-      const user = await storage.getUser(userId);
-      
-      if (!user) {
-        return res.status(404).json({ message: "User not found" });
-      }
-      
-      // Don't expose sensitive wallet info
-      const publicUser = {
-        id: user.id,
-        username: user.username,
-        discordUsername: user.discordUsername,
-        discordAvatar: user.discordAvatar,
-        walletAddress: user.walletAddress,
-        testTokenBalance: user.testTokenBalance,
-        delegatedCredits: user.delegatedCredits,
-      };
-      
-      res.json(publicUser);
-    } catch (error) {
-      console.error("Get user error:", error);
-      res.status(500).json({ message: "Failed to get user info" });
-    }
-  });
-
-  // Get all NFTs with optional filtering
+  // NFT Routes
   app.get("/api/nfts", async (req, res) => {
     try {
-      const { category, creator, listed } = req.query;
+      const { category, creatorId, isListed } = req.query;
+      
       const filters: any = {};
-      
       if (category) filters.category = category as string;
-      if (creator) filters.creatorId = parseInt(creator as string);
-      if (listed !== undefined) filters.isListed = listed === 'true';
-      
+      if (creatorId) filters.creatorId = parseInt(creatorId as string);
+      if (isListed !== undefined) filters.isListed = isListed === 'true';
+
       const nfts = await storage.getNfts(filters);
       
-      // Get creator info for each NFT
+      // Get creators for each NFT
       const nftsWithCreators = await Promise.all(
         nfts.map(async (nft) => {
           const creator = await storage.getUser(nft.creatorId);
           return {
             ...nft,
-            creator: creator ? { id: creator.id, username: creator.username } : null,
+            creator: creator ? { id: creator.id, username: creator.username } : null
           };
         })
       );
-      
+
       res.json(nftsWithCreators);
     } catch (error) {
+      console.error("Get NFTs error:", error);
       res.status(500).json({ message: "Failed to fetch NFTs" });
     }
   });
 
-  // Get single NFT
   app.get("/api/nfts/:id", async (req, res) => {
     try {
       const id = parseInt(req.params.id);
@@ -182,47 +55,53 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!nft) {
         return res.status(404).json({ message: "NFT not found" });
       }
-      
+
+      // Get creator info
       const creator = await storage.getUser(nft.creatorId);
-      res.json({
+      const nftWithCreator = {
         ...nft,
-        creator: creator ? { id: creator.id, username: creator.username } : null,
-      });
+        creator: creator ? { id: creator.id, username: creator.username } : null
+      };
+
+      res.json(nftWithCreator);
     } catch (error) {
+      console.error("Get NFT error:", error);
       res.status(500).json({ message: "Failed to fetch NFT" });
     }
   });
 
-  // Upload and mint NFT with SP1 proof and wallet integration
+  // NFT Minting Route
   app.post("/api/nfts/mint", upload.single("image"), async (req: MulterRequest, res) => {
     try {
+      if (!req.isAuthenticated() || !req.user) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+
       if (!req.file) {
         return res.status(400).json({ message: "Image file is required" });
       }
 
-      const nftData = insertNftSchema.parse(req.body);
-      const { userId } = req.body;
+      const { title, description, price, editionSize, category } = req.body;
+
+      // Validate request body
+      const nftData = insertNftSchema.parse({
+        title,
+        description,
+        price: parseFloat(price),
+        editionSize: parseInt(editionSize),
+        category,
+      });
+
+      // Check if user has enough credits
+      const user = req.user;
+      const requiredCredits = 5; // Cost to mint an NFT
       
-      if (!userId) {
-        return res.status(400).json({ message: "User authentication required" });
+      if (!user.credits || user.credits < requiredCredits) {
+        return res.status(400).json({ 
+          message: `Insufficient credits. You need ${requiredCredits} credits to mint an NFT.` 
+        });
       }
-      
-      // Get user and verify they have sufficient credits and tokens
-      const user = await storage.getUser(parseInt(userId));
-      if (!user) {
-        return res.status(404).json({ message: "User not found" });
-      }
-      
-      if (!user.delegatedCredits || user.delegatedCredits < 1) {
-        return res.status(400).json({ message: "Insufficient SP1 credits for minting" });
-      }
-      
-      if (!user.testTokenBalance || user.testTokenBalance < nftData.price) {
-        return res.status(400).json({ message: "Insufficient test tokens for minting" });
-      }
-      
-      const creatorId = user.id;
-      
+
       // Upload image to IPFS
       const imageUpload = await ipfsService.uploadFile(req.file.buffer, req.file.originalname);
       
@@ -232,115 +111,124 @@ export async function registerRoutes(app: Express): Promise<Server> {
         description: nftData.description,
         image: imageUpload.url,
         attributes: [
-          { trait_type: "Edition Size", value: nftData.editionSize },
           { trait_type: "Category", value: nftData.category },
-          { trait_type: "Creator", value: user.discordUsername || user.username },
-          { trait_type: "Wallet", value: user.walletAddress },
-        ],
+          { trait_type: "Edition Size", value: nftData.editionSize },
+          { trait_type: "Creator", value: user.username }
+        ]
       };
-      
+
       // Upload metadata to IPFS
       const metadataUpload = await ipfsService.uploadJSON(metadata);
-      
-      // Decrypt user's private key for blockchain interaction
-      const privateKey = walletService.decryptPrivateKey(user.walletPrivateKey!);
-      
-      // Generate SP1 proof for minting with wallet integration
-      const mintResult = await walletService.mintNFTWithProof(
-        user.walletAddress!,
-        privateKey,
-        {
-          title: nftData.title,
-          description: nftData.description,
-          price: nftData.price,
-          editionSize: nftData.editionSize,
-          category: nftData.category,
-          metadataUrl: metadataUpload.url,
-          imageUrl: imageUpload.url,
-        }
-      );
-      
-      // Create NFT record with blockchain transaction
-      const nft = await storage.createNft({
+
+      // Generate ZK proof for minting
+      const zkProof = await sp1Service.generateMintProof({
+        creatorId: user.id,
+        title: nftData.title,
+        price: nftData.price,
+        editionSize: nftData.editionSize,
+      });
+
+      // Create NFT with ZK proof
+      const newNft = await storage.createNft({
         ...nftData,
-        creatorId,
+        creatorId: user.id,
         imageUrl: imageUpload.url,
         metadataUrl: metadataUpload.url,
-        zkProofHash: mintResult.proofHash,
+        zkProofHash: zkProof.proofHash,
         ipfsHash: imageUpload.hash,
         currentEdition: 1,
+        isVerified: true,
+        isListed: true,
       });
-      
-      // Store ZK proof with transaction details
+
+      // Store ZK proof
       await storage.createZkProof({
-        userId: creatorId,
+        userId: user.id,
         proofType: "mint",
-        proofData: {
-          transactionHash: mintResult.transactionHash,
-          walletAddress: user.walletAddress,
-          nftData: metadata,
-          verificationTime: new Date().toISOString(),
-        },
-        proofHash: mintResult.proofHash,
+        proofData: zkProof.proofData,
+        proofHash: zkProof.proofHash,
       });
-      
-      // Update user's credits and token balance
-      await storage.updateUserCredits(creatorId, user.delegatedCredits! - 1);
-      await storage.updateUserTokenBalance(creatorId, user.testTokenBalance! - 10);
-      
-      const creator = await storage.getUser(creatorId);
-      res.json({
-        ...nft,
-        creator: creator ? { 
-          id: creator.id, 
-          username: creator.username,
-          discordUsername: creator.discordUsername,
-          walletAddress: creator.walletAddress 
-        } : null,
-        transactionHash: mintResult.transactionHash,
-        proofHash: mintResult.proofHash,
-        remainingCredits: user.delegatedCredits! - 1,
-        remainingTokens: user.testTokenBalance! - 10,
+
+      // Deduct credits from user
+      await storage.updateUserCredits(user.id, user.credits - requiredCredits);
+
+      res.status(201).json({
+        nft: newNft,
+        message: `NFT minted successfully! ${requiredCredits} credits deducted.`
       });
-    } catch (error: any) {
-      console.error("Mint error:", error);
-      res.status(500).json({ message: error.message || "Failed to mint NFT" });
+    } catch (error) {
+      console.error("NFT minting error:", error);
+      res.status(500).json({ message: "Failed to mint NFT" });
     }
   });
 
-  // Buy NFT
-  app.post("/api/nfts/:id/buy", async (req, res) => {
+  // NFT Purchase Route
+  app.post("/api/nfts/:id/purchase", async (req, res) => {
     try {
+      if (!req.isAuthenticated() || !req.user) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+
       const nftId = parseInt(req.params.id);
-      const { buyerId } = req.body;
-      
+      const buyerId = req.user.id;
+
       const nft = await storage.getNft(nftId);
       if (!nft) {
         return res.status(404).json({ message: "NFT not found" });
       }
-      
+
       if (!nft.isListed) {
         return res.status(400).json({ message: "NFT is not for sale" });
       }
+
+      if (nft.creatorId === buyerId) {
+        return res.status(400).json({ message: "Cannot buy your own NFT" });
+      }
+
+      // Check if buyer has enough credits
+      const buyer = req.user;
+      const requiredCredits = nft.price;
       
-      // Generate ZK proof for purchase
+      if (!buyer.credits || buyer.credits < requiredCredits) {
+        return res.status(400).json({ 
+          message: `Insufficient credits. You need ${requiredCredits} credits to purchase this NFT.` 
+        });
+      }
+
+      // Generate ZK proof for transfer
       const zkProof = await sp1Service.generateTransferProof({
-        nftId,
+        nftId: nft.id,
         sellerId: nft.creatorId,
-        buyerId,
+        buyerId: buyerId,
         price: nft.price,
       });
-      
-      // Create transaction
+
+      // Create transaction record
       const transaction = await storage.createTransaction({
-        nftId,
-        buyerId,
+        nftId: nft.id,
         sellerId: nft.creatorId,
+        buyerId: buyerId,
         price: nft.price,
+        transactionType: "purchase",
         zkProofHash: zkProof.proofHash,
-        transactionHash: `0x${Math.random().toString(16).substr(2, 64)}`,
+        transactionHash: `0x${Date.now().toString(16)}`,
       });
-      
+
+      // Update NFT ownership (mark as sold)
+      await storage.updateNft(nft.id, {
+        isListed: false,
+        currentEdition: nft.currentEdition + 1,
+      });
+
+      // Update buyer credits
+      await storage.updateUserCredits(buyerId, buyer.credits - requiredCredits);
+
+      // Update seller credits (they receive the payment)
+      const seller = await storage.getUser(nft.creatorId);
+      if (seller && seller.credits !== null) {
+        await storage.updateUserCredits(nft.creatorId, seller.credits + requiredCredits);
+      }
+
       // Store ZK proof
       await storage.createZkProof({
         userId: buyerId,
@@ -348,42 +236,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         proofData: zkProof.proofData,
         proofHash: zkProof.proofHash,
       });
-      
-      // Update NFT ownership and listing status
-      await storage.updateNft(nftId, {
-        isListed: false,
-        creatorId: buyerId, // Transfer ownership
+
+      res.json({
+        transaction,
+        message: `NFT purchased successfully! ${requiredCredits} credits transferred.`
       });
-      
-      res.json(transaction);
-    } catch (error: any) {
-      console.error("Purchase error:", error);
-      res.status(500).json({ message: error.message || "Failed to purchase NFT" });
-    }
-  });
-
-  // Get marketplace stats
-  app.get("/api/stats", async (req, res) => {
-    try {
-      const stats = await storage.getStats();
-      res.json(stats);
     } catch (error) {
-      res.status(500).json({ message: "Failed to fetch stats" });
+      console.error("NFT purchase error:", error);
+      res.status(500).json({ message: "Failed to purchase NFT" });
     }
   });
 
-  // Get user's ZK proofs
-  app.get("/api/users/:id/proofs", async (req, res) => {
-    try {
-      const userId = parseInt(req.params.id);
-      const proofs = await storage.getZkProofs(userId);
-      res.json(proofs);
-    } catch (error) {
-      res.status(500).json({ message: "Failed to fetch proofs" });
-    }
-  });
-
-  // Get transactions
+  // Transaction Routes
   app.get("/api/transactions", async (req, res) => {
     try {
       const { userId } = req.query;
@@ -392,7 +256,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
       );
       res.json(transactions);
     } catch (error) {
+      console.error("Get transactions error:", error);
       res.status(500).json({ message: "Failed to fetch transactions" });
+    }
+  });
+
+  // ZK Proof Routes
+  app.get("/api/zkproofs/:userId", async (req, res) => {
+    try {
+      const userId = parseInt(req.params.userId);
+      const proofs = await storage.getZkProofs(userId);
+      res.json(proofs);
+    } catch (error) {
+      console.error("Get ZK proofs error:", error);
+      res.status(500).json({ message: "Failed to fetch ZK proofs" });
+    }
+  });
+
+  // Stats Route
+  app.get("/api/stats", async (req, res) => {
+    try {
+      const stats = await storage.getStats();
+      res.json(stats);
+    } catch (error) {
+      console.error("Get stats error:", error);
+      res.status(500).json({ message: "Failed to fetch stats" });
     }
   });
 
