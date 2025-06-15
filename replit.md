@@ -119,6 +119,7 @@ The application uses a PostgreSQL database with the following core entities:
 - **June 15, 2025**: Removed Discord dependency for proof viewing - now displays directly from Succinct Network
 - **June 15, 2025**: Fixed ZK proof auto-refresh system with dynamic time-based proof generation
 - **June 15, 2025**: Implemented proper real-time updates for Community ZK Proofs section
+- **June 15, 2025**: Updated ZK proof refresh rate from 30 seconds to 5 seconds for more responsive live updates
 
 ## Changelog
 - June 15, 2025: Complete SP1Mint rebranding and authentication system migration

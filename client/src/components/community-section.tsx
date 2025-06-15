@@ -43,10 +43,10 @@ export default function CommunitySection({ onNavigateToUpload }: CommunitySectio
     queryKey: ["/api/nfts"],
   });
 
-  // Fetch proofs from Succinct API with 30-second refresh
+  // Fetch proofs from Succinct API with 5-second refresh
   const { data: proofsData, isLoading: proofsLoading, refetch: refetchProofs, dataUpdatedAt } = useQuery<SuccinctApiResponse>({
     queryKey: ["/api/proofs"],
-    refetchInterval: 30000, // 30 seconds
+    refetchInterval: 5000, // 5 seconds
     refetchIntervalInBackground: true,
     refetchOnWindowFocus: true,
     staleTime: 0, // Always consider data stale to ensure fresh fetches

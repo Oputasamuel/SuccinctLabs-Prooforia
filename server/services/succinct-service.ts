@@ -73,9 +73,9 @@ class SuccinctService {
   }
 
   private getMockProofs(page: number, limit: number): SuccinctApiResponse {
-    // Generate time-based proofs that actually change every 30 seconds
+    // Generate time-based proofs that actually change every 5 seconds
     const now = Date.now();
-    const cycleTime = Math.floor(now / 30000); // 30-second cycles
+    const cycleTime = Math.floor(now / 5000); // 5-second cycles
     
     const proofTemplates = [
       "SP1 Circuit Dreams", "Digital Abstraction", "Quantum Mesh", "Neon Cityscape",
@@ -104,7 +104,7 @@ class SuccinctService {
         status: i === 0 && proofCycle % 3 === 0 ? "pending" : "completed",
         proof_hash: `0x${hashSeed.padStart(64, '0').slice(0, 64)}`,
         proof_type: proofTypes[typeIndex],
-        created_at: new Date(proofCycle * 30000).toISOString(),
+        created_at: new Date(proofCycle * 5000).toISOString(),
         metadata: {
           nft_title: `${proofTemplates[templateIndex]} #${proofCycle}`,
           wallet_address: `0x${walletSeed.padStart(40, '0').slice(0, 40)}`
