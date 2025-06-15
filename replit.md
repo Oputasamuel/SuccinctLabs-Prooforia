@@ -103,8 +103,15 @@ The application uses a PostgreSQL database with the following core entities:
 
 ## Changelog
 
-Changelog:
-- June 15, 2025. Initial setup
+## Recent Changes
+
+- **June 15, 2025**: Initial NFT marketplace setup with SP1 integration
+- **June 15, 2025**: Implemented custom theme with #FE11C5 hot pink primary color
+- **June 15, 2025**: Fixed Select component validation errors and CSS compilation issues
+- **June 15, 2025**: Application successfully deployed with full functionality
+
+## Changelog
+- June 15, 2025. Initial setup and theme customization complete
 
 ## User Preferences
 

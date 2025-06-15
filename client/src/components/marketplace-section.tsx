@@ -14,7 +14,7 @@ export default function MarketplaceSection() {
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
 
   const { data: nfts, isLoading } = useQuery({
-    queryKey: ["/api/nfts", { category: category || undefined }],
+    queryKey: ["/api/nfts", { category: category === "all" || !category ? undefined : category }],
   });
 
   const filteredNfts = nfts || [];
@@ -41,7 +41,7 @@ export default function MarketplaceSection() {
                 <SelectValue placeholder="All Categories" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Categories</SelectItem>
+                <SelectItem value="all">All Categories</SelectItem>
                 <SelectItem value="Digital Art">Digital Art</SelectItem>
                 <SelectItem value="Photography">Photography</SelectItem>
                 <SelectItem value="3D Models">3D Models</SelectItem>
