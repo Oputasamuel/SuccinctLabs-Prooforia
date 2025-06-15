@@ -12,7 +12,19 @@ export interface IStorage {
   // User operations
   getUser(id: number): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
+  getUserByDiscordId(discordId: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
+  createDiscordUser(userData: {
+    username: string;
+    discordId: string;
+    discordUsername: string;
+    discordAvatar?: string;
+    walletAddress: string;
+    walletPrivateKey: string;
+    walletPublicKey: string;
+  }): Promise<User>;
+  updateUserCredits(userId: number, credits: number): Promise<User>;
+  updateUserTokenBalance(userId: number, balance: number): Promise<User>;
   
   // NFT operations
   getNft(id: number): Promise<Nft | undefined>;

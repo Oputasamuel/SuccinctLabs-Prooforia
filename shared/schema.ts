@@ -6,8 +6,15 @@ import { z } from "zod";
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
   username: text("username").notNull().unique(),
-  password: text("password").notNull(),
+  password: text("password"),
   discordId: text("discord_id").unique(),
+  discordUsername: text("discord_username"),
+  discordAvatar: text("discord_avatar"),
+  walletAddress: text("wallet_address").unique(),
+  walletPrivateKey: text("wallet_private_key"), // Encrypted
+  walletPublicKey: text("wallet_public_key"),
+  testTokenBalance: integer("test_token_balance").default(100),
+  delegatedCredits: integer("delegated_credits").default(10),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -54,6 +61,8 @@ export const insertUserSchema = createInsertSchema(users).pick({
   username: true,
   password: true,
   discordId: true,
+  discordUsername: true,
+  discordAvatar: true,
 });
 
 export const insertNftSchema = createInsertSchema(nfts).pick({
