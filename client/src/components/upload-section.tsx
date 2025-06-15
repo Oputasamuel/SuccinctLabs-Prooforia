@@ -175,15 +175,9 @@ export default function UploadSection({ currentUser }: UploadSectionProps) {
                 Verified
               </Badge>
             </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="text-center">
-                <div className="text-lg font-bold text-blue-600">{currentUser.testTokenBalance}</div>
-                <div className="text-xs text-gray-600">Test Tokens</div>
-              </div>
-              <div className="text-center">
-                <div className="text-lg font-bold text-purple-600">{currentUser.delegatedCredits}</div>
-                <div className="text-xs text-gray-600">SP1 Credits</div>
-              </div>
+            <div className="text-center">
+              <div className="text-lg font-bold text-purple-600">{currentUser.credits || 0}</div>
+              <div className="text-xs text-gray-600">SP1 Credits</div>
             </div>
           </div>
         </div>
@@ -257,7 +251,7 @@ export default function UploadSection({ currentUser }: UploadSectionProps) {
                   />
                 </div>
                 <div>
-                  <Label htmlFor="price">Price (Tokens) *</Label>
+                  <Label htmlFor="price">Price (Credits) *</Label>
                   <Input
                     id="price"
                     type="number"
@@ -266,7 +260,7 @@ export default function UploadSection({ currentUser }: UploadSectionProps) {
                     onChange={(e) =>
                       setFormData((prev) => ({ ...prev, price: e.target.value }))
                     }
-                    placeholder="Enter price in tokens"
+                    placeholder="Enter price in credits"
                     className="mt-2"
                     required
                   />
