@@ -4,7 +4,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Users, Shield, ExternalLink, Clock, RefreshCw } from "lucide-react";
+import { Users, Shield, ExternalLink, Clock, RefreshCw, Upload, MessageCircle, Github } from "lucide-react";
+import { useLocation } from "wouter";
 
 interface SuccinctProof {
   id: string;
@@ -29,6 +30,7 @@ interface SuccinctApiResponse {
 export default function CommunitySection() {
   const [activeTab, setActiveTab] = useState<"gallery" | "proofs" | "learn" | "contribute">("gallery");
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
+  const [, setLocation] = useLocation();
 
   const { data: stats, isLoading: statsLoading } = useQuery({
     queryKey: ["/api/stats"],
@@ -407,16 +409,27 @@ export default function CommunitySection() {
                     Share your digital art with the community and showcase the power of ZK
                     verification.
                   </p>
-                  <Button className="btn-primary w-full">Upload Art</Button>
+                  <Button 
+                    className="btn-primary w-full"
+                    onClick={() => setLocation('/?tab=upload')}
+                  >
+                    <Upload className="w-4 h-4 mr-2" />
+                    Upload Art
+                  </Button>
                 </CardContent>
               </Card>
               <Card>
                 <CardContent className="p-8">
                   <h4 className="text-lg font-semibold text-gray-900 mb-4">Join Discord</h4>
                   <p className="text-gray-600 mb-6">
-                    Connect with other artists and developers in our Discord community.
+                    Connect with other artists and developers in the Succinct Discord community.
                   </p>
-                  <Button variant="outline" className="w-full">
+                  <Button 
+                    variant="outline" 
+                    className="w-full"
+                    onClick={() => window.open('https://discord.gg/succinct', '_blank')}
+                  >
+                    <MessageCircle className="w-4 h-4 mr-2" />
                     Join Discord
                   </Button>
                 </CardContent>
@@ -425,10 +438,15 @@ export default function CommunitySection() {
                 <CardContent className="p-8">
                   <h4 className="text-lg font-semibold text-gray-900 mb-4">Contribute Code</h4>
                   <p className="text-gray-600 mb-6">
-                    Help build the future of ZK-powered NFTs by contributing to our
-                    open-source project.
+                    Help build the future of ZK-powered NFTs by contributing to the
+                    Succinct open-source project.
                   </p>
-                  <Button variant="outline" className="w-full">
+                  <Button 
+                    variant="outline" 
+                    className="w-full"
+                    onClick={() => window.open('https://github.com/succinctlabs', '_blank')}
+                  >
+                    <Github className="w-4 h-4 mr-2" />
                     View GitHub
                   </Button>
                 </CardContent>
