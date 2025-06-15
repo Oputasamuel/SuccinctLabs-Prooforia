@@ -79,6 +79,15 @@ export const insertNftSchema = createInsertSchema(nfts).pick({
   price: true,
   editionSize: true,
   category: true,
+}).extend({
+  // Additional fields that will be added during creation
+  creatorId: z.number(),
+  imageUrl: z.string(),
+  metadataUrl: z.string(),
+  zkProofHash: z.string(),
+  ipfsHash: z.string(),
+  currentEdition: z.number(),
+  isListed: z.boolean().optional(),
 });
 
 export const insertTransactionSchema = createInsertSchema(transactions).pick({

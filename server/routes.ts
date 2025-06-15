@@ -210,7 +210,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         sellerId: nft.creatorId,
         buyerId: buyerId,
         price: nft.price,
-        sellerWallet: seller.walletAddress,
+        sellerWallet: sellerUser.walletAddress,
         buyerWallet: buyer.walletAddress,
         timestamp: Date.now(),
       });
@@ -221,7 +221,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         sellerId: nft.creatorId,
         buyerId: buyerId,
         price: nft.price,
-        transactionType: "purchase",
         zkProofHash: zkProof.proofHash,
         transactionHash: `0x${Date.now().toString(16)}`,
       });

@@ -304,6 +304,7 @@ export class MemStorage implements IStorage {
     const transaction: Transaction = {
       ...transactionData,
       id,
+      transactionType: "purchase",
       transactionHash: transactionData.transactionHash || null,
       createdAt: new Date(),
     };
