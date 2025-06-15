@@ -44,19 +44,21 @@ export default function CommunitySection({ onNavigateToUpload }: CommunitySectio
   });
 
   // Fetch proofs from Succinct API with 30-second refresh
-  const { data: proofsData, isLoading: proofsLoading, refetch: refetchProofs } = useQuery<SuccinctApiResponse>({
+  const { data: proofsData, isLoading: proofsLoading, refetch: refetchProofs, dataUpdatedAt } = useQuery<SuccinctApiResponse>({
     queryKey: ["/api/proofs"],
     refetchInterval: 30000, // 30 seconds
     refetchIntervalInBackground: true,
     refetchOnWindowFocus: true,
+    staleTime: 0, // Always consider data stale to ensure fresh fetches
+    gcTime: 0, // Don't cache to ensure fresh data (TanStack Query v5)
   });
 
   // Update last updated timestamp when proofs refresh
   useEffect(() => {
-    if (proofsData) {
-      setLastUpdated(new Date());
+    if (dataUpdatedAt) {
+      setLastUpdated(new Date(dataUpdatedAt));
     }
-  }, [proofsData]);
+  }, [dataUpdatedAt]);
 
   const featuredNfts = nfts?.slice(0, 3) || [];
 
