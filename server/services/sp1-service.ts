@@ -9,6 +9,9 @@ interface MintProofData {
   title: string;
   price: number;
   editionSize: number;
+  walletAddress: string;
+  creditsBalance: number;
+  timestamp: number;
 }
 
 interface TransferProofData {
@@ -16,11 +19,33 @@ interface TransferProofData {
   sellerId: number;
   buyerId: number;
   price: number;
+  sellerWallet: string;
+  buyerWallet: string;
+  timestamp: number;
+}
+
+interface SP1ProofInput {
+  user_id: number;
+  wallet_address: string;
+  credits_balance: number;
+  operation_cost: number;
+  timestamp: number;
+  operation_type: 'mint' | 'transfer' | 'verification';
+}
+
+interface SP1ProofOutput {
+  is_valid: boolean;
+  user_id: number;
+  remaining_credits: number;
+  proof_hash: string;
+  verification_key: string;
 }
 
 interface ZkProofResult {
   proofHash: string;
-  proofData: any;
+  proofData: SP1ProofOutput;
+  verificationKey: string;
+  publicInputs: any;
 }
 
 class SP1Service {
