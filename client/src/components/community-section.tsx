@@ -1,13 +1,34 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Users, Shield, ExternalLink } from "lucide-react";
+import { Users, Shield, ExternalLink, Clock, RefreshCw } from "lucide-react";
+
+interface SuccinctProof {
+  id: string;
+  status: "pending" | "completed" | "failed";
+  proof_hash: string;
+  proof_type: "mint" | "transfer" | "verification";
+  created_at: string;
+  metadata?: {
+    nft_title?: string;
+    wallet_address?: string;
+    transaction_hash?: string;
+  };
+}
+
+interface SuccinctApiResponse {
+  proofs: SuccinctProof[];
+  total: number;
+  page: number;
+  limit: number;
+}
 
 export default function CommunitySection() {
   const [activeTab, setActiveTab] = useState<"gallery" | "proofs" | "learn" | "contribute">("gallery");
+  const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
 
   const { data: stats, isLoading: statsLoading } = useQuery({
     queryKey: ["/api/stats"],
@@ -16,6 +37,21 @@ export default function CommunitySection() {
   const { data: nfts, isLoading: nftsLoading } = useQuery({
     queryKey: ["/api/nfts"],
   });
+
+  // Fetch proofs from Succinct API with 30-second refresh
+  const { data: proofsData, isLoading: proofsLoading, refetch: refetchProofs } = useQuery<SuccinctApiResponse>({
+    queryKey: ["/api/proofs"],
+    refetchInterval: 30000, // 30 seconds
+    refetchIntervalInBackground: true,
+    refetchOnWindowFocus: true,
+  });
+
+  // Update last updated timestamp when proofs refresh
+  useEffect(() => {
+    if (proofsData) {
+      setLastUpdated(new Date());
+    }
+  }, [proofsData]);
 
   const featuredNfts = nfts?.slice(0, 3) || [];
 
@@ -161,188 +197,138 @@ export default function CommunitySection() {
           <div>
             <div className="text-center mb-8">
               <h3 className="text-2xl font-bold text-gray-900 mb-4">Zero-Knowledge Proofs</h3>
-              <p className="text-gray-600 mb-8">
-                Explore the latest ZK proofs generated on the platform
+              <p className="text-gray-600 mb-4">
+                Live proofs from the Succinct Network - updates every 30 seconds
               </p>
+              <div className="flex items-center justify-center gap-4 text-sm text-gray-500">
+                <div className="flex items-center gap-2">
+                  <Clock className="w-4 h-4" />
+                  <span>Last updated: {lastUpdated.toLocaleTimeString()}</span>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => refetchProofs()}
+                  disabled={proofsLoading}
+                  className="h-8 px-3"
+                >
+                  <RefreshCw className={`w-4 h-4 mr-1 ${proofsLoading ? 'animate-spin' : ''}`} />
+                  Refresh
+                </Button>
+              </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {/* Sample ZK Proof entries */}
-              <Card>
-                <CardContent className="p-6">
-                  <div className="flex items-center space-x-3 mb-4">
-                    <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
-                      <Shield className="w-5 h-5 text-green-600" />
-                    </div>
-                    <div>
-                      <h4 className="font-semibold text-gray-900">Mint Proof</h4>
-                      <p className="text-sm text-gray-600">SP1 Circuit Dreams</p>
-                    </div>
-                  </div>
-                  <div className="space-y-2 text-sm">
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Proof Hash:</span>
-                      <span className="font-mono text-xs">0x7a8b...9c2d</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Type:</span>
-                      <Badge variant="outline" className="text-xs">NFT Mint</Badge>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Status:</span>
-                      <Badge className="bg-green-100 text-green-800 text-xs">Verified</Badge>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+            {proofsLoading ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {[...Array(6)].map((_, i) => (
+                  <Card key={i}>
+                    <CardContent className="p-6">
+                      <div className="flex items-center space-x-3 mb-4">
+                        <Skeleton className="w-10 h-10 rounded-full" />
+                        <div className="space-y-2">
+                          <Skeleton className="h-4 w-20" />
+                          <Skeleton className="h-3 w-32" />
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <Skeleton className="h-3 w-full" />
+                        <Skeleton className="h-3 w-3/4" />
+                        <Skeleton className="h-3 w-1/2" />
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            ) : proofsData?.proofs && proofsData.proofs.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {proofsData.proofs.map((proof) => {
+                  const getProofTypeColor = (type: string) => {
+                    switch (type) {
+                      case 'mint': return 'green';
+                      case 'transfer': return 'blue';
+                      case 'verification': return 'purple';
+                      default: return 'gray';
+                    }
+                  };
 
-              <Card>
-                <CardContent className="p-6">
-                  <div className="flex items-center space-x-3 mb-4">
-                    <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                      <Shield className="w-5 h-5 text-blue-600" />
-                    </div>
-                    <div>
-                      <h4 className="font-semibold text-gray-900">Transfer Proof</h4>
-                      <p className="text-sm text-gray-600">Digital Abstraction #1</p>
-                    </div>
-                  </div>
-                  <div className="space-y-2 text-sm">
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Proof Hash:</span>
-                      <span className="font-mono text-xs">0x3f5e...1a8b</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Type:</span>
-                      <Badge variant="outline" className="text-xs">Transfer</Badge>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Status:</span>
-                      <Badge className="bg-green-100 text-green-800 text-xs">Verified</Badge>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+                  const color = getProofTypeColor(proof.proof_type);
+                  const timeAgo = new Date(proof.created_at).toLocaleString();
 
-              <Card>
-                <CardContent className="p-6">
-                  <div className="flex items-center space-x-3 mb-4">
-                    <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
-                      <Shield className="w-5 h-5 text-purple-600" />
-                    </div>
-                    <div>
-                      <h4 className="font-semibold text-gray-900">Mint Proof</h4>
-                      <p className="text-sm text-gray-600">Quantum Mesh</p>
-                    </div>
-                  </div>
-                  <div className="space-y-2 text-sm">
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Proof Hash:</span>
-                      <span className="font-mono text-xs">0x9d2c...4e7f</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Type:</span>
-                      <Badge variant="outline" className="text-xs">NFT Mint</Badge>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Status:</span>
-                      <Badge className="bg-green-100 text-green-800 text-xs">Verified</Badge>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+                  return (
+                    <Card key={proof.id}>
+                      <CardContent className="p-6">
+                        <div className="flex items-center space-x-3 mb-4">
+                          <div className={`w-10 h-10 bg-${color}-100 rounded-full flex items-center justify-center`}>
+                            <Shield className={`w-5 h-5 text-${color}-600`} />
+                          </div>
+                          <div>
+                            <h4 className="font-semibold text-gray-900 capitalize">{proof.proof_type} Proof</h4>
+                            <p className="text-sm text-gray-600">
+                              {proof.metadata?.nft_title || 'Unknown NFT'}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="space-y-2 text-sm">
+                          <div className="flex justify-between">
+                            <span className="text-gray-600">Proof Hash:</span>
+                            <span className="font-mono text-xs">
+                              {proof.proof_hash.slice(0, 6)}...{proof.proof_hash.slice(-4)}
+                            </span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-gray-600">Type:</span>
+                            <Badge variant="outline" className="text-xs capitalize">
+                              {proof.proof_type}
+                            </Badge>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-gray-600">Status:</span>
+                            <Badge 
+                              className={`text-xs ${
+                                proof.status === 'completed' 
+                                  ? 'bg-green-100 text-green-800' 
+                                  : proof.status === 'pending'
+                                  ? 'bg-yellow-100 text-yellow-800'
+                                  : 'bg-red-100 text-red-800'
+                              }`}
+                            >
+                              {proof.status}
+                            </Badge>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-gray-600">Created:</span>
+                            <span className="text-xs">{timeAgo}</span>
+                          </div>
+                          {proof.metadata?.wallet_address && (
+                            <div className="flex justify-between">
+                              <span className="text-gray-600">Wallet:</span>
+                              <span className="font-mono text-xs">
+                                {proof.metadata.wallet_address.slice(0, 6)}...{proof.metadata.wallet_address.slice(-4)}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="text-center py-12">
+                <Shield className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                <h4 className="text-lg font-semibold text-gray-900 mb-2">No Proofs Found</h4>
+                <p className="text-gray-600">No ZK proofs are currently available from the Succinct Network.</p>
+              </div>
+            )}
 
-              <Card>
-                <CardContent className="p-6">
-                  <div className="flex items-center space-x-3 mb-4">
-                    <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center">
-                      <Shield className="w-5 h-5 text-orange-600" />
-                    </div>
-                    <div>
-                      <h4 className="font-semibold text-gray-900">Verification Proof</h4>
-                      <p className="text-sm text-gray-600">Neon Cityscape</p>
-                    </div>
-                  </div>
-                  <div className="space-y-2 text-sm">
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Proof Hash:</span>
-                      <span className="font-mono text-xs">0x6b1a...8f3c</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Type:</span>
-                      <Badge variant="outline" className="text-xs">Verification</Badge>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Status:</span>
-                      <Badge className="bg-green-100 text-green-800 text-xs">Verified</Badge>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardContent className="p-6">
-                  <div className="flex items-center space-x-3 mb-4">
-                    <div className="w-10 h-10 bg-pink-100 rounded-full flex items-center justify-center">
-                      <Shield className="w-5 h-5 text-pink-600" />
-                    </div>
-                    <div>
-                      <h4 className="font-semibold text-gray-900">Mint Proof</h4>
-                      <p className="text-sm text-gray-600">Ethereal Waves</p>
-                    </div>
-                  </div>
-                  <div className="space-y-2 text-sm">
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Proof Hash:</span>
-                      <span className="font-mono text-xs">0x2e4d...7c9a</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Type:</span>
-                      <Badge variant="outline" className="text-xs">NFT Mint</Badge>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Status:</span>
-                      <Badge className="bg-green-100 text-green-800 text-xs">Verified</Badge>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardContent className="p-6">
-                  <div className="flex items-center space-x-3 mb-4">
-                    <div className="w-10 h-10 bg-teal-100 rounded-full flex items-center justify-center">
-                      <Shield className="w-5 h-5 text-teal-600" />
-                    </div>
-                    <div>
-                      <h4 className="font-semibold text-gray-900">Transfer Proof</h4>
-                      <p className="text-sm text-gray-600">Fractured Reality</p>
-                    </div>
-                  </div>
-                  <div className="space-y-2 text-sm">
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Proof Hash:</span>
-                      <span className="font-mono text-xs">0x5a7f...3b8e</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Type:</span>
-                      <Badge variant="outline" className="text-xs">Transfer</Badge>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Status:</span>
-                      <Badge className="bg-green-100 text-green-800 text-xs">Verified</Badge>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-
-            <div className="text-center mt-8">
-              <Button variant="outline">
-                <ExternalLink className="w-4 h-4 mr-2" />
-                View All Proofs
-              </Button>
-            </div>
+            {proofsData?.total && proofsData.total > 6 && (
+              <div className="text-center mt-8">
+                <Button variant="outline">
+                  <ExternalLink className="w-4 h-4 mr-2" />
+                  View All {proofsData.total} Proofs
+                </Button>
+              </div>
+            )}
           </div>
         )}
 

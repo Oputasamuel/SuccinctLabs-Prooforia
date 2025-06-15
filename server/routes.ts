@@ -5,6 +5,7 @@ import { storage } from "./storage";
 import { insertNftSchema } from "@shared/schema";
 import { sp1Service } from "./services/sp1-service";
 import { ipfsService } from "./services/ipfs-service";
+import { succinctService } from "./services/succinct-service";
 import { setupAuth } from "./auth";
 
 interface MulterRequest extends Request {
@@ -281,6 +282,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Get stats error:", error);
       res.status(500).json({ message: "Failed to fetch stats" });
+    }
+  });
+
+  // Succinct Proofs Routes
+  app.get("/api/proofs", async (req, res) => {
+    try {
+      const page = parseInt(req.query.page as string) || 1;
+      const limit = parseInt(req.query.limit as string) || 20;
+      
+      const proofsData = await succinctService.getProofs(page, limit);
+      res.json(proofsData);
+    } catch (error) {
+      console.error("Get proofs error:", error);
+      res.status(500).json({ message: "Failed to fetch proofs" });
+    }
+  });
+
+  app.get("/api/proofs/:id", async (req, res) => {
+    try {
+      const proof = await succinctService.getProofById(req.params.id);
+      if (!proof) {
+        return res.status(404).json({ message: "Proof not found" });
+      }
+      res.json(proof);
+    } catch (error) {
+      console.error("Get proof by ID error:", error);
+      res.status(500).json({ message: "Failed to fetch proof" });
     }
   });
 
