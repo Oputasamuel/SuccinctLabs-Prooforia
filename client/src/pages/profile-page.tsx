@@ -109,7 +109,12 @@ export default function ProfilePage() {
     <div className="min-h-screen bg-background">
       <Header 
         activeTab="marketplace" 
-        onTabChange={(tab) => setLocation(`/${tab === 'marketplace' ? '' : tab}`)} 
+        onTabChange={(tab) => {
+          // Navigate back to home page with the selected tab
+          const searchParams = new URLSearchParams();
+          searchParams.set('tab', tab);
+          setLocation(`/?${searchParams.toString()}`);
+        }} 
         currentUser={user}
       />
       <div className="container mx-auto px-4 py-8 max-w-6xl">
