@@ -158,26 +158,191 @@ export default function CommunitySection() {
 
         {/* ZK Proofs Tab */}
         {activeTab === "proofs" && (
-          <div className="text-center">
-            <h3 className="text-2xl font-bold text-gray-900 mb-4">Connect to View Proofs</h3>
-            <p className="text-gray-600 mb-8">
-              Connect your Discord account to view your ZK proof history.
-            </p>
+          <div>
+            <div className="text-center mb-8">
+              <h3 className="text-2xl font-bold text-gray-900 mb-4">Zero-Knowledge Proofs</h3>
+              <p className="text-gray-600 mb-8">
+                Explore the latest ZK proofs generated on the platform
+              </p>
+            </div>
 
-            <Card className="max-w-md mx-auto">
-              <CardContent className="p-12">
-                <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-6">
-                  <Shield className="w-8 h-8 text-primary" />
-                </div>
-                <h4 className="text-xl font-semibold text-gray-900 mb-2">
-                  Connect to View Proofs
-                </h4>
-                <p className="text-gray-600 mb-6">
-                  Connect your Discord account to view your ZK proof history.
-                </p>
-                <Button className="btn-primary">Connect Discord</Button>
-              </CardContent>
-            </Card>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {/* Sample ZK Proof entries */}
+              <Card>
+                <CardContent className="p-6">
+                  <div className="flex items-center space-x-3 mb-4">
+                    <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+                      <Shield className="w-5 h-5 text-green-600" />
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-gray-900">Mint Proof</h4>
+                      <p className="text-sm text-gray-600">SP1 Circuit Dreams</p>
+                    </div>
+                  </div>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Proof Hash:</span>
+                      <span className="font-mono text-xs">0x7a8b...9c2d</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Type:</span>
+                      <Badge variant="outline" className="text-xs">NFT Mint</Badge>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Status:</span>
+                      <Badge className="bg-green-100 text-green-800 text-xs">Verified</Badge>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardContent className="p-6">
+                  <div className="flex items-center space-x-3 mb-4">
+                    <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                      <Shield className="w-5 h-5 text-blue-600" />
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-gray-900">Transfer Proof</h4>
+                      <p className="text-sm text-gray-600">Digital Abstraction #1</p>
+                    </div>
+                  </div>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Proof Hash:</span>
+                      <span className="font-mono text-xs">0x3f5e...1a8b</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Type:</span>
+                      <Badge variant="outline" className="text-xs">Transfer</Badge>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Status:</span>
+                      <Badge className="bg-green-100 text-green-800 text-xs">Verified</Badge>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardContent className="p-6">
+                  <div className="flex items-center space-x-3 mb-4">
+                    <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
+                      <Shield className="w-5 h-5 text-purple-600" />
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-gray-900">Mint Proof</h4>
+                      <p className="text-sm text-gray-600">Quantum Mesh</p>
+                    </div>
+                  </div>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Proof Hash:</span>
+                      <span className="font-mono text-xs">0x9d2c...4e7f</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Type:</span>
+                      <Badge variant="outline" className="text-xs">NFT Mint</Badge>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Status:</span>
+                      <Badge className="bg-green-100 text-green-800 text-xs">Verified</Badge>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardContent className="p-6">
+                  <div className="flex items-center space-x-3 mb-4">
+                    <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center">
+                      <Shield className="w-5 h-5 text-orange-600" />
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-gray-900">Verification Proof</h4>
+                      <p className="text-sm text-gray-600">Neon Cityscape</p>
+                    </div>
+                  </div>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Proof Hash:</span>
+                      <span className="font-mono text-xs">0x6b1a...8f3c</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Type:</span>
+                      <Badge variant="outline" className="text-xs">Verification</Badge>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Status:</span>
+                      <Badge className="bg-green-100 text-green-800 text-xs">Verified</Badge>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardContent className="p-6">
+                  <div className="flex items-center space-x-3 mb-4">
+                    <div className="w-10 h-10 bg-pink-100 rounded-full flex items-center justify-center">
+                      <Shield className="w-5 h-5 text-pink-600" />
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-gray-900">Mint Proof</h4>
+                      <p className="text-sm text-gray-600">Ethereal Waves</p>
+                    </div>
+                  </div>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Proof Hash:</span>
+                      <span className="font-mono text-xs">0x2e4d...7c9a</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Type:</span>
+                      <Badge variant="outline" className="text-xs">NFT Mint</Badge>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Status:</span>
+                      <Badge className="bg-green-100 text-green-800 text-xs">Verified</Badge>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardContent className="p-6">
+                  <div className="flex items-center space-x-3 mb-4">
+                    <div className="w-10 h-10 bg-teal-100 rounded-full flex items-center justify-center">
+                      <Shield className="w-5 h-5 text-teal-600" />
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-gray-900">Transfer Proof</h4>
+                      <p className="text-sm text-gray-600">Fractured Reality</p>
+                    </div>
+                  </div>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Proof Hash:</span>
+                      <span className="font-mono text-xs">0x5a7f...3b8e</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Type:</span>
+                      <Badge variant="outline" className="text-xs">Transfer</Badge>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Status:</span>
+                      <Badge className="bg-green-100 text-green-800 text-xs">Verified</Badge>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            <div className="text-center mt-8">
+              <Button variant="outline">
+                <ExternalLink className="w-4 h-4 mr-2" />
+                View All Proofs
+              </Button>
+            </div>
           </div>
         )}
 
