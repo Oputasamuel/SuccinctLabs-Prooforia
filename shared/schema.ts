@@ -6,15 +6,17 @@ import { z } from "zod";
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
   username: text("username").notNull().unique(),
-  password: text("password"),
-  discordId: text("discord_id").unique(),
+  email: text("email").notNull().unique(),
+  password: text("password").notNull(),
+  walletAddress: text("wallet_address").notNull().unique(),
+  walletPrivateKey: text("wallet_private_key").notNull(), // Encrypted
+  walletPublicKey: text("wallet_public_key").notNull(),
+  credits: integer("credits").default(10),
+  discordConnected: boolean("discord_connected").default(false),
   discordUsername: text("discord_username"),
   discordAvatar: text("discord_avatar"),
-  walletAddress: text("wallet_address").unique(),
-  walletPrivateKey: text("wallet_private_key"), // Encrypted
-  walletPublicKey: text("wallet_public_key"),
-  testTokenBalance: integer("test_token_balance").default(100),
-  delegatedCredits: integer("delegated_credits").default(10),
+  xConnected: boolean("x_connected").default(false),
+  xUsername: text("x_username"),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -25,7 +27,7 @@ export const nfts = pgTable("nfts", {
   creatorId: integer("creator_id").references(() => users.id).notNull(),
   imageUrl: text("image_url").notNull(),
   metadataUrl: text("metadata_url").notNull(),
-  price: integer("price").notNull(), // in tokens
+  price: integer("price").notNull(), // in credits
   editionSize: integer("edition_size").notNull(),
   currentEdition: integer("current_edition").notNull(),
   category: text("category").notNull(),
@@ -59,10 +61,15 @@ export const zkProofs = pgTable("zk_proofs", {
 
 export const insertUserSchema = createInsertSchema(users).pick({
   username: true,
+  email: true,
   password: true,
-  discordId: true,
-  discordUsername: true,
-  discordAvatar: true,
+});
+
+export const registerUserSchema = insertUserSchema.extend({
+  confirmPassword: z.string(),
+}).refine((data) => data.password === data.confirmPassword, {
+  message: "Passwords don't match",
+  path: ["confirmPassword"],
 });
 
 export const insertNftSchema = createInsertSchema(nfts).pick({
