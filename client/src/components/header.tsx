@@ -1,10 +1,22 @@
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Zap, Wallet } from "lucide-react";
+import { Zap, Wallet, User } from "lucide-react";
+
+interface DiscordUser {
+  id: number;
+  username: string;
+  discordUsername: string;
+  discordAvatar: string;
+  walletAddress: string;
+  testTokenBalance: number;
+  delegatedCredits: number;
+}
 
 interface HeaderProps {
   activeTab: "marketplace" | "community" | "upload";
   onTabChange: (tab: "marketplace" | "community" | "upload") => void;
+  currentUser?: DiscordUser | null;
+  onShowAuth?: () => void;
 }
 
 export default function Header({ activeTab, onTabChange }: HeaderProps) {
