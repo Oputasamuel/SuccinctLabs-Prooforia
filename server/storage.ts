@@ -365,27 +365,15 @@ export class DatabaseStorage implements IStorage {
     return user || undefined;
   }
 
-  async getUserByDiscordId(discordId: string): Promise<User | undefined> {
-    const [user] = await db.select().from(users).where(eq(users.discordId, discordId));
+  async getUserByEmail(email: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.email, email));
     return user || undefined;
   }
 
-  async createUser(insertUser: InsertUser): Promise<User> {
-    const [user] = await db
-      .insert(users)
-      .values({
-        ...insertUser,
-        discordId: insertUser.discordId || null,
-      })
-      .returning();
-    return user;
-  }
-
-  async createDiscordUser(userData: {
+  async createUser(userData: {
     username: string;
-    discordId: string;
-    discordUsername: string;
-    discordAvatar?: string | null;
+    email: string;
+    password: string;
     walletAddress: string;
     walletPrivateKey: string;
     walletPublicKey: string;
@@ -394,15 +382,14 @@ export class DatabaseStorage implements IStorage {
       .insert(users)
       .values({
         username: userData.username,
-        discordId: userData.discordId,
-        discordUsername: userData.discordUsername,
-        discordAvatar: userData.discordAvatar || null,
+        email: userData.email,
+        password: userData.password,
         walletAddress: userData.walletAddress,
         walletPrivateKey: userData.walletPrivateKey,
         walletPublicKey: userData.walletPublicKey,
-        testTokenBalance: 100,
-        delegatedCredits: 10,
-        password: null,
+        credits: 10,
+        discordConnected: false,
+        xConnected: false,
       })
       .returning();
     return user;
@@ -411,17 +398,48 @@ export class DatabaseStorage implements IStorage {
   async updateUserCredits(userId: number, credits: number): Promise<User> {
     const [user] = await db
       .update(users)
-      .set({ delegatedCredits: credits })
+      .set({ credits: credits })
       .where(eq(users.id, userId))
       .returning();
     if (!user) throw new Error("User not found");
     return user;
   }
 
-  async updateUserTokenBalance(userId: number, balance: number): Promise<User> {
+  async connectDiscord(userId: number, discordUsername: string, discordAvatar?: string): Promise<User> {
+    // First get current user to calculate new credits
+    const currentUser = await this.getUser(userId);
+    if (!currentUser) throw new Error("User not found");
+    
+    const newCredits = (currentUser.credits || 10) + (currentUser.discordConnected ? 0 : 4);
+    
     const [user] = await db
       .update(users)
-      .set({ testTokenBalance: balance })
+      .set({ 
+        discordConnected: true,
+        discordUsername: discordUsername,
+        discordAvatar: discordAvatar || null,
+        credits: newCredits
+      })
+      .where(eq(users.id, userId))
+      .returning();
+    if (!user) throw new Error("User not found");
+    return user;
+  }
+
+  async connectX(userId: number, xUsername: string): Promise<User> {
+    // First get current user to calculate new credits
+    const currentUser = await this.getUser(userId);
+    if (!currentUser) throw new Error("User not found");
+    
+    const newCredits = (currentUser.credits || 10) + (currentUser.xConnected ? 0 : 6);
+    
+    const [user] = await db
+      .update(users)
+      .set({ 
+        xConnected: true,
+        xUsername: xUsername,
+        credits: newCredits
+      })
       .where(eq(users.id, userId))
       .returning();
     if (!user) throw new Error("User not found");
