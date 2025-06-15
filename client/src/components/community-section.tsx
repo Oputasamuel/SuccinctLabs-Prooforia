@@ -27,10 +27,13 @@ interface SuccinctApiResponse {
   limit: number;
 }
 
-export default function CommunitySection() {
+interface CommunitySectionProps {
+  onNavigateToUpload?: () => void;
+}
+
+export default function CommunitySection({ onNavigateToUpload }: CommunitySectionProps = {}) {
   const [activeTab, setActiveTab] = useState<"gallery" | "proofs" | "learn" | "contribute">("gallery");
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
-  const [, setLocation] = useLocation();
 
   const { data: stats, isLoading: statsLoading } = useQuery({
     queryKey: ["/api/stats"],
@@ -411,7 +414,7 @@ export default function CommunitySection() {
                   </p>
                   <Button 
                     className="btn-primary w-full"
-                    onClick={() => setLocation('/?tab=upload')}
+                    onClick={() => onNavigateToUpload?.()}
                   >
                     <Upload className="w-4 h-4 mr-2" />
                     Upload Art

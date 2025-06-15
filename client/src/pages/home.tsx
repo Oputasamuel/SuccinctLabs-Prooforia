@@ -37,7 +37,7 @@ export default function Home() {
       
       {activeTab === "community" && (
         <>
-          <CommunitySection />
+          <CommunitySection onNavigateToUpload={() => handleTabChange("upload")} />
           <SP1InfoSection />
         </>
       )}
