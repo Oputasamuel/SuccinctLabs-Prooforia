@@ -7,13 +7,21 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ShoppingBag, Grid3X3, List, Filter } from "lucide-react";
 import NFTCard from "@/components/nft-card";
+import type { Nft } from "@shared/schema";
+
+interface NftWithCreator extends Nft {
+  creator?: {
+    id: number;
+    username: string;
+  };
+}
 
 export default function MarketplaceSection() {
   const [category, setCategory] = useState<string>("");
   const [sortBy, setSortBy] = useState<string>("recent");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
 
-  const { data: nfts, isLoading } = useQuery({
+  const { data: nfts, isLoading } = useQuery<Nft[]>({
     queryKey: ["/api/nfts", { category: category === "all" || !category ? undefined : category }],
   });
 
