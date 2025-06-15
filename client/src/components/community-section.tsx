@@ -362,7 +362,12 @@ export default function CommunitySection() {
                     Learn the fundamentals of ZK technology and how it enables private,
                     verifiable transactions.
                   </p>
-                  <Button variant="outline" className="w-full">
+                  <Button 
+                    variant="outline" 
+                    className="w-full"
+                    onClick={() => window.open('https://docs.succinct.xyz/getting-started/what-is-sp1.html', '_blank')}
+                  >
+                    <ExternalLink className="w-4 h-4 mr-2" />
                     Read Guide
                   </Button>
                 </CardContent>
@@ -376,7 +381,12 @@ export default function CommunitySection() {
                     Dive deep into SP1 zkVM technology and learn how to build with
                     zero-knowledge proofs.
                   </p>
-                  <Button variant="outline" className="w-full">
+                  <Button 
+                    variant="outline" 
+                    className="w-full"
+                    onClick={() => window.open('https://docs.succinct.xyz/', '_blank')}
+                  >
+                    <ExternalLink className="w-4 h-4 mr-2" />
                     View Docs
                   </Button>
                 </CardContent>
