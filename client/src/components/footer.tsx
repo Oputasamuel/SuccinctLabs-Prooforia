@@ -19,13 +19,28 @@ export default function Footer() {
               digital art with cryptographic certainty.
             </p>
             <div className="flex space-x-4">
-              <a href="#" className="text-gray-400 hover:text-primary transition-colors">
+              <a 
+                href="https://twitter.com/succinctlabs" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="text-gray-400 hover:text-primary transition-colors"
+              >
                 <Twitter className="w-5 h-5" />
               </a>
-              <a href="#" className="text-gray-400 hover:text-primary transition-colors">
+              <a 
+                href="https://github.com/succinctlabs" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="text-gray-400 hover:text-primary transition-colors"
+              >
                 <Github className="w-5 h-5" />
               </a>
-              <a href="#" className="text-gray-400 hover:text-primary transition-colors">
+              <a 
+                href="https://discord.gg/succinctlabs" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="text-gray-400 hover:text-primary transition-colors"
+              >
                 <SiDiscord className="w-5 h-5" />
               </a>
             </div>
@@ -35,22 +50,36 @@ export default function Footer() {
             <h4 className="font-semibold text-white mb-4">Platform</h4>
             <ul className="space-y-2 text-gray-400">
               <li>
-                <a href="#" className="hover:text-primary transition-colors">
+                <button 
+                  onClick={() => window.location.hash = '#marketplace'} 
+                  className="hover:text-primary transition-colors text-left"
+                >
                   Marketplace
-                </a>
+                </button>
               </li>
               <li>
-                <a href="#" className="hover:text-primary transition-colors">
+                <button 
+                  onClick={() => window.location.hash = '#upload'} 
+                  className="hover:text-primary transition-colors text-left"
+                >
                   Upload Art
-                </a>
+                </button>
               </li>
               <li>
-                <a href="#" className="hover:text-primary transition-colors">
+                <button 
+                  onClick={() => window.location.hash = '#community'} 
+                  className="hover:text-primary transition-colors text-left"
+                >
                   Community
-                </a>
+                </button>
               </li>
               <li>
-                <a href="#" className="hover:text-primary transition-colors">
+                <a 
+                  href="https://docs.succinct.xyz/"
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="hover:text-primary transition-colors"
+                >
                   Documentation
                 </a>
               </li>
@@ -71,17 +100,32 @@ export default function Footer() {
                 </a>
               </li>
               <li>
-                <a href="#" className="hover:text-primary transition-colors">
+                <a 
+                  href="https://docs.succinct.xyz/learning-resources" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="hover:text-primary transition-colors"
+                >
                   ZK Learning
                 </a>
               </li>
               <li>
-                <a href="#" className="hover:text-primary transition-colors">
+                <a 
+                  href="https://docs.succinct.xyz/api-reference" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="hover:text-primary transition-colors"
+                >
                   API Reference
                 </a>
               </li>
               <li>
-                <a href="#" className="hover:text-primary transition-colors">
+                <a 
+                  href="https://discord.gg/succinctlabs" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="hover:text-primary transition-colors"
+                >
                   Support
                 </a>
               </li>
@@ -92,10 +136,20 @@ export default function Footer() {
         <div className="border-t border-gray-800 mt-12 pt-8 flex flex-col md:flex-row justify-between items-center">
           <p className="text-gray-400 text-sm">© 2025 Succinct Labs. All rights reserved.</p>
           <div className="flex space-x-6 mt-4 md:mt-0">
-            <a href="#" className="text-gray-400 hover:text-primary text-sm transition-colors">
+            <a 
+              href="https://succinct.xyz/privacy" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="text-gray-400 hover:text-primary text-sm transition-colors"
+            >
               Privacy Policy
             </a>
-            <a href="#" className="text-gray-400 hover:text-primary text-sm transition-colors">
+            <a 
+              href="https://succinct.xyz/terms" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="text-gray-400 hover:text-primary text-sm transition-colors"
+            >
               Terms of Service
             </a>
           </div>
