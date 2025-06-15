@@ -127,6 +127,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         title: nftData.title,
         price: nftData.price,
         editionSize: nftData.editionSize,
+        walletAddress: user.walletAddress,
+        creditsBalance: user.credits || 0,
+        timestamp: Date.now(),
       });
 
       // Create NFT with ZK proof
@@ -138,7 +141,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         zkProofHash: zkProof.proofHash,
         ipfsHash: imageUpload.hash,
         currentEdition: 1,
-        isVerified: true,
         isListed: true,
       });
 
@@ -163,8 +165,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // NFT Purchase Route
-  app.post("/api/nfts/:id/purchase", async (req, res) => {
+  // NFT Purchase/Buy Route
+  app.post("/api/nfts/:id/buy", async (req, res) => {
     try {
       if (!req.isAuthenticated() || !req.user) {
         return res.status(401).json({ message: "Authentication required" });
@@ -196,12 +198,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
+      // Get seller wallet info
+      const sellerUser = await storage.getUser(nft.creatorId);
+      if (!sellerUser) {
+        return res.status(404).json({ message: "Seller not found" });
+      }
+
       // Generate ZK proof for transfer
       const zkProof = await sp1Service.generateTransferProof({
         nftId: nft.id,
         sellerId: nft.creatorId,
         buyerId: buyerId,
         price: nft.price,
+        sellerWallet: seller.walletAddress,
+        buyerWallet: buyer.walletAddress,
+        timestamp: Date.now(),
       });
 
       // Create transaction record

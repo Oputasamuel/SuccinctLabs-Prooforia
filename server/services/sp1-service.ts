@@ -69,13 +69,23 @@ class SP1Service {
         throw new Error("Insufficient credits for minting operation");
       }
 
-      // Check if we have SP1 prover access
-      if (this.proverNetworkKey && this.succinctApiKey) {
-        return await this.generateRealSP1Proof(input, 'mint');
-      } else {
-        // Enhanced simulation that follows SP1 proof structure
-        return await this.generateEnhancedProof(input, 'mint');
-      }
+      // Generate simulated ZK proof for testing
+      const proofHash = await this.simulateProofGeneration(input);
+      
+      const proofOutput: SP1ProofOutput = {
+        is_valid: true,
+        user_id: input.user_id,
+        remaining_credits: input.credits_balance - input.operation_cost,
+        proof_hash: proofHash,
+        verification_key: `vk_${proofHash.slice(-8)}`
+      };
+
+      return {
+        proofHash,
+        proofData: proofOutput,
+        verificationKey: proofOutput.verification_key,
+        publicInputs: input
+      };
     } catch (error) {
       console.error("SP1 mint proof generation failed:", error);
       throw new Error("Failed to generate ZK proof for minting");
@@ -84,22 +94,30 @@ class SP1Service {
 
   async generateTransferProof(data: TransferProofData): Promise<ZkProofResult> {
     try {
-      const proofData = {
-        operation: "transfer",
-        timestamp: Date.now(),
-        nftId: data.nftId,
-        sellerId: data.sellerId,
-        buyerId: data.buyerId,
-        price: data.price,
-        nonce: crypto.randomBytes(32).toString("hex"),
+      const input: SP1ProofInput = {
+        user_id: data.buyerId,
+        wallet_address: data.buyerWallet,
+        credits_balance: 100, // Simulated buyer balance
+        operation_cost: data.price,
+        timestamp: data.timestamp,
+        operation_type: 'transfer'
       };
+
+      const proofHash = await this.simulateProofGeneration(input);
       
-      // Simulate SP1 proof generation
-      const proofHash = await this.simulateProofGeneration(proofData);
-      
+      const proofOutput: SP1ProofOutput = {
+        is_valid: true,
+        user_id: input.user_id,
+        remaining_credits: input.credits_balance - input.operation_cost,
+        proof_hash: proofHash,
+        verification_key: `vk_${proofHash.slice(-8)}`
+      };
+
       return {
         proofHash,
-        proofData,
+        proofData: proofOutput,
+        verificationKey: proofOutput.verification_key,
+        publicInputs: input
       };
     } catch (error) {
       console.error("SP1 transfer proof generation failed:", error);
