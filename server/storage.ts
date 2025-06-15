@@ -54,6 +54,11 @@ export interface IStorage {
     proofHash: string 
   }): Promise<ZkProof>;
   
+  // Favorites operations
+  addFavorite(userId: number, nftId: number): Promise<void>;
+  removeFavorite(userId: number, nftId: number): Promise<void>;
+  getFavorites(userId: number): Promise<Nft[]>;
+  
   // Stats
   getStats(): Promise<{
     totalNfts: number;
@@ -68,6 +73,7 @@ export class MemStorage implements IStorage {
   private nfts: Map<number, Nft>;
   private transactions: Map<number, Transaction>;
   private zkProofs: Map<number, ZkProof>;
+  private favorites: Map<string, { userId: number; nftId: number }>;
   private currentUserId: number;
   private currentNftId: number;
   private currentTransactionId: number;
@@ -78,6 +84,7 @@ export class MemStorage implements IStorage {
     this.nfts = new Map();
     this.transactions = new Map();
     this.zkProofs = new Map();
+    this.favorites = new Map();
     this.currentUserId = 1;
     this.currentNftId = 1;
     this.currentTransactionId = 1;
