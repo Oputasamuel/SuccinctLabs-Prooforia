@@ -5,6 +5,8 @@ import {
   type Transaction, type InsertTransaction,
   type ZkProof
 } from "@shared/schema";
+import { db } from "./db";
+import { eq, and, or, desc, count, sum } from "drizzle-orm";
 
 export interface IStorage {
   // User operations
@@ -287,4 +289,160 @@ export class MemStorage implements IStorage {
   }
 }
 
-export const storage = new MemStorage();
+export class DatabaseStorage implements IStorage {
+  async getUser(id: number): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user || undefined;
+  }
+
+  async getUserByUsername(username: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.username, username));
+    return user || undefined;
+  }
+
+  async createUser(insertUser: InsertUser): Promise<User> {
+    const [user] = await db
+      .insert(users)
+      .values({
+        ...insertUser,
+        discordId: insertUser.discordId || null,
+      })
+      .returning();
+    return user;
+  }
+
+  async getNft(id: number): Promise<Nft | undefined> {
+    const [nft] = await db.select().from(nfts).where(eq(nfts.id, id));
+    return nft || undefined;
+  }
+
+  async getNfts(filters?: { category?: string; creatorId?: number; isListed?: boolean }): Promise<Nft[]> {
+    const conditions = [];
+    
+    if (filters?.category) {
+      conditions.push(eq(nfts.category, filters.category));
+    }
+    if (filters?.creatorId) {
+      conditions.push(eq(nfts.creatorId, filters.creatorId));
+    }
+    if (filters?.isListed !== undefined) {
+      conditions.push(eq(nfts.isListed, filters.isListed));
+    }
+    
+    if (conditions.length > 0) {
+      return db.select().from(nfts).where(and(...conditions)).orderBy(desc(nfts.createdAt));
+    }
+    
+    return db.select().from(nfts).orderBy(desc(nfts.createdAt));
+  }
+
+  async createNft(nftData: InsertNft & { 
+    creatorId: number; 
+    imageUrl: string; 
+    metadataUrl: string; 
+    zkProofHash: string; 
+    ipfsHash: string;
+    currentEdition: number;
+  }): Promise<Nft> {
+    const [nft] = await db
+      .insert(nfts)
+      .values({
+        ...nftData,
+        description: nftData.description || null,
+        isVerified: true,
+        isListed: true,
+      })
+      .returning();
+    return nft;
+  }
+
+  async updateNft(id: number, updates: Partial<Nft>): Promise<Nft> {
+    const [nft] = await db
+      .update(nfts)
+      .set(updates)
+      .where(eq(nfts.id, id))
+      .returning();
+    if (!nft) throw new Error("NFT not found");
+    return nft;
+  }
+
+  async getTransactions(userId?: number): Promise<Transaction[]> {
+    if (userId) {
+      return db.select().from(transactions).where(
+        or(
+          eq(transactions.buyerId, userId),
+          eq(transactions.sellerId, userId)
+        )
+      ).orderBy(desc(transactions.createdAt));
+    }
+    
+    return db.select().from(transactions).orderBy(desc(transactions.createdAt));
+  }
+
+  async createTransaction(transactionData: InsertTransaction & { 
+    zkProofHash: string; 
+    transactionHash?: string 
+  }): Promise<Transaction> {
+    const [transaction] = await db
+      .insert(transactions)
+      .values({
+        ...transactionData,
+        transactionHash: transactionData.transactionHash || null,
+      })
+      .returning();
+    return transaction;
+  }
+
+  async getZkProofs(userId: number): Promise<ZkProof[]> {
+    return db
+      .select()
+      .from(zkProofs)
+      .where(eq(zkProofs.userId, userId))
+      .orderBy(desc(zkProofs.createdAt));
+  }
+
+  async createZkProof(proofData: { 
+    userId: number; 
+    proofType: string; 
+    proofData: any; 
+    proofHash: string 
+  }): Promise<ZkProof> {
+    const [proof] = await db
+      .insert(zkProofs)
+      .values({
+        ...proofData,
+        isValid: true,
+      })
+      .returning();
+    return proof;
+  }
+
+  async getStats(): Promise<{
+    totalNfts: number;
+    activeArtists: number;
+    totalVolume: number;
+    communityMembers: number;
+  }> {
+    const [nftCount] = await db
+      .select({ count: count() })
+      .from(nfts);
+    
+    const [artistCount] = await db
+      .select({ count: count(users.id) })
+      .from(users)
+      .innerJoin(nfts, eq(users.id, nfts.creatorId));
+    
+    const [volumeResult] = await db
+      .select({ total: sum(transactions.price) })
+      .from(transactions);
+    
+    return {
+      totalNfts: nftCount.count,
+      activeArtists: artistCount.count,
+      totalVolume: Number(volumeResult.total) || 0,
+      communityMembers: 342, // Mock discord member count
+    };
+  }
+}
+
+export const storage = new DatabaseStorage();

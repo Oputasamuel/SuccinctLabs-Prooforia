@@ -1,4 +1,5 @@
 import { pgTable, text, serial, integer, boolean, timestamp, jsonb } from "drizzle-orm/pg-core";
+import { relations } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -69,6 +70,43 @@ export const insertTransactionSchema = createInsertSchema(transactions).pick({
   sellerId: true,
   price: true,
 });
+
+// Relations
+export const usersRelations = relations(users, ({ many }) => ({
+  nfts: many(nfts),
+  transactions: many(transactions),
+  zkProofs: many(zkProofs),
+}));
+
+export const nftsRelations = relations(nfts, ({ one, many }) => ({
+  creator: one(users, {
+    fields: [nfts.creatorId],
+    references: [users.id],
+  }),
+  transactions: many(transactions),
+}));
+
+export const transactionsRelations = relations(transactions, ({ one }) => ({
+  nft: one(nfts, {
+    fields: [transactions.nftId],
+    references: [nfts.id],
+  }),
+  buyer: one(users, {
+    fields: [transactions.buyerId],
+    references: [users.id],
+  }),
+  seller: one(users, {
+    fields: [transactions.sellerId],
+    references: [users.id],
+  }),
+}));
+
+export const zkProofsRelations = relations(zkProofs, ({ one }) => ({
+  user: one(users, {
+    fields: [zkProofs.userId],
+    references: [users.id],
+  }),
+}));
 
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
