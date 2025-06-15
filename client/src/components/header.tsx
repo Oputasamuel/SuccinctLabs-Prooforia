@@ -10,7 +10,8 @@ interface HeaderProps {
   currentUser?: AuthUser | null;
 }
 
-export default function Header({ activeTab, onTabChange, currentUser, onShowAuth }: HeaderProps) {
+export default function Header({ activeTab, onTabChange, currentUser }: HeaderProps) {
+  const { logoutMutation } = useAuth();
   return (
     <header className="bg-white border-b border-gray-100 sticky top-0 z-50 backdrop-blur-sm bg-white/95">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -60,36 +61,38 @@ export default function Header({ activeTab, onTabChange, currentUser, onShowAuth
             </button>
           </nav>
 
-          {/* Discord Authentication */}
+          {/* User Authentication */}
           {currentUser ? (
             <div className="flex items-center space-x-4">
               <div className="flex items-center space-x-3 bg-gray-50 rounded-lg px-3 py-2">
                 <div className="flex items-center space-x-2">
-                  <Wallet className="w-4 h-4 text-gray-600" />
-                  <span className="text-sm font-medium text-gray-700">
-                    {currentUser.testTokenBalance} tokens
-                  </span>
-                </div>
-                <div className="flex items-center space-x-2">
                   <Zap className="w-4 h-4 text-purple-600" />
                   <span className="text-sm font-medium text-purple-700">
-                    {currentUser.delegatedCredits} credits
+                    {currentUser.credits || 0} credits
                   </span>
                 </div>
               </div>
-              <div className="text-sm">
-                <span className="text-gray-600">Connected as </span>
-                <span className="font-medium text-gray-900">{currentUser.discordUsername}</span>
+              <div className="flex items-center space-x-2">
+                <Link href="/profile" className="text-sm font-medium text-gray-900 hover:text-primary">
+                  {currentUser.username}
+                </Link>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => logoutMutation.mutate()}
+                  disabled={logoutMutation.isPending}
+                >
+                  <LogOut className="w-4 h-4" />
+                </Button>
               </div>
             </div>
           ) : (
-            <Button 
-              onClick={onShowAuth}
-              className="btn-primary flex items-center space-x-2"
-            >
-              <User className="w-4 h-4" />
-              <span>Connect Discord</span>
-            </Button>
+            <Link href="/auth">
+              <Button className="bg-primary hover:bg-primary/90 text-white">
+                <User className="w-4 h-4 mr-2" />
+                Sign In
+              </Button>
+            </Link>
           )}
         </div>
       </div>

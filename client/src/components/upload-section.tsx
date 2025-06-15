@@ -13,18 +13,10 @@ import { Upload, Image, ShieldCheck, Zap, CheckCircle, Clock, AlertCircle } from
 import { apiRequest } from "@/lib/queryClient";
 import { validateFileType, validateFileSize } from "@/lib/utils";
 
-interface DiscordUser {
-  id: number;
-  username: string;
-  discordUsername: string;
-  discordAvatar: string;
-  walletAddress: string;
-  testTokenBalance: number;
-  delegatedCredits: number;
-}
+import { type AuthUser } from "@/hooks/use-auth";
 
 interface UploadSectionProps {
-  currentUser: DiscordUser;
+  currentUser: AuthUser;
 }
 
 export default function UploadSection({ currentUser }: UploadSectionProps) {
@@ -127,20 +119,11 @@ export default function UploadSection({ currentUser }: UploadSectionProps) {
       return;
     }
 
-    const mintingCost = 10;
-    if (currentUser.testTokenBalance < mintingCost) {
+    const mintingCost = 5;
+    if ((currentUser.credits || 0) < mintingCost) {
       toast({
-        title: "Insufficient Balance",
-        description: `You need at least ${mintingCost} test tokens to mint an NFT.`,
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (currentUser.delegatedCredits < 1) {
-      toast({
-        title: "Insufficient SP1 Credits",
-        description: "You need at least 1 SP1 credit to generate a proof for minting.",
+        title: "Insufficient Credits",
+        description: `You need at least ${mintingCost} credits to mint an NFT.`,
         variant: "destructive",
       });
       return;
