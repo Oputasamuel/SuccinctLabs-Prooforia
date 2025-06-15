@@ -44,6 +44,7 @@ export const transactions = pgTable("transactions", {
   buyerId: integer("buyer_id").references(() => users.id).notNull(),
   sellerId: integer("seller_id").references(() => users.id).notNull(),
   price: integer("price").notNull(),
+  transactionType: text("transaction_type").notNull().default("purchase"),
   zkProofHash: text("zk_proof_hash").notNull(),
   transactionHash: text("transaction_hash"),
   createdAt: timestamp("created_at").defaultNow(),
