@@ -18,14 +18,16 @@ interface DiscordTokenResponse {
 class DiscordService {
   private clientId = '1383812613640556679';
   private clientSecret = 'mBj7gItCTA3DOqDmls0VNqXC4zqPDmWJ';
-  private redirectUri = process.env.NODE_ENV === 'production' 
-    ? 'https://your-domain.replit.app/api/auth/discord/callback'
-    : 'http://localhost:5000/api/auth/discord/callback';
+  private getRedirectUri(): string {
+    const host = process.env.REPLIT_DEV_DOMAIN || 'localhost:5000';
+    const protocol = host.includes('localhost') ? 'http' : 'https';
+    return `${protocol}://${host}/api/auth/discord/callback`;
+  }
 
   getAuthUrl(): string {
     const params = new URLSearchParams({
       client_id: this.clientId,
-      redirect_uri: this.redirectUri,
+      redirect_uri: this.getRedirectUri(),
       response_type: 'code',
       scope: 'identify email',
     });
@@ -41,7 +43,7 @@ class DiscordService {
         client_secret: this.clientSecret,
         grant_type: 'authorization_code',
         code,
-        redirect_uri: this.redirectUri,
+        redirect_uri: this.getRedirectUri(),
       }),
       {
         headers: {

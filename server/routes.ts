@@ -15,6 +15,55 @@ import { walletService } from "./services/wallet-service";
 const upload = multer({ storage: multer.memoryStorage() });
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Demo Authentication Route (for testing)
+  app.post("/api/auth/demo", async (req, res) => {
+    try {
+      const { username } = req.body;
+      
+      if (!username) {
+        return res.status(400).json({ message: "Username is required" });
+      }
+
+      // Check if demo user already exists
+      let user = await storage.getUserByUsername(username);
+      
+      if (!user) {
+        // Generate new wallet for demo user
+        const wallet = walletService.generateWallet();
+        const encryptedPrivateKey = walletService.encryptPrivateKey(wallet.privateKey);
+        
+        // Create demo user with wallet
+        user = await storage.createDiscordUser({
+          username: username,
+          discordId: `demo_${Date.now()}`,
+          discordUsername: username,
+          discordAvatar: null,
+          walletAddress: wallet.address,
+          walletPrivateKey: encryptedPrivateKey,
+          walletPublicKey: wallet.publicKey,
+        });
+        
+        // Delegate initial credits
+        await walletService.delegateCredits(wallet.address, 10);
+      }
+      
+      const publicUser = {
+        id: user.id,
+        username: user.username,
+        discordUsername: user.discordUsername,
+        discordAvatar: user.discordAvatar,
+        walletAddress: user.walletAddress,
+        testTokenBalance: user.testTokenBalance,
+        delegatedCredits: user.delegatedCredits,
+      };
+      
+      res.json({ success: true, user: publicUser });
+    } catch (error) {
+      console.error("Demo auth error:", error);
+      res.status(500).json({ message: "Authentication failed" });
+    }
+  });
+
   // Discord Authentication Routes
   app.get("/api/auth/discord", (req, res) => {
     const authUrl = discordService.getAuthUrl();

@@ -6,7 +6,7 @@ import CommunitySection from "@/components/community-section";
 import SP1InfoSection from "@/components/sp1-info-section";
 import Footer from "@/components/footer";
 import DiscordAuth from "@/components/discord-auth";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { useState } from "react";
 
 interface DiscordUser {
@@ -61,6 +61,10 @@ export default function Home() {
 
       <Dialog open={showAuth} onOpenChange={setShowAuth}>
         <DialogContent className="max-w-md">
+          <DialogTitle className="sr-only">Discord Authentication</DialogTitle>
+          <DialogDescription className="sr-only">
+            Connect with Discord to create your NFT wallet and start minting
+          </DialogDescription>
           <DiscordAuth 
             onUserLogin={handleUserLogin}
             currentUser={currentUser}
