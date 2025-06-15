@@ -6,8 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useToast } from "@/hooks/use-toast";
-import { Wallet, ShoppingBag, Palette, TrendingUp, Copy, Share, Heart, HeartOff } from "lucide-react";
-import { Link } from "wouter";
+import { Wallet, ShoppingBag, Palette, TrendingUp, Copy, Share, Heart, HeartOff, Settings, Users, Eye } from "lucide-react";
+import { Link, useLocation } from "wouter";
 import { Nft, Transaction, ZkProof } from "@shared/schema";
 import Header from "@/components/header";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -36,6 +36,7 @@ interface UserProfile {
 export default function ProfilePage() {
   const { user } = useAuth();
   const { toast } = useToast();
+  const [location, setLocation] = useLocation();
 
   const { data: profile, isLoading } = useQuery<UserProfile>({
     queryKey: ["/api/profile"],
@@ -108,7 +109,7 @@ export default function ProfilePage() {
     <div className="min-h-screen bg-background">
       <Header 
         activeTab="marketplace" 
-        onTabChange={() => {}} 
+        onTabChange={(tab) => setLocation(`/${tab === 'marketplace' ? '' : tab}`)} 
         currentUser={user}
       />
       <div className="container mx-auto px-4 py-8 max-w-6xl">
@@ -171,14 +172,77 @@ export default function ProfilePage() {
           </div>
         </div>
 
-        {/* NFT Collections */}
-        <Tabs defaultValue="created" className="w-full">
-          <TabsList className="grid w-full grid-cols-4">
+        {/* Profile Sections */}
+        <Tabs defaultValue="overview" className="w-full">
+          <TabsList className="grid w-full grid-cols-7">
+            <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="created">Created NFTs</TabsTrigger>
             <TabsTrigger value="purchased">Purchased NFTs</TabsTrigger>
             <TabsTrigger value="favorited">Favorited NFTs</TabsTrigger>
-            <TabsTrigger value="activity">Activity</TabsTrigger>
+            <TabsTrigger value="wallet">Wallet</TabsTrigger>
+            <TabsTrigger value="social">Social</TabsTrigger>
+            <TabsTrigger value="settings">Settings</TabsTrigger>
           </TabsList>
+
+          <TabsContent value="overview" className="mt-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Eye className="h-5 w-5" />
+                    Quick Stats
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="flex justify-between">
+                    <span>NFTs Created:</span>
+                    <span className="font-semibold">{profile?.stats.totalCreated || 0}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>NFTs Purchased:</span>
+                    <span className="font-semibold">{profile?.stats.totalPurchased || 0}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Credits Earned:</span>
+                    <span className="font-semibold">{profile?.stats.totalEarned || 0}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Credits Spent:</span>
+                    <span className="font-semibold">{profile?.stats.totalSpent || 0}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Favorited NFTs:</span>
+                    <span className="font-semibold">{profile?.favoritedNfts?.length || 0}</span>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Recent Activity</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {profile?.transactions?.slice(0, 5).map((transaction) => (
+                    <div key={transaction.id} className="flex justify-between items-center py-2 border-b last:border-b-0">
+                      <div>
+                        <p className="font-medium text-sm">
+                          {transaction.transactionType === "purchase" ? "Purchased" : "Sold"} NFT
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {new Date(transaction.createdAt || '').toLocaleDateString()}
+                        </p>
+                      </div>
+                      <Badge variant="outline">
+                        {transaction.price} Credits
+                      </Badge>
+                    </div>
+                  )) || (
+                    <p className="text-muted-foreground text-center py-4">No recent activity</p>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
 
           <TabsContent value="created" className="mt-6">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -258,34 +322,198 @@ export default function ProfilePage() {
             </div>
           </TabsContent>
 
-          <TabsContent value="activity" className="mt-6">
-            <div className="space-y-4">
-              {profile?.transactions?.length ? (
-                profile.transactions.map((transaction) => (
-                  <Card key={transaction.id}>
-                    <CardContent className="p-4">
-                      <div className="flex justify-between items-center">
+          <TabsContent value="wallet" className="mt-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Wallet className="h-5 w-5" />
+                    Wallet Information
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Wallet Address</label>
+                    <div className="flex items-center gap-2">
+                      <code className="flex-1 p-2 bg-muted rounded text-sm break-all">
+                        {user.walletAddress}
+                      </code>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => {
+                          navigator.clipboard.writeText(user.walletAddress);
+                          toast({ title: "Copied!", description: "Wallet address copied to clipboard." });
+                        }}
+                      >
+                        <Copy className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="font-medium">Current Balance:</span>
+                    <span className="text-2xl font-bold text-primary">{user.credits || 0} Credits</span>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Transaction History</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2 max-h-64 overflow-y-auto">
+                    {profile?.transactions?.map((transaction) => (
+                      <div key={transaction.id} className="flex justify-between items-center p-2 rounded border">
                         <div>
-                          <p className="font-medium">
-                            {transaction.transactionType === "purchase" ? "Purchased" : "Sold"} NFT
+                          <p className="text-sm font-medium">
+                            {transaction.transactionType === "purchase" ? "Purchase" : "Sale"}
                           </p>
-                          <p className="text-sm text-muted-foreground">
-                            {transaction.price} Credits
+                          <p className="text-xs text-muted-foreground">
+                            {new Date(transaction.createdAt || '').toLocaleDateString()}
                           </p>
                         </div>
-                        <Badge variant="outline">
-                          {new Date(transaction.createdAt || '').toLocaleDateString()}
-                        </Badge>
+                        <span className={`font-semibold ${transaction.buyerId === user.id ? 'text-red-500' : 'text-green-500'}`}>
+                          {transaction.buyerId === user.id ? '-' : '+'}{transaction.price} Credits
+                        </span>
                       </div>
-                    </CardContent>
-                  </Card>
-                ))
-              ) : (
-                <div className="text-center py-12">
-                  <TrendingUp className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                  <p className="text-muted-foreground">No activity yet.</p>
-                </div>
-              )}
+                    )) || (
+                      <p className="text-muted-foreground text-center py-4">No transactions yet</p>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="social" className="mt-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Users className="h-5 w-5" />
+                    Social Connections
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="flex items-center justify-between p-3 border rounded">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 bg-blue-500 rounded flex items-center justify-center">
+                        <span className="text-white text-sm font-bold">D</span>
+                      </div>
+                      <div>
+                        <p className="font-medium">Discord</p>
+                        <p className="text-sm text-muted-foreground">
+                          {user.discordConnected ? user.discordUsername || 'Connected' : 'Not connected'}
+                        </p>
+                      </div>
+                    </div>
+                    <Badge variant={user.discordConnected ? "default" : "outline"}>
+                      {user.discordConnected ? 'Connected' : 'Disconnected'}
+                    </Badge>
+                  </div>
+
+                  <div className="flex items-center justify-between p-3 border rounded">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 bg-black rounded flex items-center justify-center">
+                        <span className="text-white text-sm font-bold">X</span>
+                      </div>
+                      <div>
+                        <p className="font-medium">X (Twitter)</p>
+                        <p className="text-sm text-muted-foreground">
+                          {user.xConnected ? user.xUsername || 'Connected' : 'Not connected'}
+                        </p>
+                      </div>
+                    </div>
+                    <Badge variant={user.xConnected ? "default" : "outline"}>
+                      {user.xConnected ? 'Connected' : 'Disconnected'}
+                    </Badge>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Social Stats</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="flex justify-between">
+                    <span>Profile Views:</span>
+                    <span className="font-semibold">847</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>NFTs Shared:</span>
+                    <span className="font-semibold">{profile?.stats.totalCreated || 0}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Community Rank:</span>
+                    <Badge variant="outline">Creator</Badge>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="settings" className="mt-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Settings className="h-5 w-5" />
+                    Account Settings
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Username</label>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="text"
+                        value={user.username}
+                        disabled
+                        className="flex-1 p-2 border rounded bg-muted"
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Email</label>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="email"
+                        value={user.email}
+                        disabled
+                        className="flex-1 p-2 border rounded bg-muted"
+                      />
+                    </div>
+                  </div>
+                  <Button variant="outline" className="w-full">
+                    Edit Profile
+                  </Button>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Preferences</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <span>Email Notifications</span>
+                    <Badge variant="outline">Enabled</Badge>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span>Public Profile</span>
+                    <Badge variant="outline">Visible</Badge>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span>NFT Notifications</span>
+                    <Badge variant="outline">Enabled</Badge>
+                  </div>
+                  <Button variant="outline" className="w-full">
+                    Update Preferences
+                  </Button>
+                </CardContent>
+              </Card>
             </div>
           </TabsContent>
         </Tabs>
