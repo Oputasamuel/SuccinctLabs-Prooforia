@@ -242,24 +242,40 @@ export default function CommunitySection() {
             ) : proofsData?.proofs && proofsData.proofs.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {proofsData.proofs.map((proof) => {
-                  const getProofTypeColor = (type: string) => {
+                  const getProofTypeColors = (type: string) => {
                     switch (type) {
-                      case 'mint': return 'green';
-                      case 'transfer': return 'blue';
-                      case 'verification': return 'purple';
-                      default: return 'gray';
+                      case 'mint': 
+                        return { 
+                          bg: 'bg-green-100', 
+                          icon: 'text-green-600' 
+                        };
+                      case 'transfer': 
+                        return { 
+                          bg: 'bg-blue-100', 
+                          icon: 'text-blue-600' 
+                        };
+                      case 'verification': 
+                        return { 
+                          bg: 'bg-purple-100', 
+                          icon: 'text-purple-600' 
+                        };
+                      default: 
+                        return { 
+                          bg: 'bg-gray-100', 
+                          icon: 'text-gray-600' 
+                        };
                     }
                   };
 
-                  const color = getProofTypeColor(proof.proof_type);
+                  const colors = getProofTypeColors(proof.proof_type);
                   const timeAgo = new Date(proof.created_at).toLocaleString();
 
                   return (
                     <Card key={proof.id}>
                       <CardContent className="p-6">
                         <div className="flex items-center space-x-3 mb-4">
-                          <div className={`w-10 h-10 bg-${color}-100 rounded-full flex items-center justify-center`}>
-                            <Shield className={`w-5 h-5 text-${color}-600`} />
+                          <div className={`w-10 h-10 ${colors.bg} rounded-full flex items-center justify-center`}>
+                            <Shield className={`w-5 h-5 ${colors.icon}`} />
                           </div>
                           <div>
                             <h4 className="font-semibold text-gray-900 capitalize">{proof.proof_type} Proof</h4>

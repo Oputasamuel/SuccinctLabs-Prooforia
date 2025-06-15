@@ -115,6 +115,8 @@ The application uses a PostgreSQL database with the following core entities:
 - **June 15, 2025**: Enhanced NFT minting with blockchain transactions and proof generation
 - **June 15, 2025**: Complete rebranding from "NFT Lab" to "SP1Mint" across all components
 - **June 15, 2025**: Implemented credits-only interface with 10 initial + social connection bonuses
+- **June 15, 2025**: Integrated Succinct API for live ZK proof display with 30-second auto-refresh
+- **June 15, 2025**: Removed Discord dependency for proof viewing - now displays directly from Succinct Network
 
 ## Changelog
 - June 15, 2025: Complete SP1Mint rebranding and authentication system migration
