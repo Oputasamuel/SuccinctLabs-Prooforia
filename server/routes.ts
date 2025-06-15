@@ -84,14 +84,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const { title, description, price, editionSize, category } = req.body;
 
-      // Validate request body
-      const nftData = insertNftSchema.parse({
-        title,
-        description,
-        price: parseFloat(price),
-        editionSize: parseInt(editionSize),
-        category,
-      });
+      // Debug logging to see what we're receiving
+      console.log('Received form data:', { title, description, price, editionSize, category });
+
+      // Validate required fields first
+      if (!title || !price) {
+        return res.status(400).json({ 
+          message: "Title and price are required fields" 
+        });
+      }
+
+      // Validate request body with proper type conversion
+      const parsedPrice = parseFloat(price);
+      const parsedEditionSize = parseInt(editionSize);
+
+      if (isNaN(parsedPrice) || parsedPrice <= 0) {
+        return res.status(400).json({ 
+          message: "Price must be a valid positive number" 
+        });
+      }
+
+      if (isNaN(parsedEditionSize) || parsedEditionSize <= 0) {
+        return res.status(400).json({ 
+          message: "Edition size must be a valid positive number" 
+        });
+      }
+
+      const nftData = {
+        title: title.trim(),
+        description: description || '',
+        price: parsedPrice,
+        editionSize: parsedEditionSize,
+        category: category || 'Digital Art',
+      };
 
       // Check if user has enough credits
       const user = req.user;

@@ -137,8 +137,8 @@ export default function UploadSection({ currentUser }: UploadSectionProps) {
       metadata: {
         title: formData.title,
         description: formData.description,
-        price: parseInt(formData.price),
-        editionSize: parseInt(formData.editionSize),
+        price: formData.price,
+        editionSize: formData.editionSize,
         category: formData.category,
       },
     });
