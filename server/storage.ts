@@ -162,6 +162,7 @@ export class MemStorage implements IStorage {
     const user: User = {
       ...insertUser,
       id,
+      discordId: insertUser.discordId || null,
       createdAt: new Date(),
     };
     this.users.set(id, user);
@@ -200,6 +201,7 @@ export class MemStorage implements IStorage {
     const nft: Nft = {
       ...nftData,
       id,
+      description: nftData.description || null,
       isVerified: true,
       isListed: true,
       createdAt: new Date(),
@@ -235,6 +237,7 @@ export class MemStorage implements IStorage {
     const transaction: Transaction = {
       ...transactionData,
       id,
+      transactionHash: transactionData.transactionHash || null,
       createdAt: new Date(),
     };
     this.transactions.set(id, transaction);

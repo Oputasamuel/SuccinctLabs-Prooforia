@@ -1,6 +1,10 @@
-import type { Express } from "express";
+import type { Express, Request } from "express";
 import { createServer, type Server } from "http";
 import multer from "multer";
+
+interface MulterRequest extends Request {
+  file?: Express.Multer.File;
+}
 import { storage } from "./storage";
 import { insertNftSchema } from "@shared/schema";
 import { sp1Service } from "./services/sp1-service";
@@ -59,7 +63,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Upload and mint NFT
-  app.post("/api/nfts/mint", upload.single("image"), async (req, res) => {
+  app.post("/api/nfts/mint", upload.single("image"), async (req: MulterRequest, res) => {
     try {
       if (!req.file) {
         return res.status(400).json({ message: "Image file is required" });

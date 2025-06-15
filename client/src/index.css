@@ -13,7 +13,7 @@
   --card-foreground: hsl(20, 14.3%, 4.1%);
   --border: hsl(20, 5.9%, 90%);
   --input: hsl(20, 5.9%, 90%);
-  --primary: hsl(325, 98%, 54%);
+  --primary: hsl(315, 100%, 54%);
   --primary-foreground: hsl(0, 0%, 100%);
   --secondary: hsl(60, 4.8%, 95.9%);
   --secondary-foreground: hsl(24, 9.8%, 10%);
@@ -21,12 +21,12 @@
   --accent-foreground: hsl(24, 9.8%, 10%);
   --destructive: hsl(0, 84.2%, 60.2%);
   --destructive-foreground: hsl(60, 9.1%, 97.8%);
-  --ring: hsl(20, 14.3%, 4.1%);
+  --ring: hsl(315, 100%, 54%);
   --radius: 0.5rem;
   
   /* Custom colors for the NFT marketplace */
-  --primary-pink: hsl(325, 98%, 54%);
-  --primary-pink-dark: hsl(325, 98%, 48%);
+  --primary-pink: hsl(315, 100%, 54%);
+  --primary-pink-dark: hsl(315, 100%, 48%);
   --success: hsl(142, 76%, 36%);
   --warning: hsl(38, 92%, 50%);
   --info: hsl(199, 89%, 48%);
@@ -67,11 +67,12 @@
 
 @layer components {
   .nft-card {
-    @apply bg-white rounded-2xl shadow-sm border border-gray-100 hover:shadow-lg transition-all duration-300 group;
+    @apply bg-white rounded-2xl shadow-sm border border-gray-100 hover:shadow-lg transition-all duration-300;
   }
 
   .zk-badge {
-    @apply bg-primary/90 text-white text-xs font-semibold px-2 py-1 rounded-full backdrop-blur-sm;
+    @apply bg-primary text-white text-xs font-semibold px-2 py-1 rounded-full backdrop-blur-sm;
+    background-color: hsl(315 100% 54% / 0.9);
   }
 
   .btn-primary {
@@ -83,7 +84,7 @@
   }
 
   .gradient-bg {
-    @apply bg-gradient-to-br from-primary/5 to-primary/10;
+    background: linear-gradient(to bottom right, hsl(315 100% 54% / 0.05), hsl(315 100% 54% / 0.1));
   }
 
   .animate-pulse-slow {
