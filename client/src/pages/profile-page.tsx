@@ -28,6 +28,7 @@ import {
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import Header from "@/components/header";
+import { useLocation } from "wouter";
 
 const discordSchema = z.object({
   discordUsername: z.string().min(1, "Discord username is required"),
@@ -50,6 +51,7 @@ interface WalletDetails {
 export default function ProfilePage() {
   const { user, connectDiscordMutation, connectXMutation } = useAuth();
   const { toast } = useToast();
+  const [, setLocation] = useLocation();
   const [showPrivateKey, setShowPrivateKey] = useState(false);
   const [copiedField, setCopiedField] = useState<string | null>(null);
 
@@ -106,6 +108,16 @@ export default function ProfilePage() {
     connectXMutation.mutate(data);
   };
 
+  const handleTabChange = (tab: "marketplace" | "community" | "upload") => {
+    if (tab === "marketplace") {
+      setLocation("/");
+    } else if (tab === "community") {
+      setLocation("/?tab=community");
+    } else if (tab === "upload") {
+      setLocation("/?tab=upload");
+    }
+  };
+
   if (!user) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -118,7 +130,7 @@ export default function ProfilePage() {
     <div className="min-h-screen bg-background">
       <Header 
         activeTab="marketplace" 
-        onTabChange={() => {}} 
+        onTabChange={handleTabChange} 
         currentUser={user}
       />
       <div className="container mx-auto px-4 py-8">

@@ -12,6 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Loader2, Wallet, Zap, Users } from "lucide-react";
 import { registerUserSchema } from "@shared/schema";
 import Header from "@/components/header";
+import { useLocation } from "wouter";
 
 const loginSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
@@ -24,6 +25,7 @@ type RegisterFormData = z.infer<typeof registerUserSchema>;
 export default function AuthPage() {
   const { user, loginMutation, registerMutation } = useAuth();
   const [activeTab, setActiveTab] = useState("login");
+  const [, setLocation] = useLocation();
 
   const loginForm = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
@@ -55,11 +57,21 @@ export default function AuthPage() {
     registerMutation.mutate(data);
   };
 
+  const handleTabChange = (tab: "marketplace" | "community" | "upload") => {
+    if (tab === "marketplace") {
+      setLocation("/");
+    } else if (tab === "community") {
+      setLocation("/?tab=community");
+    } else if (tab === "upload") {
+      setLocation("/?tab=upload");
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-muted/30 to-background">
       <Header 
         activeTab="marketplace" 
-        onTabChange={() => {}} 
+        onTabChange={handleTabChange} 
         currentUser={null}
       />
       <div className="flex items-center justify-center p-4" style={{ minHeight: 'calc(100vh - 64px)' }}>
