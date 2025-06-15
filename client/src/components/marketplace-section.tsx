@@ -43,9 +43,9 @@ export default function MarketplaceSection() {
           </div>
 
           {/* Filters */}
-          <div className="flex flex-col sm:flex-row gap-4 mt-6 md:mt-0">
+          <div className="flex flex-col sm:flex-row gap-4 mt-6 md:mt-0 w-full md:w-auto">
             <Select value={category} onValueChange={setCategory}>
-              <SelectTrigger className="w-48">
+              <SelectTrigger className="w-full sm:w-48">
                 <SelectValue placeholder="All Categories" />
               </SelectTrigger>
               <SelectContent>

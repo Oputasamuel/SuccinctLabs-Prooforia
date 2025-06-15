@@ -179,15 +179,15 @@ export default function ProfilePage() {
 
         {/* Profile Sections */}
         <Tabs defaultValue="overview" className="w-full">
-          <TabsList className="grid w-full grid-cols-8">
-            <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="created">Created NFTs</TabsTrigger>
-            <TabsTrigger value="purchased">Purchased NFTs</TabsTrigger>
-            <TabsTrigger value="favorited">Favorited NFTs</TabsTrigger>
-            <TabsTrigger value="activity">Activity</TabsTrigger>
-            <TabsTrigger value="wallet">Wallet</TabsTrigger>
-            <TabsTrigger value="social">Social</TabsTrigger>
-            <TabsTrigger value="settings">Settings</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-1">
+            <TabsTrigger value="overview" className="text-xs sm:text-sm">Overview</TabsTrigger>
+            <TabsTrigger value="created" className="text-xs sm:text-sm">Created</TabsTrigger>
+            <TabsTrigger value="purchased" className="text-xs sm:text-sm">Purchased</TabsTrigger>
+            <TabsTrigger value="favorited" className="text-xs sm:text-sm">Favorited</TabsTrigger>
+            <TabsTrigger value="activity" className="text-xs sm:text-sm">Activity</TabsTrigger>
+            <TabsTrigger value="wallet" className="text-xs sm:text-sm">Wallet</TabsTrigger>
+            <TabsTrigger value="social" className="text-xs sm:text-sm">Social</TabsTrigger>
+            <TabsTrigger value="settings" className="text-xs sm:text-sm">Settings</TabsTrigger>
           </TabsList>
 
           <TabsContent value="overview" className="mt-6">
