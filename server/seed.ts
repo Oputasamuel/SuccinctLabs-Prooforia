@@ -3,12 +3,8 @@ import { users, nfts, zkProofs } from "@shared/schema";
 
 export async function seedDatabase() {
   try {
-    // Check if data already exists
-    const existingUsers = await db.select().from(users).limit(1);
-    if (existingUsers.length > 0) {
-      console.log("Database already seeded, skipping...");
-      return;
-    }
+    // Force reseed with new prices - temporarily disable check
+    console.log("Force reseeding database with updated NFT prices...");
 
     console.log("Seeding database with initial data...");
 
@@ -67,7 +63,7 @@ export async function seedDatabase() {
         title: "SP1 Circuit Dreams",
         description: "A vibrant digital abstract art piece showcasing the beauty of zero-knowledge circuits",
         creatorId: artist1.id,
-        price: 80,
+        price: 0.5,
         editionSize: 10,
         currentEdition: 1,
         category: "Digital Art",
@@ -82,7 +78,7 @@ export async function seedDatabase() {
         title: "Cryptographic Mandala",
         description: "Sacred geometry meets cryptography in this unique mandala design",
         creatorId: artist2.id,
-        price: 45,
+        price: 0.8,
         editionSize: 1,
         currentEdition: 1,
         category: "Digital Art",
@@ -97,7 +93,7 @@ export async function seedDatabase() {
         title: "Succinct Genesis #1",
         description: "The first in a series celebrating the future of zero-knowledge proofs",
         creatorId: artist3.id,
-        price: 25,
+        price: 1.2,
         editionSize: 5,
         currentEdition: 3,
         category: "Generative Art",
@@ -112,7 +108,7 @@ export async function seedDatabase() {
         title: "ZK Abstracts",
         description: "Modern minimalist composition exploring the aesthetics of zero-knowledge",
         creatorId: artist1.id,
-        price: 120,
+        price: 0.3,
         editionSize: 1,
         currentEdition: 1,
         category: "Abstract",
