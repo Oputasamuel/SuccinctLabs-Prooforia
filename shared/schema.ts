@@ -60,6 +60,13 @@ export const zkProofs = pgTable("zk_proofs", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+export const favorites = pgTable("favorites", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id).notNull(),
+  nftId: integer("nft_id").references(() => nfts.id).notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 export const insertUserSchema = createInsertSchema(users).pick({
   username: true,
   email: true,
@@ -102,6 +109,7 @@ export const usersRelations = relations(users, ({ many }) => ({
   nfts: many(nfts),
   transactions: many(transactions),
   zkProofs: many(zkProofs),
+  favorites: many(favorites),
 }));
 
 export const nftsRelations = relations(nfts, ({ one, many }) => ({
@@ -110,6 +118,7 @@ export const nftsRelations = relations(nfts, ({ one, many }) => ({
     references: [users.id],
   }),
   transactions: many(transactions),
+  favorites: many(favorites),
 }));
 
 export const transactionsRelations = relations(transactions, ({ one }) => ({
@@ -134,6 +143,17 @@ export const zkProofsRelations = relations(zkProofs, ({ one }) => ({
   }),
 }));
 
+export const favoritesRelations = relations(favorites, ({ one }) => ({
+  user: one(users, {
+    fields: [favorites.userId],
+    references: [users.id],
+  }),
+  nft: one(nfts, {
+    fields: [favorites.nftId],
+    references: [nfts.id],
+  }),
+}));
+
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 export type InsertNft = z.infer<typeof insertNftSchema>;
@@ -141,3 +161,4 @@ export type Nft = typeof nfts.$inferSelect;
 export type InsertTransaction = z.infer<typeof insertTransactionSchema>;
 export type Transaction = typeof transactions.$inferSelect;
 export type ZkProof = typeof zkProofs.$inferSelect;
+export type Favorite = typeof favorites.$inferSelect;

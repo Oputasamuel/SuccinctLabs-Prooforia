@@ -7,6 +7,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Wallet, ShoppingBag, Palette, TrendingUp } from "lucide-react";
 import { Link } from "wouter";
 import { Nft, Transaction, ZkProof } from "@shared/schema";
+import Header from "@/components/header";
 
 interface NftWithCreator extends Nft {
   creator?: {
@@ -18,6 +19,7 @@ interface NftWithCreator extends Nft {
 interface UserProfile {
   createdNfts: NftWithCreator[];
   purchasedNfts: NftWithCreator[];
+  favoritedNfts: NftWithCreator[];
   transactions: Transaction[];
   zkProofs: ZkProof[];
   stats: {
