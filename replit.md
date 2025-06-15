@@ -121,6 +121,7 @@ The application uses a PostgreSQL database with the following core entities:
 - **June 15, 2025**: Implemented proper real-time updates for Community ZK Proofs section
 - **June 15, 2025**: Updated ZK proof refresh rate from 30 seconds to 5 seconds for more responsive live updates
 - **June 15, 2025**: Implemented NFT Metadata Whisper Effect with elegant hover animations revealing hidden details
+- **June 15, 2025**: Reduced NFT prices to 1-2 credits for easy testing and minting functionality
 
 ## Changelog
 - June 15, 2025: Complete SP1Mint rebranding and authentication system migration
