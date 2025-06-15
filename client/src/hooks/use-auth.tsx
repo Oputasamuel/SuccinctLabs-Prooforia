@@ -38,6 +38,7 @@ type AuthContextType = {
   logoutMutation: UseMutationResult<void, Error, void>;
   connectDiscordMutation: UseMutationResult<AuthUser, Error, { discordUsername: string; discordAvatar?: string }>;
   connectXMutation: UseMutationResult<AuthUser, Error, { xUsername: string }>;
+  refreshUser: () => void;
 };
 
 export const AuthContext = createContext<AuthContextType | null>(null);

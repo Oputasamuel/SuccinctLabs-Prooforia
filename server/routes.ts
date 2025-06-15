@@ -235,9 +235,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       await storage.updateUserCredits(buyerId, buyer.credits - requiredCredits);
 
       // Update seller credits (they receive the payment)
-      const seller = await storage.getUser(nft.creatorId);
-      if (seller && seller.credits !== null) {
-        await storage.updateUserCredits(nft.creatorId, seller.credits + requiredCredits);
+      const sellerForUpdate = await storage.getUser(nft.creatorId);
+      if (sellerForUpdate && sellerForUpdate.credits !== null) {
+        await storage.updateUserCredits(nft.creatorId, sellerForUpdate.credits + requiredCredits);
       }
 
       // Store ZK proof
@@ -319,6 +319,68 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Get proof by ID error:", error);
       res.status(500).json({ message: "Failed to fetch proof" });
+    }
+  });
+
+  // User Profile Route
+  app.get("/api/profile", async (req, res) => {
+    try {
+      if (!req.isAuthenticated() || !req.user) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+
+      const userId = req.user.id;
+
+      // Get user's created NFTs
+      const createdNfts = await storage.getNfts({ creatorId: userId });
+
+      // Get user's purchased NFTs (from transactions)
+      const userTransactions = await storage.getTransactions(userId);
+      const purchasedNftIds = userTransactions
+        .filter(t => t.buyerId === userId)
+        .map(t => t.nftId);
+      
+      const purchasedNfts = [];
+      for (const nftId of purchasedNftIds) {
+        const nft = await storage.getNft(nftId);
+        if (nft) {
+          const creator = await storage.getUser(nft.creatorId);
+          purchasedNfts.push({
+            ...nft,
+            creator: creator ? { id: creator.id, username: creator.username } : null
+          });
+        }
+      }
+
+      // Calculate stats
+      const totalSpent = userTransactions
+        .filter(t => t.buyerId === userId)
+        .reduce((sum, t) => sum + t.price, 0);
+      
+      const totalEarned = userTransactions
+        .filter(t => t.sellerId === userId)
+        .reduce((sum, t) => sum + t.price, 0);
+
+      const profile = {
+        createdNfts: createdNfts.map(nft => ({
+          ...nft,
+          creator: { id: req.user.id, username: req.user.username }
+        })),
+        purchasedNfts,
+        transactions: userTransactions,
+        zkProofs: await storage.getZkProofs(userId),
+        stats: {
+          totalCreated: createdNfts.length,
+          totalPurchased: purchasedNfts.length,
+          totalSpent,
+          totalEarned
+        }
+      };
+
+      res.json(profile);
+    } catch (error) {
+      console.error("Profile fetch error:", error);
+      res.status(500).json({ message: "Failed to fetch profile" });
     }
   });
 
