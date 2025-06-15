@@ -1,5 +1,5 @@
 import { 
-  users, nfts, transactions, zkProofs,
+  users, nfts, transactions, zkProofs, favorites,
   type User, type InsertUser, 
   type Nft, type InsertNft,
   type Transaction, type InsertTransaction,
@@ -342,6 +342,57 @@ export class MemStorage implements IStorage {
     return proof;
   }
 
+  async addFavorite(userId: number, nftId: number): Promise<void> {
+    const key = `${userId}-${nftId}`;
+    this.favorites.set(key, { userId, nftId });
+  }
+
+  async removeFavorite(userId: number, nftId: number): Promise<void> {
+    const key = `${userId}-${nftId}`;
+    this.favorites.delete(key);
+  }
+
+  async getFavorites(userId: number): Promise<Nft[]> {
+    const userFavorites = Array.from(this.favorites.values())
+      .filter(fav => fav.userId === userId)
+      .map(fav => fav.nftId);
+    
+    return userFavorites
+      .map(nftId => this.nfts.get(nftId))
+      .filter((nft): nft is Nft => nft !== undefined);
+  }
+
+  async getUserByEmail(email: string): Promise<User | undefined> {
+    return Array.from(this.users.values()).find(user => user.email === email);
+  }
+
+  async connectDiscord(userId: number, discordUsername: string, discordAvatar?: string): Promise<User> {
+    const user = this.users.get(userId);
+    if (!user) throw new Error("User not found");
+    
+    const updatedUser = {
+      ...user,
+      discordConnected: true,
+      discordUsername,
+      discordAvatar: discordAvatar || null,
+    };
+    this.users.set(userId, updatedUser);
+    return updatedUser;
+  }
+
+  async connectX(userId: number, xUsername: string): Promise<User> {
+    const user = this.users.get(userId);
+    if (!user) throw new Error("User not found");
+    
+    const updatedUser = {
+      ...user,
+      xConnected: true,
+      xUsername,
+    };
+    this.users.set(userId, updatedUser);
+    return updatedUser;
+  }
+
   async getStats(): Promise<{
     totalNfts: number;
     activeArtists: number;
@@ -351,7 +402,7 @@ export class MemStorage implements IStorage {
     const totalNfts = this.nfts.size;
     const activeArtists = new Set(Array.from(this.nfts.values()).map(nft => nft.creatorId)).size;
     const totalVolume = Array.from(this.transactions.values()).reduce((sum, tx) => sum + tx.price, 0);
-    const communityMembers = 342; // Mock discord member count
+    const communityMembers = 342;
     
     return {
       totalNfts,
@@ -560,6 +611,39 @@ export class DatabaseStorage implements IStorage {
     return proof;
   }
 
+  async addFavorite(userId: number, nftId: number): Promise<void> {
+    await db.insert(favorites).values({ userId, nftId });
+  }
+
+  async removeFavorite(userId: number, nftId: number): Promise<void> {
+    await db.delete(favorites)
+      .where(and(eq(favorites.userId, userId), eq(favorites.nftId, nftId)));
+  }
+
+  async getFavorites(userId: number): Promise<Nft[]> {
+    return db
+      .select({
+        id: nfts.id,
+        title: nfts.title,
+        description: nfts.description,
+        creatorId: nfts.creatorId,
+        imageUrl: nfts.imageUrl,
+        metadataUrl: nfts.metadataUrl,
+        price: nfts.price,
+        editionSize: nfts.editionSize,
+        currentEdition: nfts.currentEdition,
+        category: nfts.category,
+        zkProofHash: nfts.zkProofHash,
+        ipfsHash: nfts.ipfsHash,
+        isVerified: nfts.isVerified,
+        isListed: nfts.isListed,
+        createdAt: nfts.createdAt,
+      })
+      .from(favorites)
+      .innerJoin(nfts, eq(favorites.nftId, nfts.id))
+      .where(eq(favorites.userId, userId));
+  }
+
   async getStats(): Promise<{
     totalNfts: number;
     activeArtists: number;
@@ -583,7 +667,7 @@ export class DatabaseStorage implements IStorage {
       totalNfts: nftCount.count,
       activeArtists: artistCount.count,
       totalVolume: Number(volumeResult.total) || 0,
-      communityMembers: 342, // Mock discord member count
+      communityMembers: 342,
     };
   }
 }

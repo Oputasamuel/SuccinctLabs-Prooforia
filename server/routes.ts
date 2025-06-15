@@ -309,6 +309,87 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Favorites Routes
+  app.post("/api/nfts/:id/favorite", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Authentication required" });
+    }
+
+    try {
+      const nftId = parseInt(req.params.id);
+      const userId = req.user.id;
+      const { action } = req.body;
+
+      if (action === 'add') {
+        await storage.addFavorite(userId, nftId);
+        res.json({ message: "Added to favorites" });
+      } else if (action === 'remove') {
+        await storage.removeFavorite(userId, nftId);
+        res.json({ message: "Removed from favorites" });
+      } else {
+        res.status(400).json({ message: "Invalid action" });
+      }
+    } catch (error) {
+      console.error("Favorite action error:", error);
+      res.status(500).json({ message: "Failed to update favorite" });
+    }
+  });
+
+  // Profile Route - Enhanced with favorited NFTs
+  app.get("/api/profile", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Authentication required" });
+    }
+
+    try {
+      const userId = req.user.id;
+
+      // Get created NFTs
+      const createdNfts = await storage.getNfts({ creatorId: userId });
+      
+      // Get purchased NFTs (from transactions)
+      const transactions = await storage.getTransactions(userId);
+      const purchasedNftIds = transactions
+        .filter(tx => tx.buyerId === userId)
+        .map(tx => tx.nftId);
+      
+      const purchasedNfts = [];
+      for (const nftId of purchasedNftIds) {
+        const nft = await storage.getNft(nftId);
+        if (nft) purchasedNfts.push(nft);
+      }
+
+      // Get favorited NFTs
+      const favoritedNfts = await storage.getFavorites(userId);
+
+      // Calculate stats
+      const totalEarned = transactions
+        .filter(tx => tx.sellerId === userId)
+        .reduce((sum, tx) => sum + tx.price, 0);
+      
+      const totalSpent = transactions
+        .filter(tx => tx.buyerId === userId)
+        .reduce((sum, tx) => sum + tx.price, 0);
+
+      res.json({
+        createdNfts,
+        purchasedNfts,
+        favoritedNfts,
+        transactions,
+        zkProofs: await storage.getZkProofs(userId),
+        stats: {
+          totalCreated: createdNfts.length,
+          totalPurchased: purchasedNfts.length,
+          totalSpent,
+          totalEarned,
+        },
+      });
+    } catch (error) {
+      console.error("Get profile error:", error);
+      res.status(500).json({ message: "Failed to fetch profile" });
+    }
+  });
+
   // Stats Route
   app.get("/api/stats", async (req, res) => {
     try {
