@@ -76,7 +76,12 @@
   }
 
   .btn-primary {
-    @apply bg-primary hover:bg-primary-pink-dark text-white font-medium transition-colors;
+    @apply bg-primary text-white font-medium transition-colors;
+    background-color: hsl(315, 100%, 54%);
+  }
+  
+  .btn-primary:hover {
+    background-color: hsl(315, 100%, 48%);
   }
 
   .btn-secondary {
