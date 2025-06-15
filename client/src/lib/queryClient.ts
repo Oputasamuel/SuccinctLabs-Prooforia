@@ -2,8 +2,22 @@ import { QueryClient, QueryFunction } from "@tanstack/react-query";
 
 async function throwIfResNotOk(res: Response) {
   if (!res.ok) {
-    const text = (await res.text()) || res.statusText;
-    throw new Error(`${res.status}: ${text}`);
+    try {
+      const contentType = res.headers.get("content-type");
+      if (contentType && contentType.includes("application/json")) {
+        const errorData = await res.json();
+        throw new Error(errorData.message || errorData.error || `HTTP ${res.status}`);
+      } else {
+        const text = await res.text();
+        // If we get HTML (like an error page), extract meaningful error
+        if (text.includes("<!DOCTYPE html>")) {
+          throw new Error(`Server error (${res.status}). Please check your connection and try again.`);
+        }
+        throw new Error(text || res.statusText || `HTTP ${res.status}`);
+      }
+    } catch (parseError) {
+      throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+    }
   }
 }
 
@@ -12,10 +26,12 @@ export async function apiRequest(
   url: string,
   data?: unknown | undefined,
 ): Promise<Response> {
+  const isFormData = data instanceof FormData;
+  
   const res = await fetch(url, {
     method,
-    headers: data ? { "Content-Type": "application/json" } : {},
-    body: data ? JSON.stringify(data) : undefined,
+    headers: isFormData ? {} : data ? { "Content-Type": "application/json" } : {},
+    body: isFormData ? data : data ? JSON.stringify(data) : undefined,
     credentials: "include",
   });
 
