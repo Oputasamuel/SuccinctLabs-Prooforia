@@ -19,7 +19,7 @@ export default function UploadSection() {
     description: "",
     price: "",
     editionSize: "1",
-    category: "",
+    category: "Digital Art",
   });
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);

@@ -17,7 +17,7 @@ interface NftWithCreator extends Nft {
 }
 
 export default function MarketplaceSection() {
-  const [category, setCategory] = useState<string>("");
+  const [category, setCategory] = useState<string>("all");
   const [sortBy, setSortBy] = useState<string>("recent");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
 
