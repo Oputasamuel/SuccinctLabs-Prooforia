@@ -6,6 +6,7 @@ import { scrypt, randomBytes, timingSafeEqual } from "crypto";
 import { promisify } from "util";
 import { storage } from "./storage";
 import { User as SelectUser } from "@shared/schema";
+import { walletService } from "./services/wallet-service";
 import connectPg from "connect-pg-simple";
 import { pool } from "./db";
 
@@ -267,7 +268,6 @@ export function setupAuth(app: Express) {
     }
 
     try {
-      const { walletService } = require("./services/wallet-service");
       const privateKey = walletService.decryptPrivateKey(req.user.walletPrivateKey);
       
       res.json({
