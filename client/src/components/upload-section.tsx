@@ -13,7 +13,21 @@ import { Upload, Image, ShieldCheck, Zap, CheckCircle, Clock, AlertCircle } from
 import { apiRequest } from "@/lib/queryClient";
 import { validateFileType, validateFileSize } from "@/lib/utils";
 
-export default function UploadSection() {
+interface DiscordUser {
+  id: number;
+  username: string;
+  discordUsername: string;
+  discordAvatar: string;
+  walletAddress: string;
+  testTokenBalance: number;
+  delegatedCredits: number;
+}
+
+interface UploadSectionProps {
+  currentUser: DiscordUser;
+}
+
+export default function UploadSection({ currentUser }: UploadSectionProps) {
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -35,14 +49,15 @@ export default function UploadSection() {
       formData.append("price", data.metadata.price.toString());
       formData.append("editionSize", data.metadata.editionSize.toString());
       formData.append("category", data.metadata.category);
+      formData.append("userId", currentUser.id.toString());
 
       const response = await apiRequest("POST", "/api/nfts/mint", formData);
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       toast({
         title: "NFT Minted Successfully!",
-        description: "Your NFT has been minted with ZK proof verification.",
+        description: `Transaction: ${data.transactionHash?.slice(0, 10)}... | Proof: ${data.proofHash?.slice(0, 10)}...`,
       });
       queryClient.invalidateQueries({ queryKey: ["/api/nfts"] });
       resetForm();
