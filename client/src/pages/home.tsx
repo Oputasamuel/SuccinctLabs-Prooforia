@@ -42,7 +42,7 @@ export default function Home() {
         </>
       )}
       
-      <Footer />
+      <Footer onTabChange={handleTabChange} />
     </div>
   );
 }

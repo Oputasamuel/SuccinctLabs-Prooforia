@@ -2,7 +2,11 @@ import { Badge } from "@/components/ui/badge";
 import { Zap, Twitter, Github } from "lucide-react";
 import { SiDiscord } from "react-icons/si";
 
-export default function Footer() {
+interface FooterProps {
+  onTabChange?: (tab: "marketplace" | "community" | "upload") => void;
+}
+
+export default function Footer({ onTabChange }: FooterProps) {
   return (
     <footer className="bg-gray-900 text-white py-16">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -51,7 +55,7 @@ export default function Footer() {
             <ul className="space-y-2 text-gray-400">
               <li>
                 <button 
-                  onClick={() => window.location.hash = '#marketplace'} 
+                  onClick={() => onTabChange?.("marketplace")} 
                   className="hover:text-primary transition-colors text-left"
                 >
                   Marketplace
@@ -59,7 +63,7 @@ export default function Footer() {
               </li>
               <li>
                 <button 
-                  onClick={() => window.location.hash = '#upload'} 
+                  onClick={() => onTabChange?.("upload")} 
                   className="hover:text-primary transition-colors text-left"
                 >
                   Upload Art
@@ -67,7 +71,7 @@ export default function Footer() {
               </li>
               <li>
                 <button 
-                  onClick={() => window.location.hash = '#community'} 
+                  onClick={() => onTabChange?.("community")} 
                   className="hover:text-primary transition-colors text-left"
                 >
                   Community
