@@ -205,7 +205,7 @@ export default function CommunitySection({ onNavigateToUpload }: CommunitySectio
             <div className="text-center mb-8">
               <h3 className="text-2xl font-bold text-gray-900 mb-4">Zero-Knowledge Proofs</h3>
               <p className="text-gray-600 mb-4">
-                Live proofs from the Succinct Network - updates every 30 seconds
+                Live proofs from the Succinct Network - updates every 5 seconds
               </p>
               <div className="flex items-center justify-center gap-4 text-sm text-gray-500">
                 <div className="flex items-center gap-2">
