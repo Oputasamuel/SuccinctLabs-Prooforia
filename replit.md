@@ -1,8 +1,8 @@
-# NFT Marketplace with Zero-Knowledge Proofs
+# SP1Mint - Zero-Knowledge NFT Minting Platform
 
 ## Overview
 
-This application is a modern NFT marketplace built with zero-knowledge proof technology using SP1 zkVM. The platform allows users to create, mint, trade, and verify digital art NFTs with cryptographic proof ensuring privacy and authenticity. The application features a React-based frontend with a Node.js/Express backend, utilizing PostgreSQL for data persistence and Drizzle ORM for database operations.
+SP1Mint is a modern NFT minting platform built with zero-knowledge proof technology using SP1 zkVM. The platform allows users to create, mint, and trade digital art NFTs with cryptographic proof ensuring privacy and authenticity. The application features email/password authentication, automatic wallet generation, and a credits-based economy. Built with React frontend and Node.js/Express backend, utilizing PostgreSQL for data persistence and Drizzle ORM for database operations.
 
 ## System Architecture
 

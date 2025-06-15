@@ -5,39 +5,14 @@ import MarketplaceSection from "@/components/marketplace-section";
 import CommunitySection from "@/components/community-section";
 import SP1InfoSection from "@/components/sp1-info-section";
 import Footer from "@/components/footer";
-import DiscordAuth from "@/components/discord-auth";
-import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { useAuth } from "@/hooks/use-auth";
 import { useState } from "react";
-
-interface DiscordUser {
-  id: number;
-  username: string;
-  discordUsername: string;
-  discordAvatar: string;
-  walletAddress: string;
-  testTokenBalance: number;
-  delegatedCredits: number;
-}
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState<"marketplace" | "community" | "upload">("marketplace");
-  const [currentUser, setCurrentUser] = useState<DiscordUser | null>(null);
-  const [showAuth, setShowAuth] = useState(false);
-
-  const handleUserLogin = (user: DiscordUser | null) => {
-    setCurrentUser(user);
-    setShowAuth(false);
-  };
-
-  const handleShowAuth = () => {
-    setShowAuth(true);
-  };
+  const { user } = useAuth();
 
   const handleTabChange = (tab: "marketplace" | "community" | "upload") => {
-    if (tab === "upload" && !currentUser) {
-      setShowAuth(true);
-      return;
-    }
     setActiveTab(tab);
   };
 
@@ -46,31 +21,28 @@ export default function Home() {
       <Header 
         activeTab={activeTab} 
         onTabChange={handleTabChange}
-        currentUser={currentUser}
-        onShowAuth={handleShowAuth}
+        currentUser={user}
       />
       
-      {activeTab === "marketplace" && <HeroSection onStartCreating={() => handleTabChange("upload")} />}
+      {activeTab === "marketplace" && (
+        <>
+          <HeroSection onStartCreating={() => handleTabChange("upload")} />
+          <MarketplaceSection />
+        </>
+      )}
       
-      {activeTab === "upload" && currentUser && <UploadSection currentUser={currentUser} />}
-      {activeTab === "marketplace" && <MarketplaceSection />}
-      {activeTab === "community" && <CommunitySection />}
+      {activeTab === "upload" && user && (
+        <UploadSection currentUser={user} />
+      )}
       
-      <SP1InfoSection />
+      {activeTab === "community" && (
+        <>
+          <CommunitySection />
+          <SP1InfoSection />
+        </>
+      )}
+      
       <Footer />
-
-      <Dialog open={showAuth} onOpenChange={setShowAuth}>
-        <DialogContent className="max-w-md">
-          <DialogTitle className="sr-only">Discord Authentication</DialogTitle>
-          <DialogDescription className="sr-only">
-            Connect with Discord to create your NFT wallet and start minting
-          </DialogDescription>
-          <DiscordAuth 
-            onUserLogin={handleUserLogin}
-            currentUser={currentUser}
-          />
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }

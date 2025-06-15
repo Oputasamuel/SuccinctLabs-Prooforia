@@ -120,7 +120,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     onSuccess: (user: AuthUser) => {
       queryClient.setQueryData(["/api/user"], user);
       toast({
-        title: "Welcome to NFT Lab!",
+        title: "Welcome to SP1Mint!",
         description: `Account created successfully. You have ${user.credits} credits to start minting.`,
       });
     },
