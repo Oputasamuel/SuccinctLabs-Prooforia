@@ -122,3 +122,9 @@ The application uses a PostgreSQL database with the following core entities:
 ## User Preferences
 
 Preferred communication style: Simple, everyday language.
+
+## Demo Account
+- Email: zedef0808@gmail.com
+- Password: 1234
+- Username: sam
+- Created: June 15, 2025
