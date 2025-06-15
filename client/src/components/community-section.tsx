@@ -159,7 +159,7 @@ export default function CommunitySection({ onNavigateToUpload }: CommunitySectio
             )}
 
             {/* Community Stats */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-6">
               {statsLoading ? (
                 Array.from({ length: 4 }).map((_, i) => (
                   <div key={i} className="text-center">
