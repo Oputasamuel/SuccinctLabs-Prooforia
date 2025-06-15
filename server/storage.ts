@@ -171,6 +171,60 @@ export class MemStorage implements IStorage {
     return Array.from(this.users.values()).find(user => user.username === username);
   }
 
+  async getUserByDiscordId(discordId: string): Promise<User | undefined> {
+    return Array.from(this.users.values()).find(user => user.discordId === discordId);
+  }
+
+  async createDiscordUser(userData: {
+    username: string;
+    discordId: string;
+    discordUsername: string;
+    discordAvatar?: string | null;
+    walletAddress: string;
+    walletPrivateKey: string;
+    walletPublicKey: string;
+  }): Promise<User> {
+    const user: User = {
+      id: this.currentUserId++,
+      username: userData.username,
+      password: null,
+      discordId: userData.discordId,
+      discordUsername: userData.discordUsername,
+      discordAvatar: userData.discordAvatar || null,
+      walletAddress: userData.walletAddress,
+      walletPrivateKey: userData.walletPrivateKey,
+      walletPublicKey: userData.walletPublicKey,
+      testTokenBalance: 100,
+      delegatedCredits: 10,
+      createdAt: new Date(),
+    };
+    
+    this.users.set(user.id, user);
+    return user;
+  }
+
+  async updateUserCredits(userId: number, credits: number): Promise<User> {
+    const user = this.users.get(userId);
+    if (!user) {
+      throw new Error('User not found');
+    }
+    
+    user.delegatedCredits = credits;
+    this.users.set(userId, user);
+    return user;
+  }
+
+  async updateUserTokenBalance(userId: number, balance: number): Promise<User> {
+    const user = this.users.get(userId);
+    if (!user) {
+      throw new Error('User not found');
+    }
+    
+    user.testTokenBalance = balance;
+    this.users.set(userId, user);
+    return user;
+  }
+
   async createUser(insertUser: InsertUser): Promise<User> {
     const id = this.currentUserId++;
     const user: User = {
