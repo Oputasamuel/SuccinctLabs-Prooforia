@@ -27,6 +27,7 @@ import {
   Loader2
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import Header from "@/components/header";
 
 const discordSchema = z.object({
   discordUsername: z.string().min(1, "Discord username is required"),
@@ -115,6 +116,11 @@ export default function ProfilePage() {
 
   return (
     <div className="min-h-screen bg-background">
+      <Header 
+        activeTab="marketplace" 
+        onTabChange={() => {}} 
+        currentUser={user}
+      />
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-4xl mx-auto space-y-8">
           {/* Profile Header */}

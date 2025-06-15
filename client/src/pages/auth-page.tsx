@@ -11,6 +11,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Loader2, Wallet, Zap, Users } from "lucide-react";
 import { registerUserSchema } from "@shared/schema";
+import Header from "@/components/header";
 
 const loginSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
@@ -55,8 +56,14 @@ export default function AuthPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-muted/30 to-background flex items-center justify-center p-4">
-      <div className="w-full max-w-6xl grid lg:grid-cols-2 gap-8 items-center">
+    <div className="min-h-screen bg-gradient-to-br from-background via-muted/30 to-background">
+      <Header 
+        activeTab="marketplace" 
+        onTabChange={() => {}} 
+        currentUser={null}
+      />
+      <div className="flex items-center justify-center p-4" style={{ minHeight: 'calc(100vh - 64px)' }}>
+        <div className="w-full max-w-6xl grid lg:grid-cols-2 gap-8 items-center">
         {/* Left side - Auth forms */}
         <div className="w-full max-w-md mx-auto lg:mx-0">
           <div className="text-center mb-8">
@@ -267,6 +274,7 @@ export default function AuthPage() {
             </div>
           </div>
         </div>
+      </div>
       </div>
     </div>
   );
