@@ -9,6 +9,8 @@ import { storage } from "./storage";
 import { insertNftSchema } from "@shared/schema";
 import { sp1Service } from "./services/sp1-service";
 import { ipfsService } from "./services/ipfs-service";
+import { discordService } from "./services/discord-service";
+import { walletService } from "./services/wallet-service";
 
 const upload = multer({ storage: multer.memoryStorage() });
 

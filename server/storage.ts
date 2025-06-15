@@ -312,6 +312,11 @@ export class DatabaseStorage implements IStorage {
     return user || undefined;
   }
 
+  async getUserByDiscordId(discordId: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.discordId, discordId));
+    return user || undefined;
+  }
+
   async createUser(insertUser: InsertUser): Promise<User> {
     const [user] = await db
       .insert(users)
@@ -320,6 +325,53 @@ export class DatabaseStorage implements IStorage {
         discordId: insertUser.discordId || null,
       })
       .returning();
+    return user;
+  }
+
+  async createDiscordUser(userData: {
+    username: string;
+    discordId: string;
+    discordUsername: string;
+    discordAvatar?: string;
+    walletAddress: string;
+    walletPrivateKey: string;
+    walletPublicKey: string;
+  }): Promise<User> {
+    const [user] = await db
+      .insert(users)
+      .values({
+        username: userData.username,
+        discordId: userData.discordId,
+        discordUsername: userData.discordUsername,
+        discordAvatar: userData.discordAvatar || null,
+        walletAddress: userData.walletAddress,
+        walletPrivateKey: userData.walletPrivateKey,
+        walletPublicKey: userData.walletPublicKey,
+        testTokenBalance: 100,
+        delegatedCredits: 10,
+        password: null,
+      })
+      .returning();
+    return user;
+  }
+
+  async updateUserCredits(userId: number, credits: number): Promise<User> {
+    const [user] = await db
+      .update(users)
+      .set({ delegatedCredits: credits })
+      .where(eq(users.id, userId))
+      .returning();
+    if (!user) throw new Error("User not found");
+    return user;
+  }
+
+  async updateUserTokenBalance(userId: number, balance: number): Promise<User> {
+    const [user] = await db
+      .update(users)
+      .set({ testTokenBalance: balance })
+      .where(eq(users.id, userId))
+      .returning();
+    if (!user) throw new Error("User not found");
     return user;
   }
 
