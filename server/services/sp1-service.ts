@@ -49,28 +49,33 @@ interface ZkProofResult {
 }
 
 class SP1Service {
+  private readonly proverNetworkKey = process.env.SP1_PROVER_NETWORK_KEY;
+  private readonly succinctApiKey = process.env.SUCCINCT_API_KEY;
+
   async generateMintProof(data: MintProofData): Promise<ZkProofResult> {
     try {
-      // In a real implementation, this would use SP1 CLI to generate actual ZK proofs
-      // For this demo, we'll simulate the proof generation process
-      
-      const proofData = {
-        operation: "mint",
-        timestamp: Date.now(),
-        creatorId: data.creatorId,
-        title: data.title,
-        price: data.price,
-        editionSize: data.editionSize,
-        nonce: crypto.randomBytes(32).toString("hex"),
+      // Create SP1 proof input based on sp1-project-template structure
+      const input: SP1ProofInput = {
+        user_id: data.creatorId,
+        wallet_address: data.walletAddress,
+        credits_balance: data.creditsBalance,
+        operation_cost: data.price,
+        timestamp: data.timestamp,
+        operation_type: 'mint'
       };
-      
-      // Simulate SP1 proof generation with cargo prove
-      const proofHash = await this.simulateProofGeneration(proofData);
-      
-      return {
-        proofHash,
-        proofData,
-      };
+
+      // Validate user has sufficient credits before proof generation
+      if (data.creditsBalance < data.price) {
+        throw new Error("Insufficient credits for minting operation");
+      }
+
+      // Check if we have SP1 prover access
+      if (this.proverNetworkKey && this.succinctApiKey) {
+        return await this.generateRealSP1Proof(input, 'mint');
+      } else {
+        // Enhanced simulation that follows SP1 proof structure
+        return await this.generateEnhancedProof(input, 'mint');
+      }
     } catch (error) {
       console.error("SP1 mint proof generation failed:", error);
       throw new Error("Failed to generate ZK proof for minting");
