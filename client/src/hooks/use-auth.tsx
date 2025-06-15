@@ -206,6 +206,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     },
   });
 
+  const refreshUser = () => {
+    queryClient.invalidateQueries({ queryKey: ["/api/user"] });
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -217,6 +221,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         logoutMutation,
         connectDiscordMutation,
         connectXMutation,
+        refreshUser,
       }}
     >
       {children}

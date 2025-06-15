@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/use-auth";
 import { Upload, Image, ShieldCheck, Zap, CheckCircle, Clock, AlertCircle } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { validateFileType, validateFileSize } from "@/lib/utils";
@@ -31,6 +32,7 @@ export default function UploadSection({ currentUser }: UploadSectionProps) {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const { refreshUser } = useAuth();
 
   const mintMutation = useMutation({
     mutationFn: async (data: { file: File; metadata: any }) => {

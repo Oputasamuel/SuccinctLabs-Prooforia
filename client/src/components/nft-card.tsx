@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/use-auth";
 import { Heart, CheckCircle, Database, ShoppingCart, Eye, Calendar, Hash, Palette } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { formatTokens } from "@/lib/utils";
@@ -25,6 +26,7 @@ export default function NFTCard({ nft, viewMode = "grid" }: NFTCardProps) {
   const [isLiked, setIsLiked] = useState(false);
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const { refreshUser } = useAuth();
 
   const buyMutation = useMutation({
     mutationFn: async () => {
@@ -39,6 +41,7 @@ export default function NFTCard({ nft, viewMode = "grid" }: NFTCardProps) {
         description: `You successfully purchased ${nft.title}`,
       });
       queryClient.invalidateQueries({ queryKey: ["/api/nfts"] });
+      refreshUser(); // Update user credits in real-time
     },
     onError: (error: any) => {
       toast({
