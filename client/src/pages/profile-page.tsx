@@ -174,11 +174,12 @@ export default function ProfilePage() {
 
         {/* Profile Sections */}
         <Tabs defaultValue="overview" className="w-full">
-          <TabsList className="grid w-full grid-cols-7">
+          <TabsList className="grid w-full grid-cols-8">
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="created">Created NFTs</TabsTrigger>
             <TabsTrigger value="purchased">Purchased NFTs</TabsTrigger>
             <TabsTrigger value="favorited">Favorited NFTs</TabsTrigger>
+            <TabsTrigger value="activity">Activity</TabsTrigger>
             <TabsTrigger value="wallet">Wallet</TabsTrigger>
             <TabsTrigger value="social">Social</TabsTrigger>
             <TabsTrigger value="settings">Settings</TabsTrigger>
@@ -317,6 +318,62 @@ export default function ProfilePage() {
                   <Link href="/" className="text-primary hover:underline mt-2 inline-block">
                     Discover NFTs
                   </Link>
+                </div>
+              )}
+            </div>
+          </TabsContent>
+
+          <TabsContent value="activity" className="mt-6">
+            <div className="space-y-4">
+              {profile?.transactions?.length ? (
+                profile.transactions.map((transaction) => (
+                  <Card key={transaction.id}>
+                    <CardContent className="p-4">
+                      <div className="flex justify-between items-start">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-2">
+                            <TrendingUp className="h-4 w-4 text-primary" />
+                            <p className="font-medium">
+                              {transaction.transactionType === "purchase" ? "Purchased NFT" : "Sold NFT"}
+                            </p>
+                            <Badge variant={transaction.transactionType === "purchase" ? "destructive" : "default"}>
+                              {transaction.transactionType === "purchase" ? "Purchase" : "Sale"}
+                            </Badge>
+                          </div>
+                          <p className="text-sm text-muted-foreground mb-1">
+                            Transaction ID: #{transaction.id}
+                          </p>
+                          <p className="text-sm text-muted-foreground">
+                            {new Date(transaction.createdAt || '').toLocaleDateString('en-US', {
+                              year: 'numeric',
+                              month: 'long',
+                              day: 'numeric',
+                              hour: '2-digit',
+                              minute: '2-digit'
+                            })}
+                          </p>
+                        </div>
+                        <div className="text-right">
+                          <p className={`text-lg font-bold ${transaction.buyerId === user.id ? 'text-red-500' : 'text-green-500'}`}>
+                            {transaction.buyerId === user.id ? '-' : '+'}{transaction.price} Credits
+                          </p>
+                          {transaction.zkProofHash && (
+                            <Badge variant="outline" className="mt-1">
+                              ZK Verified
+                            </Badge>
+                          )}
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))
+              ) : (
+                <div className="text-center py-12">
+                  <TrendingUp className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                  <p className="text-muted-foreground">No activity yet.</p>
+                  <p className="text-sm text-muted-foreground mt-2">
+                    Your NFT transactions will appear here.
+                  </p>
                 </div>
               )}
             </div>
