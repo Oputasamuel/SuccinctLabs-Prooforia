@@ -13,7 +13,7 @@ interface NftWithCreator extends Nft {
   creator?: {
     id: number;
     username: string;
-  };
+  } | null;
 }
 
 export default function MarketplaceSection() {
@@ -21,7 +21,7 @@ export default function MarketplaceSection() {
   const [sortBy, setSortBy] = useState<string>("recent");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
 
-  const { data: nfts, isLoading } = useQuery<Nft[]>({
+  const { data: nfts, isLoading } = useQuery<NftWithCreator[]>({
     queryKey: ["/api/nfts", { category: category === "all" || !category ? undefined : category }],
   });
 

@@ -7,25 +7,17 @@ import { useToast } from "@/hooks/use-toast";
 import { Heart, CheckCircle, Database, ShoppingCart } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { formatTokens } from "@/lib/utils";
+import type { Nft } from "@shared/schema";
 
-interface NFT {
-  id: number;
-  title: string;
-  description?: string;
-  imageUrl: string;
-  price: number;
-  editionSize: number;
-  currentEdition: number;
-  category: string;
-  isVerified: boolean;
+interface NftWithCreator extends Nft {
   creator?: {
     id: number;
     username: string;
-  };
+  } | null;
 }
 
 interface NFTCardProps {
-  nft: NFT;
+  nft: NftWithCreator;
   viewMode?: "grid" | "list";
 }
 
