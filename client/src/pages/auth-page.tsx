@@ -41,6 +41,7 @@ export default function AuthPage() {
       username: "",
       email: "",
       password: "",
+      confirmPassword: "",
     },
   });
 
@@ -54,7 +55,9 @@ export default function AuthPage() {
   };
 
   const handleRegister = (data: RegisterFormData) => {
-    registerMutation.mutate(data);
+    // Exclude confirmPassword when sending to API
+    const { confirmPassword, ...registerData } = data;
+    registerMutation.mutate(registerData);
   };
 
   const handleTabChange = (tab: "marketplace" | "community" | "upload") => {
@@ -202,6 +205,21 @@ export default function AuthPage() {
                       {registerForm.formState.errors.password && (
                         <p className="text-sm text-destructive">
                           {registerForm.formState.errors.password.message}
+                        </p>
+                      )}
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="register-confirm-password">Confirm Password</Label>
+                      <Input
+                        id="register-confirm-password"
+                        type="password"
+                        placeholder="Confirm your password"
+                        {...registerForm.register("confirmPassword")}
+                      />
+                      {registerForm.formState.errors.confirmPassword && (
+                        <p className="text-sm text-destructive">
+                          {registerForm.formState.errors.confirmPassword.message}
                         </p>
                       )}
                     </div>
