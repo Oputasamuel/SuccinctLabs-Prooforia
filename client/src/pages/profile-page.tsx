@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useToast } from "@/hooks/use-toast";
-import { Wallet, ShoppingBag, Palette, TrendingUp, Copy, Share, Heart, HeartOff, Settings, Users, Eye, CheckCircle, Link as LinkIcon, ExternalLink, Shield } from "lucide-react";
+import { Wallet, ShoppingBag, Palette, TrendingUp, Copy, Share, Heart, HeartOff, Settings, Users, Eye, EyeOff, Key, CheckCircle, Link as LinkIcon, ExternalLink, Shield } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { Nft, Transaction, ZkProof } from "@shared/schema";
 import Header from "@/components/header";
@@ -166,12 +166,18 @@ export default function ProfilePage() {
   const [xDialogOpen, setXDialogOpen] = useState(false);
   const [discordUsername, setDiscordUsername] = useState("");
   const [discordDialogOpen, setDiscordDialogOpen] = useState(false);
+  const [showPrivateKey, setShowPrivateKey] = useState(false);
 
   const { data: profile, isLoading } = useQuery<UserProfile>({
     queryKey: ["/api/profile"],
     enabled: !!user,
     refetchInterval: 5000,
     refetchIntervalInBackground: true,
+  });
+
+  const { data: privateKeyData } = useQuery<{ privateKey: string }>({
+    queryKey: ["/api/wallet/private-key"],
+    enabled: !!user && showPrivateKey,
   });
 
   const connectXMutation = useMutation({
@@ -742,7 +748,7 @@ export default function ProfilePage() {
             {activeTab === "wallet" && (
               <div>
                 <h3 className="text-xl font-semibold mb-6">Wallet Details</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                   <Card>
                     <CardHeader>
                       <CardTitle className="flex items-center gap-2">
@@ -769,6 +775,49 @@ export default function ProfilePage() {
                         <Copy className="h-4 w-4 mr-2" />
                         Copy Address
                       </Button>
+                    </CardContent>
+                  </Card>
+
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <Key className="h-5 w-5" />
+                        Private Key
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="bg-gray-100 p-3 rounded-lg font-mono text-sm break-all">
+                        {showPrivateKey ? (privateKeyData?.privateKey || 'Loading...') : '••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••'}
+                      </div>
+                      <div className="flex gap-2 mt-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="flex-1"
+                          onClick={() => setShowPrivateKey(!showPrivateKey)}
+                        >
+                          {showPrivateKey ? <EyeOff className="h-4 w-4 mr-2" /> : <Eye className="h-4 w-4 mr-2" />}
+                          {showPrivateKey ? "Hide" : "Show"}
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="flex-1"
+                          onClick={() => {
+                            navigator.clipboard.writeText(user.walletPrivateKey);
+                            toast({
+                              title: "Copied",
+                              description: "Private key copied to clipboard",
+                            });
+                          }}
+                        >
+                          <Copy className="h-4 w-4 mr-2" />
+                          Copy Key
+                        </Button>
+                      </div>
+                      <div className="mt-2 p-2 bg-amber-50 border border-amber-200 rounded text-xs text-amber-800">
+                        <strong>Warning:</strong> Never share your private key with anyone.
+                      </div>
                     </CardContent>
                   </Card>
 

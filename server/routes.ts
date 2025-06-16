@@ -892,6 +892,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get decrypted private key
+  app.get("/api/wallet/private-key", async (req: Request, res) => {
+    if (!req.user) {
+      return res.status(401).json({ message: "Authentication required" });
+    }
+
+    try {
+      const { walletService } = await import("./services/wallet-service");
+      const decryptedPrivateKey = walletService.decryptPrivateKey(req.user.walletPrivateKey);
+      
+      res.json({ privateKey: decryptedPrivateKey });
+    } catch (error) {
+      console.error("Private key decryption error:", error);
+      res.status(500).json({ message: "Failed to decrypt private key" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
