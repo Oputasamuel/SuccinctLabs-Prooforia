@@ -109,8 +109,8 @@ export function setupAuth(app: Express) {
         return res.status(400).json({ message: "Email already registered" });
       }
 
-      const existingUsername = await storage.getUserByUsername(username);
-      if (existingUsername) {
+      const existingDisplayName = await storage.getUserByDisplayName(username);
+      if (existingDisplayName) {
         return res.status(400).json({ message: "Username already taken" });
       }
 
@@ -122,7 +122,7 @@ export function setupAuth(app: Express) {
       // Create user with hashed password
       const hashedPassword = await hashPassword(password);
       const user = await storage.createUser({
-        username,
+        displayName: username,
         email,
         password: hashedPassword,
         walletAddress: wallet.address,
@@ -193,7 +193,7 @@ export function setupAuth(app: Express) {
     
     const publicUser = {
       id: req.user.id,
-      username: req.user.username,
+      username: req.user.displayName,
       email: req.user.email,
       walletAddress: req.user.walletAddress,
       credits: req.user.credits,

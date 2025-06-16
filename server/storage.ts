@@ -16,6 +16,7 @@ export interface IStorage {
   getUser(id: number): Promise<User | undefined>;
   getUserByWalletAddress(walletAddress: string): Promise<User | undefined>;
   getUserByEmail(email: string): Promise<User | undefined>;
+  getUserByDisplayName(displayName: string): Promise<User | undefined>;
   createUser(userData: {
     displayName: string;
     email: string;
@@ -437,6 +438,10 @@ export class MemStorage implements IStorage {
 
   async getUserByEmail(email: string): Promise<User | undefined> {
     return Array.from(this.users.values()).find(user => user.email === email);
+  }
+
+  async getUserByDisplayName(displayName: string): Promise<User | undefined> {
+    return Array.from(this.users.values()).find(user => user.displayName === displayName);
   }
 
   async connectDiscord(userId: number, discordUsername: string, discordAvatar?: string): Promise<User> {
