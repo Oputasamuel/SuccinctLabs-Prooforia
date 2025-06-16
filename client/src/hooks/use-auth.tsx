@@ -61,7 +61,14 @@ async function apiRequest(path: string, options?: RequestInit) {
     return null;
   }
 
-  return response.json();
+  // Check if response has JSON content
+  const contentType = response.headers.get('content-type');
+  if (contentType && contentType.includes('application/json')) {
+    return response.json();
+  }
+
+  // For non-JSON responses (like sendStatus), return null
+  return null;
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
