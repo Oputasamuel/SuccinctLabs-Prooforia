@@ -80,7 +80,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     mutationFn: async (credentials: WalletLoginData): Promise<AuthUser> => {
       const data = await apiRequest("/api/wallet/login", {
         method: "POST",
-        body: JSON.stringify(credentials),
+        body: JSON.stringify({ privateKey: credentials.walletPrivateKey }),
       });
       return data.user;
     },

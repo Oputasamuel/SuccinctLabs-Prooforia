@@ -140,7 +140,9 @@ export default function WalletAuthPage() {
 
   const loginMutation = useMutation({
     mutationFn: async (data: LoginData) => {
-      const res = await apiRequest("POST", "/api/wallet/login", data);
+      const res = await apiRequest("POST", "/api/wallet/login", {
+        privateKey: data.privateKey
+      });
       return await res.json();
     },
     onSuccess: (data) => {
