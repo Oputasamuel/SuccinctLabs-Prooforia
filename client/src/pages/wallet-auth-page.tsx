@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -9,7 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Textarea } from "@/components/ui/textarea";
-import { Copy, Eye, EyeOff } from "lucide-react";
+import { Copy, Eye, EyeOff, Upload, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
@@ -39,8 +39,11 @@ export default function WalletAuthPage() {
   const [createdWallet, setCreatedWallet] = useState<{ privateKey: string; user: any } | null>(null);
   const [showPrivateKey, setShowPrivateKey] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [profileImageFile, setProfileImageFile] = useState<File | null>(null);
+  const [profileImagePreview, setProfileImagePreview] = useState<string | null>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const createForm = useForm<CreateAccountData>({
     resolver: zodResolver(createAccountSchema),
@@ -49,6 +52,44 @@ export default function WalletAuthPage() {
       profilePicture: "",
     },
   });
+
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) { // 5MB limit
+        toast({
+          title: "File too large",
+          description: "Please select an image under 5MB",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      if (!file.type.startsWith('image/')) {
+        toast({
+          title: "Invalid file type",
+          description: "Please select an image file",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      setProfileImageFile(file);
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setProfileImagePreview(e.target?.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const removeProfileImage = () => {
+    setProfileImageFile(null);
+    setProfileImagePreview(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
 
   const loginForm = useForm<LoginData>({
     resolver: zodResolver(loginSchema),
@@ -59,7 +100,23 @@ export default function WalletAuthPage() {
 
   const createAccountMutation = useMutation({
     mutationFn: async (data: CreateAccountData) => {
-      const res = await apiRequest("POST", "/api/wallet/create-account", data);
+      const formData = new FormData();
+      formData.append('displayName', data.displayName);
+      
+      if (profileImageFile) {
+        formData.append('profileImage', profileImageFile);
+      }
+
+      const res = await fetch('/api/wallet/create-account', {
+        method: 'POST',
+        body: formData,
+      });
+      
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({ message: "Failed to create account" }));
+        throw new Error(errorData.message);
+      }
+      
       return await res.json() as WalletCreationResponse;
     },
     onSuccess: (data) => {

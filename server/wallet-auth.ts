@@ -1,5 +1,6 @@
-import { Express } from "express";
+import { Express, Request } from "express";
 import session from "express-session";
+import multer from "multer";
 import { storage } from "./storage";
 import { walletService } from "./services/wallet-service";
 import { User as SelectUser } from "@shared/schema";
@@ -31,8 +32,29 @@ export function setupWalletAuth(app: Express) {
   app.set("trust proxy", 1);
   app.use(session(sessionSettings));
 
+  // Configure multer for profile image uploads
+  const upload = multer({
+    storage: multer.diskStorage({
+      destination: './uploads/',
+      filename: (req, file, cb) => {
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        cb(null, 'profile-' + uniqueSuffix + '.' + file.originalname.split('.').pop());
+      }
+    }),
+    limits: {
+      fileSize: 5 * 1024 * 1024 // 5MB limit
+    },
+    fileFilter: (req, file, cb) => {
+      if (file.mimetype.startsWith('image/')) {
+        cb(null, true);
+      } else {
+        cb(new Error('Only image files are allowed'));
+      }
+    }
+  });
+
   // Create account with wallet generation
-  app.post("/api/wallet/create-account", async (req, res) => {
+  app.post("/api/wallet/create-account", upload.single('profileImage'), async (req: Request & {file?: Express.Multer.File}, res) => {
     try {
       const { displayName, profilePicture } = req.body;
 
