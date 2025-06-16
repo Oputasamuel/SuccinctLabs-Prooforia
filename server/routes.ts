@@ -894,13 +894,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Get decrypted private key
   app.get("/api/wallet/private-key", async (req: Request, res) => {
-    if (!req.user) {
+    if (!req.session.userId) {
       return res.status(401).json({ message: "Authentication required" });
     }
 
     try {
+      const user = await storage.getUser(req.session.userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
       const { walletService } = await import("./services/wallet-service");
-      const decryptedPrivateKey = walletService.decryptPrivateKey(req.user.walletPrivateKey);
+      const decryptedPrivateKey = walletService.decryptPrivateKey(user.walletPrivateKey);
       
       res.json({ privateKey: decryptedPrivateKey });
     } catch (error) {

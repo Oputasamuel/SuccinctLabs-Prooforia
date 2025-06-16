@@ -175,13 +175,16 @@ export default function ProfilePage() {
     refetchIntervalInBackground: true,
   });
 
-  // Use a simpler approach - decrypt the private key client-side when needed
+  // Fetch decrypted private key from server when needed
+  const { data: privateKeyData } = useQuery<{ privateKey: string }>({
+    queryKey: ["/api/wallet/private-key"],
+    enabled: !!user && showPrivateKey,
+    staleTime: 0, // Always fetch fresh
+  });
+
   const getDecryptedPrivateKey = () => {
-    if (!showPrivateKey || !user?.walletPrivateKey) return null;
-    
-    // For development, return the encrypted key as-is since it's already stored
-    // In production, this would use proper client-side decryption
-    return user.walletPrivateKey;
+    if (!showPrivateKey) return null;
+    return privateKeyData?.privateKey || null;
   };
 
   const connectXMutation = useMutation({
@@ -791,7 +794,11 @@ export default function ProfilePage() {
                     </CardHeader>
                     <CardContent>
                       <div className="bg-gray-100 p-3 rounded-lg font-mono text-sm break-all">
-                        {showPrivateKey ? (getDecryptedPrivateKey() || 'Private key not available') : '••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••'}
+                        {showPrivateKey ? (
+                          privateKeyData?.privateKey ? 
+                            privateKeyData.privateKey : 
+                            'Loading private key...'
+                        ) : '••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••'}
                       </div>
                       <div className="flex gap-2 mt-2">
                         <Button
