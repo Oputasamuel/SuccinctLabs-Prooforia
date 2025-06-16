@@ -416,7 +416,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         attributes: [
           { trait_type: "Category", value: nftData.category },
           { trait_type: "Edition Size", value: nftData.editionSize },
-          { trait_type: "Creator", value: user.displayName }
+          { trait_type: "Creator", value: currentUser.displayName }
         ]
       };
 
@@ -425,19 +425,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Generate ZK proof for minting
       const zkProof = await sp1Service.generateMintProof({
-        creatorId: user.id,
+        creatorId: currentUser.id,
         title: nftData.title,
         price: nftData.price,
         editionSize: nftData.editionSize,
-        walletAddress: user.walletAddress,
-        creditsBalance: user.credits || 0,
+        walletAddress: currentUser.walletAddress,
+        creditsBalance: currentUser.credits || 0,
         timestamp: Date.now(),
       });
 
       // Create NFT with ZK proof
       const newNft = await storage.createNft({
         ...nftData,
-        creatorId: user.id,
+        creatorId: currentUser.id,
         imageUrl: imageUpload.url,
         metadataUrl: metadataUpload.url,
         zkProofHash: zkProof.proofHash,
@@ -448,18 +448,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Store ZK proof
       await storage.createZkProof({
-        userId: user.id,
+        userId: currentUser.id,
         proofType: "mint",
         proofData: zkProof.proofData,
         proofHash: zkProof.proofHash,
       });
 
       // Deduct credits from user
-      await storage.updateUserCredits(user.id, user.credits - requiredCredits);
+      await storage.updateUserCredits(currentUser.id, (currentUser.credits || 0) - nftData.price);
 
       res.status(201).json({
         nft: newNft,
-        message: `NFT minted successfully! ${requiredCredits} credits deducted.`
+        message: `NFT minted successfully! ${nftData.price} credits deducted.`
       });
     } catch (error) {
       console.error("NFT minting error:", error);

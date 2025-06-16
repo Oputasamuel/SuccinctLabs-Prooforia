@@ -4,13 +4,16 @@ import { storage } from "./storage";
 import { walletService } from "./services/wallet-service";
 import { User as SelectUser } from "@shared/schema";
 
+declare module "express-session" {
+  interface SessionData {
+    userId?: number;
+    walletAddress?: string;
+  }
+}
+
 declare global {
   namespace Express {
     interface User extends SelectUser {}
-    interface Session {
-      userId?: number;
-      walletAddress?: string;
-    }
   }
 }
 
