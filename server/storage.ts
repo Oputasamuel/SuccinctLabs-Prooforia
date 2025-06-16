@@ -138,29 +138,26 @@ export class MemStorage implements IStorage {
   }
 
   private async initializeSampleData() {
-    // Create sample users with complete data
+    // Create sample users with wallet-only authentication
     const artist1 = await this.createUser({
-      username: "ArtistCRN",
-      email: "artist1@example.com",
-      password: "password123",
+      displayName: "ArtistCRN",
+      profilePicture: "https://api.dicebear.com/6.x/avataaars/svg?seed=artist1",
       walletAddress: "0x742d35Cc6665C6673532B4e8B2b421C2a87c4d21",
       walletPrivateKey: "encrypted_private_key_1",
       walletPublicKey: "public_key_1"
     });
 
     const artist2 = await this.createUser({
-      username: "Artist234",
-      email: "artist2@example.com",
-      password: "password123",
+      displayName: "Artist234",
+      profilePicture: "https://api.dicebear.com/6.x/avataaars/svg?seed=artist2",
       walletAddress: "0x8ba1f109551bD432803012645Hac136c841B2345",
       walletPrivateKey: "encrypted_private_key_2",
       walletPublicKey: "public_key_2"
     });
 
     const artist3 = await this.createUser({
-      username: "ZKArtist",
-      email: "artist3@example.com",
-      password: "password123",
+      displayName: "ZKArtist",
+      profilePicture: "https://api.dicebear.com/6.x/avataaars/svg?seed=artist3",
       walletAddress: "0x9ca2g209661cE543914123756Ibd247d952C3456",
       walletPrivateKey: "encrypted_private_key_3",
       walletPublicKey: "public_key_3"
@@ -235,7 +232,7 @@ export class MemStorage implements IStorage {
   }
 
   async createDiscordUser(userData: {
-    username: string;
+    displayName: string;
     discordId: string;
     discordUsername: string;
     discordAvatar?: string | null;
@@ -245,9 +242,9 @@ export class MemStorage implements IStorage {
   }): Promise<User> {
     const user: User = {
       id: this.currentUserId++,
-      username: userData.username,
-      password: null,
-      discordId: userData.discordId,
+      displayName: userData.displayName,
+      profilePicture: userData.discordAvatar || null,
+      discordConnected: true,
       discordUsername: userData.discordUsername,
       discordAvatar: userData.discordAvatar || null,
       walletAddress: userData.walletAddress,
