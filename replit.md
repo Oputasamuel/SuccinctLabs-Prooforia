@@ -142,6 +142,8 @@ The application uses a PostgreSQL database with the following core entities:
 - **June 16, 2025**: Fixed NFT purchase errors - updated database to mark all NFTs as available for sale
 - **June 16, 2025**: Implemented working Discord and X account connection features with OAuth integration and username validation
 - **June 16, 2025**: Fixed Discord connection "refused to connect" error by implementing username-based connection method
+- **June 16, 2025**: Resolved bidding system 400 Bad Request error by fixing schema validation and storage interface alignment
+- **June 16, 2025**: Enhanced NFT details popup with complete marketplace data including edition progress and pricing displays
 
 ## Changelog
 - June 15, 2025: Complete SP1Mint rebranding and authentication system migration
