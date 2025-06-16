@@ -115,9 +115,9 @@ export default function UserBidsSection() {
   ).length;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" key="user-bids-section">
       {/* Filter Tabs */}
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-wrap gap-2" key="filter-tabs">
         <Button
           variant={activeFilter === "all" ? "default" : "outline"}
           onClick={() => setActiveFilter("all")}
@@ -146,13 +146,13 @@ export default function UserBidsSection() {
 
       {/* Bids List */}
       {filteredBids.length > 0 ? (
-        <div className="grid gap-4">
-          {filteredBids.map((bid) => {
+        <div className="grid gap-4" key="bids-list">
+          {filteredBids.map((bid, index) => {
             const isHighestBid = currentHighestBids[bid.nftId] === bid.amount;
             const currentHighest = currentHighestBids[bid.nftId] || 0;
             
             return (
-              <Card key={bid.id} className="hover:shadow-lg transition-shadow">
+              <Card key={`bid-${bid.id}-${bid.nftId}-${index}`} className="hover:shadow-lg transition-shadow">
                 <CardContent className="p-4">
                   <div className="flex items-center gap-4">
                     {/* NFT Image */}
