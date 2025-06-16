@@ -8,11 +8,10 @@ import { useState } from "react";
 interface HeaderProps {
   activeTab: "marketplace" | "community" | "upload";
   onTabChange: (tab: "marketplace" | "community" | "upload") => void;
-  currentUser?: AuthUser | null;
 }
 
-export default function Header({ activeTab, onTabChange, currentUser }: HeaderProps) {
-  const { logoutMutation } = useAuth();
+export default function Header({ activeTab, onTabChange }: HeaderProps) {
+  const { user: currentUser, logoutMutation } = useAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   return (

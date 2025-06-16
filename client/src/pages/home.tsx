@@ -32,7 +32,6 @@ export default function Home() {
       <Header 
         activeTab={activeTab} 
         onTabChange={handleTabChange}
-        currentUser={user}
       />
       
       {activeTab === "marketplace" && (
