@@ -673,6 +673,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get received bids (bids on user's NFTs)
+  app.get("/api/user/received-bids", async (req, res) => {
+    if (!req.session.userId) {
+      return res.status(401).json({ message: "Authentication required" });
+    }
+
+    try {
+      // Get all NFTs created by the current user
+      const userNfts = await storage.getNfts({ creatorId: req.session.userId });
+      
+      // Get all active bids for these NFTs
+      const receivedBidsPromises = userNfts.map(async (nft) => {
+        const bids = await storage.getBidsForNft(nft.id);
+        const activeBids = bids.filter(bid => bid.isActive);
+        
+        if (activeBids.length > 0) {
+          return {
+            id: nft.id,
+            title: nft.title,
+            imageUrl: nft.imageUrl,
+            creatorId: nft.creatorId,
+            bids: activeBids
+          };
+        }
+        return null;
+      });
+
+      const receivedBidsResults = await Promise.all(receivedBidsPromises);
+      const nftsWithBids = receivedBidsResults.filter(result => result !== null);
+      
+      res.json(nftsWithBids);
+    } catch (error) {
+      console.error("Get received bids error:", error);
+      res.status(500).json({ message: "Failed to fetch received bids" });
+    }
+  });
+
   // Accept bid
   app.post("/api/bids/:id/accept", async (req, res) => {
     if (!req.session.userId) {

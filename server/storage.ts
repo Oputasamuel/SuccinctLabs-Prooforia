@@ -1010,6 +1010,15 @@ export class DatabaseStorage implements IStorage {
     return await db.select().from(bids).where(eq(bids.bidderId, userId)).orderBy(desc(bids.createdAt));
   }
 
+  async getBid(bidId: number): Promise<Bid | undefined> {
+    const result = await db.select().from(bids).where(eq(bids.id, bidId)).limit(1);
+    return result[0];
+  }
+
+  async rejectBid(bidId: number): Promise<void> {
+    await db.update(bids).set({ isActive: false }).where(eq(bids.id, bidId));
+  }
+
   async acceptBid(bidId: number, sellerId: number): Promise<Transaction> {
     const bid = await db.select().from(bids).where(eq(bids.id, bidId)).limit(1);
     if (!bid[0]) throw new Error("Bid not found");

@@ -12,6 +12,7 @@ import { Link, useLocation } from "wouter";
 import { Nft, Transaction, ZkProof } from "@shared/schema";
 import Header from "@/components/header";
 import UserBidsSection from "@/components/user-bids-section";
+import ReceivedBidsSection from "@/components/received-bids-section";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useState } from "react";
 
@@ -411,6 +412,22 @@ export default function ProfilePage() {
                       My Proofs
                     </Button>
                     <Button
+                      variant={activeTab === "bids" ? "default" : "ghost"}
+                      className="w-full justify-start"
+                      onClick={() => setActiveTab("bids")}
+                    >
+                      <TrendingUp className="h-4 w-4 mr-2" />
+                      My Bids
+                    </Button>
+                    <Button
+                      variant={activeTab === "received-bids" ? "default" : "ghost"}
+                      className="w-full justify-start"
+                      onClick={() => setActiveTab("received-bids")}
+                    >
+                      <ShoppingBag className="h-4 w-4 mr-2" />
+                      Received Bids
+                    </Button>
+                    <Button
                       variant={activeTab === "wallet" ? "default" : "ghost"}
                       className="w-full justify-start"
                       onClick={() => setActiveTab("wallet")}
@@ -453,6 +470,8 @@ export default function ProfilePage() {
               <option value="favorited">❤️ Favorited</option>
               <option value="activity">📈 Activity</option>
               <option value="proofs">🛡️ My Proofs</option>
+              <option value="bids">📊 My Bids</option>
+              <option value="received-bids">🛍️ Received Bids</option>
               <option value="wallet">💰 Wallet</option>
               <option value="social">👥 Social</option>
               <option value="settings">⚙️ Settings</option>
@@ -683,6 +702,20 @@ export default function ProfilePage() {
                     </CardContent>
                   </Card>
                 )}
+              </div>
+            )}
+
+            {/* My Bids Tab */}
+            {activeTab === "bids" && (
+              <div>
+                <UserBidsSection />
+              </div>
+            )}
+
+            {/* Received Bids Tab */}
+            {activeTab === "received-bids" && (
+              <div>
+                <ReceivedBidsSection />
               </div>
             )}
 
