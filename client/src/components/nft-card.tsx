@@ -72,9 +72,15 @@ export default function NFTCard({ nft, viewMode = "grid", onViewDetails }: NFTCa
     },
     onError: (error: any) => {
       console.log("Purchase error details:", error);
+      console.log("Error message:", error.message);
+      console.log("Error status:", error.status);
+      console.log("Original error:", error.originalError);
+      
+      const errorMessage = error.message || error.originalError?.message || "Failed to purchase NFT";
+      
       toast({
         title: "Purchase Failed",
-        description: error.message || "Failed to purchase NFT",
+        description: errorMessage,
         variant: "destructive",
       });
     },

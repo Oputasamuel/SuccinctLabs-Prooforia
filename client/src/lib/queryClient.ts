@@ -6,16 +6,25 @@ async function throwIfResNotOk(res: Response) {
       const contentType = res.headers.get("content-type");
       if (contentType && contentType.includes("application/json")) {
         const errorData = await res.json();
-        throw new Error(errorData.message || errorData.error || `HTTP ${res.status}`);
+        const errorMessage = errorData.message || errorData.error || `HTTP ${res.status}: ${res.statusText}`;
+        const error = new Error(errorMessage);
+        // Preserve original error data for debugging
+        (error as any).originalError = errorData;
+        (error as any).status = res.status;
+        throw error;
       } else {
         const text = await res.text();
         // If we get HTML (like an error page), extract meaningful error
         if (text.includes("<!DOCTYPE html>")) {
           throw new Error(`Server error (${res.status}). Please check your connection and try again.`);
         }
-        throw new Error(text || res.statusText || `HTTP ${res.status}`);
+        throw new Error(text || res.statusText || `HTTP ${res.status}: ${res.statusText}`);
       }
     } catch (parseError) {
+      // If parsing fails but we know it's an error response
+      if (parseError instanceof Error && parseError.message.startsWith('HTTP')) {
+        throw parseError;
+      }
       throw new Error(`HTTP ${res.status}: ${res.statusText}`);
     }
   }
