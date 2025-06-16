@@ -658,6 +658,24 @@ export class MemStorage implements IStorage {
       communityMembers,
     };
   }
+
+  // Password Reset operations (MemStorage implementation)
+  async createPasswordResetToken(email: string, token: string, expiresAt: Date): Promise<PasswordResetToken> {
+    // For MemStorage, we'll throw an error since this should use DatabaseStorage for persistence
+    throw new Error("Password reset not supported in memory storage");
+  }
+
+  async getPasswordResetToken(token: string): Promise<PasswordResetToken | undefined> {
+    throw new Error("Password reset not supported in memory storage");
+  }
+
+  async markTokenAsUsed(tokenId: number): Promise<void> {
+    throw new Error("Password reset not supported in memory storage");
+  }
+
+  async updateUserPassword(email: string, newPassword: string): Promise<User> {
+    throw new Error("Password reset not supported in memory storage");
+  }
 }
 
 export class DatabaseStorage implements IStorage {
@@ -1051,6 +1069,39 @@ export class DatabaseStorage implements IStorage {
       lowestListing,
       isMintedOut
     };
+  }
+
+  // Password Reset operations
+  async createPasswordResetToken(email: string, token: string, expiresAt: Date): Promise<PasswordResetToken> {
+    const [newToken] = await db.insert(passwordResetTokens).values({
+      email,
+      token,
+      expiresAt,
+    }).returning();
+    return newToken;
+  }
+
+  async getPasswordResetToken(token: string): Promise<PasswordResetToken | undefined> {
+    const [resetToken] = await db.select().from(passwordResetTokens)
+      .where(and(
+        eq(passwordResetTokens.token, token),
+        eq(passwordResetTokens.used, false)
+      ));
+    return resetToken || undefined;
+  }
+
+  async markTokenAsUsed(tokenId: number): Promise<void> {
+    await db.update(passwordResetTokens)
+      .set({ used: true })
+      .where(eq(passwordResetTokens.id, tokenId));
+  }
+
+  async updateUserPassword(email: string, newPassword: string): Promise<User> {
+    const [user] = await db.update(users)
+      .set({ password: newPassword })
+      .where(eq(users.email, email))
+      .returning();
+    return user;
   }
 }
 

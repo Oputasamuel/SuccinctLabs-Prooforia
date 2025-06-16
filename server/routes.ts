@@ -10,6 +10,8 @@ import { ipfsService } from "./services/ipfs-service";
 import { succinctService } from "./services/succinct-service";
 import { setupAuth } from "./auth";
 import { discordService } from "./services/discord-service";
+import { emailService } from "./services/email-service";
+import { hashPassword } from "./auth";
 
 interface MulterRequest extends Request {
   file?: Express.Multer.File;
@@ -77,6 +79,112 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("X connection error:", error);
       res.status(500).json({ message: "Failed to connect X account" });
+    }
+  });
+
+  // Password Reset Routes
+  app.post("/api/auth/forgot-password", async (req, res) => {
+    try {
+      const { email } = req.body;
+      
+      if (!email) {
+        return res.status(400).json({ message: "Email is required" });
+      }
+
+      // Check if user exists
+      const user = await storage.getUserByEmail(email);
+      if (!user) {
+        // Don't reveal if email exists or not for security
+        return res.json({ message: "If the email exists, a reset code has been sent" });
+      }
+
+      // Generate 6-digit code
+      const resetCode = Math.floor(100000 + Math.random() * 900000).toString();
+      
+      // Set expiration to 15 minutes from now
+      const expiresAt = new Date(Date.now() + 15 * 60 * 1000);
+      
+      // Store the reset token
+      await storage.createPasswordResetToken(email, resetCode, expiresAt);
+      
+      // Send email with reset code
+      const emailSent = await emailService.sendPasswordResetCode(email, resetCode);
+      
+      if (!emailSent) {
+        return res.status(500).json({ message: "Failed to send reset email" });
+      }
+
+      res.json({ message: "If the email exists, a reset code has been sent" });
+    } catch (error) {
+      console.error("Forgot password error:", error);
+      res.status(500).json({ message: "Failed to process password reset request" });
+    }
+  });
+
+  app.post("/api/auth/verify-reset-code", async (req, res) => {
+    try {
+      const { email, code } = req.body;
+      
+      if (!email || !code) {
+        return res.status(400).json({ message: "Email and code are required" });
+      }
+
+      // Get the reset token
+      const resetToken = await storage.getPasswordResetToken(code);
+      
+      if (!resetToken || resetToken.email !== email) {
+        return res.status(400).json({ message: "Invalid or expired reset code" });
+      }
+
+      // Check if token is expired
+      if (new Date() > resetToken.expiresAt) {
+        return res.status(400).json({ message: "Reset code has expired" });
+      }
+
+      res.json({ message: "Reset code verified successfully", valid: true });
+    } catch (error) {
+      console.error("Verify reset code error:", error);
+      res.status(500).json({ message: "Failed to verify reset code" });
+    }
+  });
+
+  app.post("/api/auth/reset-password", async (req, res) => {
+    try {
+      const { email, code, newPassword } = req.body;
+      
+      if (!email || !code || !newPassword) {
+        return res.status(400).json({ message: "Email, code, and new password are required" });
+      }
+
+      if (newPassword.length < 4) {
+        return res.status(400).json({ message: "Password must be at least 4 characters long" });
+      }
+
+      // Get and validate the reset token
+      const resetToken = await storage.getPasswordResetToken(code);
+      
+      if (!resetToken || resetToken.email !== email) {
+        return res.status(400).json({ message: "Invalid or expired reset code" });
+      }
+
+      // Check if token is expired
+      if (new Date() > resetToken.expiresAt) {
+        return res.status(400).json({ message: "Reset code has expired" });
+      }
+
+      // Hash the new password
+      const hashedPassword = await hashPassword(newPassword);
+      
+      // Update the user's password
+      await storage.updateUserPassword(email, hashedPassword);
+      
+      // Mark the token as used
+      await storage.markTokenAsUsed(resetToken.id);
+
+      res.json({ message: "Password reset successfully" });
+    } catch (error) {
+      console.error("Reset password error:", error);
+      res.status(500).json({ message: "Failed to reset password" });
     }
   });
 
