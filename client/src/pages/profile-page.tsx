@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useToast } from "@/hooks/use-toast";
-import { Wallet, ShoppingBag, Palette, TrendingUp, Copy, Share, Heart, HeartOff, Settings, Users, Eye } from "lucide-react";
+import { Wallet, ShoppingBag, Palette, TrendingUp, Copy, Share, Heart, HeartOff, Settings, Users, Eye, CheckCircle } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { Nft, Transaction, ZkProof } from "@shared/schema";
 import Header from "@/components/header";
@@ -181,12 +181,13 @@ export default function ProfilePage() {
 
         {/* Profile Sections */}
         <Tabs defaultValue="overview" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-1">
+          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 lg:grid-cols-9 gap-1">
             <TabsTrigger value="overview" className="text-xs sm:text-sm">Overview</TabsTrigger>
             <TabsTrigger value="created" className="text-xs sm:text-sm">Created</TabsTrigger>
             <TabsTrigger value="purchased" className="text-xs sm:text-sm">Purchased</TabsTrigger>
             <TabsTrigger value="favorited" className="text-xs sm:text-sm">Favorited</TabsTrigger>
             <TabsTrigger value="activity" className="text-xs sm:text-sm">Activity</TabsTrigger>
+            <TabsTrigger value="proofs" className="text-xs sm:text-sm">My Proofs</TabsTrigger>
             <TabsTrigger value="wallet" className="text-xs sm:text-sm">Wallet</TabsTrigger>
             <TabsTrigger value="social" className="text-xs sm:text-sm">Social</TabsTrigger>
             <TabsTrigger value="settings" className="text-xs sm:text-sm">Settings</TabsTrigger>
@@ -386,6 +387,75 @@ export default function ProfilePage() {
                   <p className="text-muted-foreground">No activity yet.</p>
                   <p className="text-sm text-muted-foreground mt-2">
                     Your NFT transactions will appear here.
+                  </p>
+                </div>
+              )}
+            </div>
+          </TabsContent>
+
+          <TabsContent value="proofs" className="mt-6">
+            <div className="space-y-4">
+              {profile?.zkProofs?.length ? (
+                profile.zkProofs.map((proof) => (
+                  <Card key={proof.id}>
+                    <CardContent className="p-4">
+                      <div className="flex justify-between items-start">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-2">
+                            <CheckCircle className="h-4 w-4 text-green-500" />
+                            <p className="font-medium capitalize">
+                              {proof.proofType} Proof
+                            </p>
+                            <Badge variant="default" className="bg-green-100 text-green-800">
+                              ZK Verified
+                            </Badge>
+                          </div>
+                          <div className="space-y-1">
+                            <p className="text-sm text-muted-foreground">
+                              Proof Hash: <code className="text-xs bg-muted px-1 rounded">{proof.proofHash.slice(0, 16)}...{proof.proofHash.slice(-8)}</code>
+                            </p>
+                            <p className="text-sm text-muted-foreground">
+                              Generated: {new Date(proof.createdAt || '').toLocaleDateString('en-US', {
+                                year: 'numeric',
+                                month: 'long',
+                                day: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit'
+                              })}
+                            </p>
+                            <p className="text-sm text-muted-foreground">
+                              Wallet: <code className="text-xs bg-muted px-1 rounded">{user.walletAddress.slice(0, 8)}...{user.walletAddress.slice(-6)}</code>
+                            </p>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <Badge variant={proof.proofType === "mint" ? "default" : "secondary"}>
+                            {proof.proofType === "mint" ? "Minting" : "Transfer"}
+                          </Badge>
+                          <div className="mt-2">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => {
+                                navigator.clipboard.writeText(proof.proofHash);
+                                toast({ title: "Copied!", description: "Proof hash copied to clipboard." });
+                              }}
+                            >
+                              <Copy className="h-3 w-3 mr-1" />
+                              Copy Hash
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))
+              ) : (
+                <div className="text-center py-12">
+                  <CheckCircle className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                  <p className="text-muted-foreground">No ZK proofs generated yet.</p>
+                  <p className="text-sm text-muted-foreground mt-2">
+                    Proofs will appear here when you mint or purchase NFTs.
                   </p>
                 </div>
               )}
