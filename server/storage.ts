@@ -166,15 +166,7 @@ export class MemStorage implements IStorage {
       walletPublicKey: "public_key_3"
     });
 
-    // Create demo account as specified in replit.md
-    const demoUser = await this.createUser({
-      username: "sam",
-      email: "zedef0808@gmail.com",
-      password: "hashed_demo_password", // Will be replaced with proper hash
-      walletAddress: "0x1234567890123456789012345678901234567890",
-      walletPrivateKey: "encrypted_demo_private_key",
-      walletPublicKey: "demo_public_key"
-    });
+
 
     // Create sample NFTs
     await this.createNft({
@@ -916,6 +908,134 @@ export class DatabaseStorage implements IStorage {
       communityMembers: 342,
     };
   }
+
+  // Bidding operations
+  async createBid(bid: InsertBid): Promise<Bid> {
+    const [newBid] = await db.insert(bids).values(bid).returning();
+    return newBid;
+  }
+
+  async getBidsForNft(nftId: number): Promise<Bid[]> {
+    return await db.select().from(bids).where(eq(bids.nftId, nftId)).orderBy(desc(bids.amount));
+  }
+
+  async getUserBids(userId: number): Promise<Bid[]> {
+    return await db.select().from(bids).where(eq(bids.bidderId, userId)).orderBy(desc(bids.createdAt));
+  }
+
+  async acceptBid(bidId: number, sellerId: number): Promise<Transaction> {
+    const bid = await db.select().from(bids).where(eq(bids.id, bidId)).limit(1);
+    if (!bid[0]) throw new Error("Bid not found");
+
+    const transaction = await this.createTransaction({
+      buyerId: bid[0].bidderId,
+      sellerId,
+      nftId: bid[0].nftId,
+      amount: bid[0].amount,
+      type: "purchase",
+      zkProofHash: `proof_${Date.now()}`
+    });
+
+    // Deactivate the accepted bid
+    await db.update(bids).set({ isActive: false }).where(eq(bids.id, bidId));
+
+    return transaction;
+  }
+
+  // Listing operations
+  async createListing(listing: InsertListing): Promise<Listing> {
+    const [newListing] = await db.insert(listings).values(listing).returning();
+    return newListing;
+  }
+
+  async getListingsForNft(nftId: number): Promise<Listing[]> {
+    return await db.select().from(listings).where(and(eq(listings.nftId, nftId), eq(listings.isActive, true))).orderBy(asc(listings.price));
+  }
+
+  async getUserListings(userId: number): Promise<Listing[]> {
+    return await db.select().from(listings).where(eq(listings.sellerId, userId)).orderBy(desc(listings.createdAt));
+  }
+
+  async buyFromListing(listingId: number, buyerId: number): Promise<Transaction> {
+    const listing = await db.select().from(listings).where(eq(listings.id, listingId)).limit(1);
+    if (!listing[0] || !listing[0].isActive) throw new Error("Listing not found or inactive");
+
+    const transaction = await this.createTransaction({
+      buyerId,
+      sellerId: listing[0].sellerId,
+      nftId: listing[0].nftId,
+      amount: listing[0].price,
+      type: "purchase",
+      zkProofHash: `proof_${Date.now()}`
+    });
+
+    // Deactivate the listing
+    await this.deactivateListing(listingId);
+
+    return transaction;
+  }
+
+  async deactivateListing(listingId: number): Promise<void> {
+    await db.update(listings).set({ isActive: false }).where(eq(listings.id, listingId));
+  }
+
+  // Ownership operations
+  async createOwnership(ownership: InsertOwnership): Promise<NftOwnership> {
+    const [newOwnership] = await db.insert(nftOwnerships).values(ownership).returning();
+    return newOwnership;
+  }
+
+  async getOwnershipsForUser(userId: number): Promise<NftOwnership[]> {
+    return await db.select().from(nftOwnerships).where(eq(nftOwnerships.userId, userId));
+  }
+
+  async getOwnershipsForNft(nftId: number): Promise<NftOwnership[]> {
+    return await db.select().from(nftOwnerships).where(eq(nftOwnerships.nftId, nftId));
+  }
+
+  async transferOwnership(nftId: number, fromUserId: number, toUserId: number, editionNumber: number): Promise<void> {
+    // Update ownership record
+    await db.update(nftOwnerships)
+      .set({ userId: toUserId })
+      .where(and(
+        eq(nftOwnerships.nftId, nftId),
+        eq(nftOwnerships.userId, fromUserId),
+        eq(nftOwnerships.editionNumber, editionNumber)
+      ));
+  }
+
+  // Enhanced NFT operations
+  async getNftWithDetails(nftId: number): Promise<Nft & {
+    listings?: Listing[];
+    bids?: Bid[];
+    ownerships?: NftOwnership[];
+    highestBid?: number;
+    lowestListing?: number;
+    isMintedOut?: boolean;
+  }> {
+    const nft = await this.getNft(nftId);
+    if (!nft) throw new Error("NFT not found");
+
+    const [nftListings, nftBids, nftOwnerships] = await Promise.all([
+      this.getListingsForNft(nftId),
+      this.getBidsForNft(nftId),
+      this.getOwnershipsForNft(nftId)
+    ]);
+
+    const highestBid = nftBids.length > 0 ? Math.max(...nftBids.map(b => b.amount)) : 0;
+    const lowestListing = nftListings.length > 0 ? Math.min(...nftListings.map(l => l.price)) : 0;
+    const isMintedOut = nft.currentEdition >= nft.editionSize;
+
+    return {
+      ...nft,
+      listings: nftListings,
+      bids: nftBids,
+      ownerships: nftOwnerships,
+      highestBid,
+      lowestListing,
+      isMintedOut
+    };
+  }
 }
 
-export const storage = new MemStorage();
+export const storage = new DatabaseStorage();

@@ -63,11 +63,11 @@ export async function seedDatabase() {
 
     // Create demo account from replit.md
     const demoWallet = walletService.generateWallet();
-    const { hashPassword } = await import("./auth");
+    const authModule = await import("./auth");
     const [demoUser] = await db.insert(users).values({
       username: "sam",
       email: "zedef0808@gmail.com",
-      password: await hashPassword("1234"),
+      password: await authModule.hashPassword("1234"),
       walletAddress: demoWallet.address,
       walletPrivateKey: walletService.encryptPrivateKey(demoWallet.privateKey),
       walletPublicKey: demoWallet.publicKey,
