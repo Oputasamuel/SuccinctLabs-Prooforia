@@ -613,6 +613,92 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Listings Routes
+  app.get("/api/listings", async (req, res) => {
+    try {
+      const listings = await storage.getAllListings();
+      res.json(listings);
+    } catch (error) {
+      console.error("Get listings error:", error);
+      res.status(500).json({ message: "Failed to fetch listings" });
+    }
+  });
+
+  app.post("/api/listings", async (req, res) => {
+    try {
+      if (!req.isAuthenticated() || !req.user) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+
+      const { nftId, price } = req.body;
+      
+      if (!nftId || !price || price <= 0) {
+        return res.status(400).json({ message: "Valid NFT ID and price required" });
+      }
+
+      // Check if user owns the NFT
+      const nft = await storage.getNft(nftId);
+      if (!nft) {
+        return res.status(404).json({ message: "NFT not found" });
+      }
+
+      // Check ownership via NFT creator or ownership records
+      const ownerships = await storage.getOwnershipsForNft(nftId);
+      const userOwnsNft = nft.creatorId === req.user.id || 
+                         ownerships.some(o => o.userId === req.user.id);
+
+      if (!userOwnsNft) {
+        return res.status(403).json({ message: "You don't own this NFT" });
+      }
+
+      const listing = await storage.createListing({
+        nftId,
+        sellerId: req.user.id,
+        price,
+        isActive: true
+      });
+
+      res.json(listing);
+    } catch (error) {
+      console.error("Create listing error:", error);
+      res.status(500).json({ message: "Failed to create listing" });
+    }
+  });
+
+  app.post("/api/listings/:id/buy", async (req, res) => {
+    try {
+      if (!req.isAuthenticated() || !req.user) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+
+      const listingId = parseInt(req.params.id);
+      const buyerId = req.user.id;
+
+      const transaction = await storage.buyFromListing(listingId, buyerId);
+      res.json(transaction);
+    } catch (error) {
+      console.error("Buy from listing error:", error);
+      res.status(500).json({ 
+        message: error instanceof Error ? error.message : "Failed to complete purchase" 
+      });
+    }
+  });
+
+  app.delete("/api/listings/:id", async (req, res) => {
+    try {
+      if (!req.isAuthenticated() || !req.user) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+
+      const listingId = parseInt(req.params.id);
+      await storage.deactivateListing(listingId);
+      res.json({ message: "Listing removed" });
+    } catch (error) {
+      console.error("Remove listing error:", error);
+      res.status(500).json({ message: "Failed to remove listing" });
+    }
+  });
+
   // Bidding Routes
   app.post("/api/bids", async (req, res) => {
     if (!req.session.userId) {
