@@ -227,7 +227,9 @@ export default function NFTDetailPopup({ nft, isOpen, onClose }: NFTDetailPopupP
               <CardContent className="p-4">
                 <div className="space-y-3">
                   <div className="flex justify-between items-center">
-                    <span className="text-sm text-gray-600">Current Price</span>
+                    <span className="text-sm text-gray-600">
+                      {isMintedOut ? "Highest Bid" : "Mint Price"}
+                    </span>
                     <span className="text-lg font-bold">{formatTokens(nft.price)}</span>
                   </div>
                 </div>

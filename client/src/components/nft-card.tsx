@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
-import { Heart, CheckCircle, Database, ShoppingCart, Eye, Calendar, Hash, Palette, Info } from "lucide-react";
+import { Heart, CheckCircle, Database, ShoppingCart, Eye, Calendar, Hash, Palette, Info, Gavel } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { formatTokens } from "@/lib/utils";
 
@@ -29,6 +29,10 @@ export default function NFTCard({ nft, viewMode = "grid", onViewDetails }: NFTCa
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const { refreshUser, user } = useAuth();
+
+  // Calculate minted out percentage
+  const mintedOutPercentage = (nft.currentEdition / nft.editionSize) * 100;
+  const isMintedOut = mintedOutPercentage >= 100;
 
   // Check if this NFT is in user's favorites
   const { data: profile } = useQuery<{
@@ -99,6 +103,21 @@ export default function NFTCard({ nft, viewMode = "grid", onViewDetails }: NFTCa
   });
 
   const handleBuy = () => {
+    if (!user) {
+      toast({
+        title: "Authentication required",
+        description: "Please log in to make purchases",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    // If minted out, open the details popup and switch to bidding tab
+    if (isMintedOut && onViewDetails) {
+      onViewDetails();
+      return;
+    }
+    
     buyMutation.mutate();
   };
 
@@ -250,6 +269,11 @@ export default function NFTCard({ nft, viewMode = "grid", onViewDetails }: NFTCa
               >
                 {buyMutation.isPending ? (
                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" />
+                ) : isMintedOut ? (
+                  <>
+                    <Gavel className="w-4 h-4 mr-2" />
+                    Place Bid
+                  </>
                 ) : (
                   <>
                     <ShoppingCart className="w-4 h-4 mr-2" />
@@ -303,9 +327,31 @@ export default function NFTCard({ nft, viewMode = "grid", onViewDetails }: NFTCa
             by {nft.creator?.username}
           </p>
 
+          {/* Edition Progress */}
+          <div className="mb-3">
+            <div className="flex justify-between items-center text-xs text-gray-500 mb-1">
+              <span>Edition Progress</span>
+              <span>{Math.round(mintedOutPercentage)}% minted</span>
+            </div>
+            <div className="w-full bg-gray-200 rounded-full h-1.5">
+              <div 
+                className={`h-1.5 rounded-full transition-all duration-300 ${
+                  isMintedOut ? 'bg-red-500' : 'bg-primary'
+                }`}
+                style={{ width: `${Math.min(mintedOutPercentage, 100)}%` }}
+              ></div>
+            </div>
+            <div className="flex justify-between items-center text-xs text-gray-400 mt-1">
+              <span>{nft.currentEdition} / {nft.editionSize}</span>
+              {isMintedOut && <span className="text-red-500 font-medium">MINTED OUT</span>}
+            </div>
+          </div>
+
           <div className="flex items-center justify-between mb-4">
             <div className="transition-all duration-300 group-hover:transform group-hover:scale-105">
-              <p className="text-xs text-gray-500 transition-colors duration-300 group-hover:text-gray-600">Current Price</p>
+              <p className="text-xs text-gray-500 transition-colors duration-300 group-hover:text-gray-600">
+                {isMintedOut ? "Highest Bid" : "Mint Price"}
+              </p>
               <p className="font-bold text-lg text-gray-900 transition-colors duration-300 group-hover:text-primary">
                 {formatTokens(nft.price)}
               </p>
