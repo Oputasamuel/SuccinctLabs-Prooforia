@@ -254,14 +254,14 @@ export default function ProfilePage() {
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6">
             <Avatar className="w-20 h-20">
               <AvatarFallback className="text-2xl font-bold bg-primary text-white">
-                {user.username.charAt(0).toUpperCase()}
+                {user.displayName.charAt(0).toUpperCase()}
               </AvatarFallback>
             </Avatar>
             <div className="flex-1">
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div>
-                  <h1 className="text-3xl font-bold text-gray-900">{user.username}</h1>
-                  <p className="text-gray-600">{user.email}</p>
+                  <h1 className="text-3xl font-bold text-gray-900">{user.displayName}</h1>
+                  <p className="text-gray-600">Wallet: {user.walletAddress.slice(0, 8)}...{user.walletAddress.slice(-6)}</p>
                   <div className="flex items-center gap-4 mt-2">
                     <div className="flex items-center gap-2">
                       <Wallet className="h-4 w-4 text-primary" />
@@ -900,15 +900,15 @@ export default function ProfilePage() {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">
-                              Username
+                              Display Name
                             </label>
-                            <Input value={user.username} disabled />
+                            <Input value={user.displayName} disabled />
                           </div>
                           <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">
-                              Email
+                              Wallet Address
                             </label>
-                            <Input value={user.email} disabled />
+                            <Input value={user.walletAddress} disabled />
                           </div>
                         </div>
                       </div>
