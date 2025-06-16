@@ -188,7 +188,7 @@ export default function NFTDetailPopup({ nft, isOpen, onClose }: NFTDetailPopupP
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="text-2xl font-bold">{displayNft.title}</DialogTitle>
+          <DialogTitle className="text-2xl font-bold">{currentNft.title}</DialogTitle>
         </DialogHeader>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -196,8 +196,8 @@ export default function NFTDetailPopup({ nft, isOpen, onClose }: NFTDetailPopupP
           <div className="space-y-6">
             <div className="relative">
               <img
-                src={displayNft.imageUrl}
-                alt={displayNft.title}
+                src={currentNft.imageUrl}
+                alt={currentNft.title}
                 className="w-full rounded-lg shadow-lg"
               />
               <div className="absolute top-4 left-4">
@@ -208,7 +208,7 @@ export default function NFTDetailPopup({ nft, isOpen, onClose }: NFTDetailPopupP
               </div>
               <div className="absolute top-4 right-4">
                 <Badge variant="outline" className="bg-white/90">
-                  #{displayNft.id?.toString().padStart(4, '0') || '0000'}
+                  #{currentNft.id?.toString().padStart(4, '0') || '0000'}
                 </Badge>
               </div>
             </div>
@@ -219,16 +219,16 @@ export default function NFTDetailPopup({ nft, isOpen, onClose }: NFTDetailPopupP
                 <div className="flex justify-between items-center mb-2">
                   <span className="text-sm font-medium">Edition Progress</span>
                   <span className="text-sm text-gray-600">
-                    {displayNft.currentEdition} / {displayNft.editionSize}
+                    {currentNft.currentEdition} / {currentNft.editionSize}
                   </span>
                 </div>
                 <Progress value={mintedOutPercentage} className="mb-2" />
                 <div className="flex justify-between text-xs text-gray-500">
-                  <span>Minted: {displayNft.currentEdition}</span>
+                  <span>Minted: {currentNft.currentEdition}</span>
                   <span className={isMintedOut ? "text-red-600 font-medium" : "text-green-600"}>
                     {isMintedOut ? "MINTED OUT" : `${remainingEditions} Available`}
                   </span>
-                  <span>Total: {displayNft.editionSize}</span>
+                  <span>Total: {currentNft.editionSize}</span>
                 </div>
               </CardContent>
             </Card>
@@ -241,7 +241,7 @@ export default function NFTDetailPopup({ nft, isOpen, onClose }: NFTDetailPopupP
                     <Wallet className="w-4 h-4 text-blue-500" />
                     <div>
                       <p className="text-xs text-gray-500">Original Price</p>
-                      <p className="font-semibold">{formatTokens(displayNft.price)}</p>
+                      <p className="font-semibold">{formatTokens(currentNft.price)}</p>
                     </div>
                   </div>
                 </CardContent>
@@ -253,7 +253,7 @@ export default function NFTDetailPopup({ nft, isOpen, onClose }: NFTDetailPopupP
                     <div>
                       <p className="text-xs text-gray-500">Highest Bid</p>
                       <p className="font-semibold">
-                        {displayNft.highestBid ? formatTokens(displayNft.highestBid) : "No bids"}
+                        {currentNft.highestBid ? formatTokens(currentNft.highestBid) : "No bids"}
                       </p>
                     </div>
                   </div>
@@ -276,7 +276,7 @@ export default function NFTDetailPopup({ nft, isOpen, onClose }: NFTDetailPopupP
               <TabsContent value="overview" className="space-y-4">
                 <div>
                   <h3 className="font-semibold mb-2">Description</h3>
-                  <p className="text-gray-600 text-sm">{displayNft.description}</p>
+                  <p className="text-gray-600 text-sm">{currentNft.description}</p>
                 </div>
 
                 <div>
@@ -284,15 +284,15 @@ export default function NFTDetailPopup({ nft, isOpen, onClose }: NFTDetailPopupP
                   <div className="space-y-2 text-sm">
                     <div className="flex justify-between">
                       <span className="text-gray-500">Creator:</span>
-                      <span>{displayNft.creator?.username}</span>
+                      <span>{currentNft.creator?.username}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-gray-500">Category:</span>
-                      <Badge variant="outline">{displayNft.category}</Badge>
+                      <Badge variant="outline">{currentNft.category}</Badge>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-gray-500">Created:</span>
-                      <span>{new Date(displayNft.createdAt || '').toLocaleDateString()}</span>
+                      <span>{new Date(currentNft.createdAt || '').toLocaleDateString()}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-gray-500">Blockchain:</span>
@@ -317,7 +317,7 @@ export default function NFTDetailPopup({ nft, isOpen, onClose }: NFTDetailPopupP
                       ) : (
                         <>
                           <ShoppingCart className="w-4 h-4 mr-2" />
-                          Mint for {formatTokens(displayNft.price)}
+                          Mint for {formatTokens(currentNft.price)}
                         </>
                       )}
                     </Button>
@@ -376,9 +376,9 @@ export default function NFTDetailPopup({ nft, isOpen, onClose }: NFTDetailPopupP
 
                 <div>
                   <h3 className="font-semibold mb-3">Current Bids</h3>
-                  {displayNft.bids && displayNft.bids.length > 0 ? (
+                  {currentNft.bids && currentNft.bids.length > 0 ? (
                     <div className="space-y-2">
-                      {displayNft.bids.map((bid) => (
+                      {currentNft.bids.map((bid: any) => (
                         <div key={bid.id} className="flex justify-between items-center p-3 bg-gray-50 rounded">
                           <div>
                             <p className="font-medium">{formatTokens(bid.amount)}</p>
@@ -434,7 +434,7 @@ export default function NFTDetailPopup({ nft, isOpen, onClose }: NFTDetailPopupP
 
                 <div>
                   <h3 className="font-semibold mb-3">Active Listings</h3>
-                  {displayNft.listings && displayNft.listings.length > 0 ? (
+                  {currentNft.listings && currentNft.listings.length > 0 ? (
                     <div className="space-y-2">
                       {displayNft.listings.map((listing) => (
                         <div key={listing.id} className="flex justify-between items-center p-3 bg-gray-50 rounded">
