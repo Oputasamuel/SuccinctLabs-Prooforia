@@ -198,12 +198,12 @@ export default function NFTCard({ nft, viewMode = "grid" }: NFTCardProps) {
           className="w-full h-64 object-cover transition-all duration-700 group-hover:scale-110 group-hover:brightness-75"
         />
         
-        {/* Whisper Overlay - Hidden metadata that appears on hover */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-500 ease-out">
-          <div className="absolute bottom-0 left-0 right-0 p-6 text-white transform translate-y-8 group-hover:translate-y-0 transition-transform duration-500 ease-out">
+        {/* Whisper Overlay - Always visible on mobile/tablet, hover on desktop */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-all duration-500 ease-out">
+          <div className="absolute bottom-0 left-0 right-0 p-6 text-white transform translate-y-0 md:translate-y-8 md:group-hover:translate-y-0 transition-transform duration-500 ease-out">
             
-            {/* Hidden metadata whispers */}
-            <div className="space-y-3 opacity-0 group-hover:opacity-100 transition-opacity duration-700 delay-200">
+            {/* Metadata - visible on mobile, appears on hover for desktop */}
+            <div className="space-y-3 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-700 delay-200">
               <div className="flex items-center space-x-2 text-sm">
                 <Hash className="w-4 h-4 text-blue-300" />
                 <span className="font-mono text-blue-200">#{nft.id.toString().padStart(4, '0')}</span>
@@ -239,8 +239,8 @@ export default function NFTCard({ nft, viewMode = "grid" }: NFTCardProps) {
               )}
             </div>
             
-            {/* Quick action button that appears on hover */}
-            <div className="mt-4 opacity-0 group-hover:opacity-100 transition-all duration-500 delay-300 transform translate-y-4 group-hover:translate-y-0">
+            {/* Quick action button - visible on mobile/tablet, appears on hover for desktop */}
+            <div className="mt-4 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-all duration-500 delay-300 transform translate-y-0 md:translate-y-4 md:group-hover:translate-y-0">
               <Button
                 onClick={handleBuy}
                 disabled={buyMutation.isPending}
