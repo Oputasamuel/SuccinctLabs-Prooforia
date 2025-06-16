@@ -361,14 +361,38 @@ export default function WalletAuthPage() {
       <Dialog open={!!createdWallet} onOpenChange={() => {}}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle className="text-center">Your Wallet Private Key</DialogTitle>
+            <DialogTitle className="text-center">Your Wallet Details</DialogTitle>
             <DialogDescription className="text-center">
-              Save this private key securely. This is your only way to access your account.
+              Save both your wallet address and private key securely. You'll need the private key to access your account.
             </DialogDescription>
           </DialogHeader>
           
           {createdWallet && (
             <div className="space-y-4">
+              {/* Wallet Address */}
+              <div className="bg-gray-50 p-4 rounded-lg border">
+                <div className="flex items-center justify-between mb-2">
+                  <label className="text-sm font-medium">Wallet Address</label>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      navigator.clipboard.writeText(createdWallet.user.walletAddress);
+                      toast({
+                        title: "Copied!",
+                        description: "Wallet address copied to clipboard",
+                      });
+                    }}
+                  >
+                    <Copy className="h-4 w-4" />
+                  </Button>
+                </div>
+                <div className="font-mono text-xs break-all p-2 bg-white border rounded">
+                  {createdWallet.user.walletAddress}
+                </div>
+              </div>
+
+              {/* Private Key */}
               <div className="bg-gray-50 p-4 rounded-lg border">
                 <div className="flex items-center justify-between mb-2">
                   <label className="text-sm font-medium">Private Key</label>
@@ -397,20 +421,39 @@ export default function WalletAuthPage() {
                     </Button>
                   </div>
                 </div>
-                <div className="font-mono text-sm break-all p-2 bg-white border rounded">
+                <div className="font-mono text-xs break-all p-2 bg-white border rounded">
                   {showPrivateKey ? createdWallet.privateKey : '••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••'}
                 </div>
               </div>
 
               <Alert>
                 <AlertDescription>
-                  Warning: Never share your private key with anyone. Store it in a secure location. 
-                  You'll need this key to log in to your account.
+                  <strong>Important:</strong> Save both your wallet address and private key securely. 
+                  Your private key is the only way to access your account. Never share it with anyone.
                 </AlertDescription>
               </Alert>
 
+              <div className="flex items-center gap-2 p-3 bg-blue-50 rounded-lg">
+                <input
+                  type="checkbox"
+                  id="confirm-saved"
+                  className="rounded"
+                  onChange={(e) => {
+                    const proceedBtn = document.getElementById('proceed-btn') as HTMLButtonElement;
+                    if (proceedBtn) {
+                      proceedBtn.disabled = !e.target.checked;
+                    }
+                  }}
+                />
+                <label htmlFor="confirm-saved" className="text-sm">
+                  I have securely saved my wallet address and private key
+                </label>
+              </div>
+
               <Button 
+                id="proceed-btn"
                 className="w-full" 
+                disabled={true}
                 onClick={() => {
                   setCreatedWallet(null);
                   window.location.href = '/?tab=marketplace';
