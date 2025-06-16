@@ -185,7 +185,10 @@ export default function MarketplaceSection() {
             </div>
             <h3 className="text-xl font-semibold text-gray-900 mb-2">No NFTs Found</h3>
             <p className="text-gray-600">
-              {category ? `No NFTs found in ${category} category.` : "No NFTs available yet."}
+              {category !== "all" ? `No NFTs found in ${category} category.` : 
+               marketFilter === "listed" ? "No NFTs are currently listed for sale." :
+               marketFilter === "unlisted" ? "No unlisted NFTs found." :
+               "No NFTs available yet."}
             </p>
           </div>
         ) : (
@@ -200,28 +203,37 @@ export default function MarketplaceSection() {
                   key={nft.id} 
                   nft={nft} 
                   viewMode={viewMode}
-                  onViewDetails={() => handleViewDetails(nft)}
+                  onViewDetails={handleViewDetails}
                 />
               ))}
             </div>
 
-            {/* Load More Button */}
-            <div className="text-center">
-              <Button variant="outline" className="px-8 py-3">
-                Load More NFTs
-              </Button>
+            <div className="text-center text-gray-600">
+              <p className="mb-2">
+                Showing {filteredAndSortedNfts.length} NFTs
+                {marketFilter === "listed" && " listed for sale"}
+                {marketFilter === "unlisted" && " not listed"}
+                {category !== "all" && ` in ${category}`}
+              </p>
+              <p className="text-sm">
+                Sort: {sortBy === "recent" ? "Recently Created" : 
+                       sortBy === "oldest" ? "Oldest First" :
+                       sortBy === "price-low" ? "Price: Low to High" :
+                       sortBy === "price-high" ? "Price: High to Low" :
+                       sortBy === "name" ? "Name: A-Z" : "Recent"}
+              </p>
             </div>
           </>
         )}
-      </div>
 
-      {/* Centralized NFT Detail Popup */}
-      <NFTDetailPopup 
-        nft={selectedNft}
-        isOpen={showDetailPopup}
-        onClose={handleClosePopup}
-        defaultTab={defaultTab}
-      />
+        {/* NFT Detail Popup */}
+        <NFTDetailPopup
+          nft={selectedNft}
+          isOpen={showDetailPopup}
+          onClose={handleClosePopup}
+          defaultTab={defaultTab}
+        />
+      </div>
     </section>
   );
 }

@@ -53,7 +53,8 @@ export default function NFTDetailPopup({ nft, isOpen, onClose, defaultTab = "ove
   // Create listing mutation
   const createListingMutation = useMutation({
     mutationFn: async ({ nftId, price }: { nftId: number; price: number }) => {
-      return apiRequest("POST", "/api/listings", { nftId, price });
+      const response = await apiRequest("POST", "/api/listings", { nftId, price });
+      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/listings"] });

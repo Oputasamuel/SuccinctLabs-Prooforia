@@ -654,8 +654,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const listing = await storage.createListing({
         nftId,
         sellerId: req.user.id,
-        price,
-        isActive: true
+        price
       });
 
       res.json(listing);
