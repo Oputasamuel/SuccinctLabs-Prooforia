@@ -5,11 +5,10 @@ import { z } from "zod";
 
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
-  username: text("username").notNull().unique(),
-  email: text("email").notNull().unique(),
-  password: text("password").notNull(),
+  displayName: text("display_name").notNull(),
+  profilePicture: text("profile_picture"),
   walletAddress: text("wallet_address").notNull().unique(),
-  walletPrivateKey: text("wallet_private_key").notNull(), // Encrypted
+  walletPrivateKey: text("wallet_private_key").notNull().unique(),
   walletPublicKey: text("wallet_public_key").notNull(),
   credits: integer("credits").default(10),
   discordConnected: boolean("discord_connected").default(false),
@@ -20,14 +19,7 @@ export const users = pgTable("users", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
-export const passwordResetTokens = pgTable("password_reset_tokens", {
-  id: serial("id").primaryKey(),
-  email: text("email").notNull(),
-  token: text("token").notNull().unique(),
-  expiresAt: timestamp("expires_at").notNull(),
-  used: boolean("used").default(false),
-  createdAt: timestamp("created_at").defaultNow(),
-});
+// Password reset tokens removed - using wallet-only authentication
 
 export const nfts = pgTable("nfts", {
   id: serial("id").primaryKey(),
@@ -105,16 +97,16 @@ export const nftOwnerships = pgTable("nft_ownerships", {
 });
 
 export const insertUserSchema = createInsertSchema(users).pick({
-  username: true,
-  email: true,
-  password: true,
+  displayName: true,
+  profilePicture: true,
 });
 
-export const registerUserSchema = insertUserSchema.extend({
-  confirmPassword: z.string(),
-}).refine((data) => data.password === data.confirmPassword, {
-  message: "Passwords don't match",
-  path: ["confirmPassword"],
+export const createAccountSchema = insertUserSchema.extend({
+  profilePictureFile: z.any().optional(),
+});
+
+export const walletLoginSchema = z.object({
+  privateKey: z.string().min(1, "Private key is required"),
 });
 
 export const insertNftSchema = createInsertSchema(nfts).pick({
@@ -158,11 +150,7 @@ export const insertOwnershipSchema = createInsertSchema(nftOwnerships).pick({
   editionNumber: true,
 });
 
-export const insertPasswordResetTokenSchema = createInsertSchema(passwordResetTokens).pick({
-  email: true,
-  token: true,
-  expiresAt: true,
-});
+// Password reset tokens removed - wallet-only authentication
 
 // Relations
 export const usersRelations = relations(users, ({ many }) => ({

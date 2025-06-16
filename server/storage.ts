@@ -1,12 +1,11 @@
 import { 
-  users, nfts, transactions, zkProofs, favorites, listings, bids, nftOwnerships, passwordResetTokens,
+  users, nfts, transactions, zkProofs, favorites, listings, bids, nftOwnerships,
   type User, type InsertUser, 
   type Nft, type InsertNft,
   type Transaction, type InsertTransaction,
   type ZkProof, type Listing, type InsertListing,
   type Bid, type InsertBid,
-  type NftOwnership, type InsertOwnership,
-  type PasswordResetToken, type InsertPasswordResetToken
+  type NftOwnership, type InsertOwnership
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, or, desc, asc, count, sum } from "drizzle-orm";
