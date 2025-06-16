@@ -804,11 +804,19 @@ export default function ProfilePage() {
                           size="sm"
                           className="flex-1"
                           onClick={() => {
-                            navigator.clipboard.writeText(user.walletPrivateKey);
-                            toast({
-                              title: "Copied",
-                              description: "Private key copied to clipboard",
-                            });
+                            if (privateKeyData?.privateKey) {
+                              navigator.clipboard.writeText(privateKeyData.privateKey);
+                              toast({
+                                title: "Copied",
+                                description: "Private key copied to clipboard",
+                              });
+                            } else {
+                              toast({
+                                title: "Error",
+                                description: "Private key not available. Please show it first.",
+                                variant: "destructive",
+                              });
+                            }
                           }}
                         >
                           <Copy className="h-4 w-4 mr-2" />
