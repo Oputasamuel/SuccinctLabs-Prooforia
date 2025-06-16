@@ -16,7 +16,7 @@ export default function Footer({ onTabChange }: FooterProps) {
               <div className="w-8 h-8 bg-gradient-to-br from-primary to-primary/80 rounded-lg flex items-center justify-center">
                 <Zap className="w-5 h-5 text-white" />
               </div>
-              <span className="text-xl font-bold">Succinct Labs</span>
+              <span className="text-xl font-bold">SP1Mint</span>
             </div>
             <p className="text-gray-400 mb-6 max-w-md">
               The future of NFTs powered by zero-knowledge proofs. Create, trade, and verify
@@ -137,9 +137,8 @@ export default function Footer({ onTabChange }: FooterProps) {
           </div>
         </div>
 
-        <div className="border-t border-gray-800 mt-12 pt-8 flex flex-col md:flex-row justify-between items-center">
-          <p className="text-gray-400 text-sm">© 2025 Succinct Labs. All rights reserved.</p>
-          <div className="flex space-x-6 mt-4 md:mt-0">
+        <div className="border-t border-gray-800 mt-12 pt-8 flex flex-col md:flex-row justify-center items-center">
+          <div className="flex space-x-6">
             <a 
               href="https://succinct.xyz/privacy" 
               target="_blank" 

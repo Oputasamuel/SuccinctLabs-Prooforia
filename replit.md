@@ -122,6 +122,8 @@ The application uses a PostgreSQL database with the following core entities:
 - **June 15, 2025**: Updated ZK proof refresh rate from 30 seconds to 5 seconds for more responsive live updates
 - **June 15, 2025**: Implemented NFT Metadata Whisper Effect with elegant hover animations revealing hidden details
 - **June 15, 2025**: Reduced NFT prices to 1-2 credits for easy testing and minting functionality
+- **June 15, 2025**: Enhanced mobile responsiveness with hamburger menu navigation and adaptive layouts
+- **June 15, 2025**: Updated footer branding from "Succinct Labs" to "SP1Mint" and removed copyright text
 
 ## Changelog
 - June 15, 2025: Complete SP1Mint rebranding and authentication system migration
