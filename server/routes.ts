@@ -716,7 +716,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const validatedData = insertBidSchema.parse(req.body);
       
       // Check if user has enough credits
-      if (user.credits < validatedData.amount) {
+      if ((user.credits || 0) < validatedData.amount) {
         return res.status(400).json({ message: "Insufficient credits" });
       }
       
