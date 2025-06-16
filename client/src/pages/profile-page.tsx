@@ -41,6 +41,8 @@ export default function ProfilePage() {
   const { data: profile, isLoading } = useQuery<UserProfile>({
     queryKey: ["/api/profile"],
     enabled: !!user,
+    refetchInterval: 5000, // Refresh every 5 seconds
+    refetchIntervalInBackground: true,
   });
 
   const favoriteMutation = useMutation({
