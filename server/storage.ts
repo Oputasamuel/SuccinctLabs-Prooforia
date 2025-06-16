@@ -1,11 +1,12 @@
 import { 
-  users, nfts, transactions, zkProofs, favorites, listings, bids, nftOwnerships,
+  users, nfts, transactions, zkProofs, favorites, listings, bids, nftOwnerships, passwordResetTokens,
   type User, type InsertUser, 
   type Nft, type InsertNft,
   type Transaction, type InsertTransaction,
   type ZkProof, type Listing, type InsertListing,
   type Bid, type InsertBid,
-  type NftOwnership, type InsertOwnership
+  type NftOwnership, type InsertOwnership,
+  type PasswordResetToken
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, or, desc, asc, count, sum } from "drizzle-orm";
@@ -14,14 +15,18 @@ export interface IStorage {
   // User operations
   getUser(id: number): Promise<User | undefined>;
   getUserByWalletAddress(walletAddress: string): Promise<User | undefined>;
+  getUserByEmail(email: string): Promise<User | undefined>;
   createUser(userData: {
     displayName: string;
+    email: string;
+    password: string;
     profilePicture?: string;
     walletAddress: string;
     walletPrivateKey: string;
     walletPublicKey: string;
   }): Promise<User>;
   updateUserCredits(userId: number, credits: number): Promise<User>;
+  updateUserPassword(email: string, newPassword: string): Promise<User>;
   connectDiscord(userId: number, discordUsername: string, discordAvatar?: string): Promise<User>;
   connectX(userId: number, xUsername: string): Promise<User>;
   
@@ -96,7 +101,10 @@ export interface IStorage {
     communityMembers: number;
   }>;
   
-  // Wallet-based authentication - no password operations needed
+  // Password reset operations
+  createPasswordResetToken(email: string, token: string, expiresAt: Date): Promise<PasswordResetToken>;
+  getPasswordResetToken(token: string): Promise<PasswordResetToken | undefined>;
+  markTokenAsUsed(tokenId: number): Promise<void>;
 }
 
 export class MemStorage implements IStorage {
@@ -673,8 +681,15 @@ export class DatabaseStorage implements IStorage {
     return user || undefined;
   }
 
+  async getUserByEmail(email: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.email, email));
+    return user || undefined;
+  }
+
   async createUser(userData: {
     displayName: string;
+    email: string;
+    password: string;
     profilePicture?: string;
     walletAddress: string;
     walletPrivateKey: string;
@@ -684,6 +699,8 @@ export class DatabaseStorage implements IStorage {
       .insert(users)
       .values({
         displayName: userData.displayName,
+        email: userData.email,
+        password: userData.password,
         profilePicture: userData.profilePicture,
         walletAddress: userData.walletAddress,
         walletPrivateKey: userData.walletPrivateKey,
@@ -691,6 +708,16 @@ export class DatabaseStorage implements IStorage {
         credits: 10,
       })
       .returning();
+    return user;
+  }
+
+  async updateUserPassword(email: string, newPassword: string): Promise<User> {
+    const [user] = await db
+      .update(users)
+      .set({ password: newPassword })
+      .where(eq(users.email, email))
+      .returning();
+    if (!user) throw new Error("User not found");
     return user;
   }
 
