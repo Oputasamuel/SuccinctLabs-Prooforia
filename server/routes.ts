@@ -323,7 +323,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const creator = await storage.getUser(nft.creatorId);
       const nftWithCreator = {
         ...nft,
-        creator: creator ? { id: creator.id, username: creator.username } : null
+        creator: creator ? { id: creator.id, username: creator.displayName } : null
       };
 
       res.json(nftWithCreator);
@@ -343,7 +343,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const creator = await storage.getUser(nftWithDetails.creatorId);
       const response = {
         ...nftWithDetails,
-        creator: creator ? { id: creator.id, username: creator.username } : null
+        creator: creator ? { id: creator.id, username: creator.displayName } : null
       };
 
       res.json(response);
@@ -1037,7 +1037,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const creator = await storage.getUser(nft.creatorId);
           purchasedNfts.push({
             ...nft,
-            creator: creator ? { id: creator.id, username: creator.username } : null
+            creator: creator ? { id: creator.id, username: creator.displayName } : null
           });
         }
       }
@@ -1054,7 +1054,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const profile = {
         createdNfts: createdNfts.map(nft => ({
           ...nft,
-          creator: { id: req.user.id, username: req.user.username }
+          creator: { id: req.user!.id, username: req.user!.displayName }
         })),
         purchasedNfts,
         transactions: userTransactions,
