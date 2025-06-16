@@ -47,6 +47,32 @@ export default function NFTDetailPopup({ nft, isOpen, onClose, defaultTab = "ove
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
+  // Check if user owns this NFT
+  const userOwnsNft = user && nft && (nft.creatorId === user.id);
+
+  // Create listing mutation
+  const createListingMutation = useMutation({
+    mutationFn: async ({ nftId, price }: { nftId: number; price: number }) => {
+      return apiRequest("POST", "/api/listings", { nftId, price });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/listings"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/nfts"] });
+      setListingPrice("");
+      toast({
+        title: "NFT Listed",
+        description: "Your NFT has been listed for sale successfully.",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Failed to List NFT",
+        description: error.message || "An error occurred while listing the NFT.",
+        variant: "destructive",
+      });
+    },
+  });
+
   // Purchase mutation
   const purchaseMutation = useMutation({
     mutationFn: async () => {
@@ -105,31 +131,7 @@ export default function NFTDetailPopup({ nft, isOpen, onClose, defaultTab = "ove
     },
   });
 
-  // Listing mutation
-  const createListingMutation = useMutation({
-    mutationFn: async (price: number) => {
-      if (!nft) throw new Error("No NFT selected");
-      const response = await apiRequest("POST", "/api/listings", {
-        nftId: nft.id,
-        price,
-      });
-      return response.json();
-    },
-    onSuccess: () => {
-      toast({
-        title: "Listing created successfully!",
-        description: `Your NFT is now listed for ${listingPrice} credits`,
-      });
-      setListingPrice("");
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Listing failed",
-        description: error.message || "Something went wrong",
-        variant: "destructive",
-      });
-    },
-  });
+
 
   const handlePurchase = () => {
     if (!user) {
@@ -166,7 +168,8 @@ export default function NFTDetailPopup({ nft, isOpen, onClose, defaultTab = "ove
       });
       return;
     }
-    createListingMutation.mutate(price);
+    if (!nft) return;
+    createListingMutation.mutate({ nftId: nft.id, price });
   };
 
   if (!nft) {

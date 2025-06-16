@@ -645,7 +645,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Check ownership via NFT creator or ownership records
       const ownerships = await storage.getOwnershipsForNft(nftId);
       const userOwnsNft = nft.creatorId === req.user.id || 
-                         ownerships.some(o => o.userId === req.user.id);
+                         ownerships.some(o => o.ownerId === req.user.id);
 
       if (!userOwnsNft) {
         return res.status(403).json({ message: "You don't own this NFT" });

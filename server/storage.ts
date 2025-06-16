@@ -77,6 +77,7 @@ export interface IStorage {
   createListing(listing: InsertListing): Promise<Listing>;
   getListingsForNft(nftId: number): Promise<Listing[]>;
   getUserListings(userId: number): Promise<Listing[]>;
+  getAllListings(): Promise<Listing[]>;
   buyFromListing(listingId: number, buyerId: number): Promise<Transaction>;
   deactivateListing(listingId: number): Promise<void>;
   
@@ -584,6 +585,10 @@ export class MemStorage implements IStorage {
     );
   }
 
+  async getAllListings(): Promise<Listing[]> {
+    return Array.from(this.listings.values()).filter(listing => listing.isActive);
+  }
+
   async buyFromListing(listingId: number, buyerId: number): Promise<Transaction> {
     const listing = this.listings.get(listingId);
     if (!listing) throw new Error("Listing not found");
@@ -1072,6 +1077,10 @@ export class DatabaseStorage implements IStorage {
 
   async getUserListings(userId: number): Promise<Listing[]> {
     return await db.select().from(listings).where(eq(listings.sellerId, userId)).orderBy(desc(listings.createdAt));
+  }
+
+  async getAllListings(): Promise<Listing[]> {
+    return await db.select().from(listings).where(eq(listings.isActive, true)).orderBy(desc(listings.createdAt));
   }
 
   async buyFromListing(listingId: number, buyerId: number): Promise<Transaction> {
