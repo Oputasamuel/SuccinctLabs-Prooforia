@@ -146,9 +146,9 @@ function NFTProfileCard({ nft, type }: { nft: NftWithCreator; type: "created" | 
             Share
           </Button>
         </div>
-        {type === "created" && (
+        {type === "created" && nft.currentEdition && (
           <div className="mt-2 text-xs text-gray-500">
-            Edition {nft.currentEdition}/{nft.totalEditions || nft.currentEdition}
+            Edition {nft.currentEdition}
           </div>
         )}
       </CardContent>
@@ -230,7 +230,7 @@ export default function ProfilePage() {
   if (!user) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
-        <Header />
+        <Header activeTab="marketplace" onTabChange={() => {}} />
         <div className="flex items-center justify-center min-h-[60vh]">
           <Card className="p-8 text-center">
             <CardContent>
@@ -247,7 +247,7 @@ export default function ProfilePage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
-      <Header />
+      <Header activeTab="marketplace" onTabChange={() => {}} />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Profile Header */}
         <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
