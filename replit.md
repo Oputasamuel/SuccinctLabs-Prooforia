@@ -135,6 +135,8 @@ The application uses a PostgreSQL database with the following core entities:
 - **June 16, 2025**: Added resale listings feature enabling owners to list NFTs at custom prices for profit
 - **June 16, 2025**: Implemented edition progress tracking with minted-out status indicators
 - **June 16, 2025**: Enhanced NFT cards with "View Details" buttons opening comprehensive marketplace popups
+- **June 16, 2025**: Fixed authentication response handling - resolved "response.json is not a function" error
+- **June 16, 2025**: Login and signup functionality fully operational with PostgreSQL database integration
 
 ## Changelog
 - June 15, 2025: Complete SP1Mint rebranding and authentication system migration
