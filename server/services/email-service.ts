@@ -1,4 +1,4 @@
-import nodemailer from 'nodemailer';
+import { MailService } from '@sendgrid/mail';
 
 interface EmailParams {
   to: string;
@@ -8,17 +8,14 @@ interface EmailParams {
 }
 
 class EmailService {
-  private transporter: nodemailer.Transporter;
-  private fromEmail = 'joetrench22@gmail.com';
+  private mailService: MailService;
+  private fromEmail = 'joetrench22@gmail.com'; // Use your verified email
 
   constructor() {
-    this.transporter = nodemailer.createTransport({
-      service: 'gmail',
-      auth: {
-        user: process.env.GMAIL_USER || 'joetrench22@gmail.com',
-        pass: process.env.GMAIL_APP_PASSWORD, // Gmail App Password
-      },
-    });
+    this.mailService = new MailService();
+    if (process.env.SENDGRID_API_KEY) {
+      this.mailService.setApiKey(process.env.SENDGRID_API_KEY);
+    }
   }
 
   async sendPasswordResetCode(email: string, code: string): Promise<boolean> {
@@ -26,15 +23,15 @@ class EmailService {
     console.log(`\n🔐 [PASSWORD RESET] Code for ${email}: ${code}`);
     console.log(`   This code expires in 15 minutes\n`);
 
-    if (!process.env.GMAIL_APP_PASSWORD) {
-      console.log(`[DEV MODE] Gmail App Password not configured - using console logging only`);
+    if (!process.env.SENDGRID_API_KEY) {
+      console.log(`[DEV MODE] Password reset code for ${email}: ${code}`);
       return true;
     }
 
     try {
-      await this.transporter.sendMail({
-        from: this.fromEmail,
+      const result = await this.mailService.send({
         to: email,
+        from: this.fromEmail, // Use verified sender email
         subject: 'SP1Mint - Password Reset Code',
         text: `Your password reset code is: ${code}. This code will expire in 15 minutes.`,
         html: `
@@ -52,14 +49,14 @@ class EmailService {
           </div>
         `,
       });
-      console.log(`✅ Gmail email sent successfully to ${email}`);
+      console.log(`✅ SendGrid API call successful for ${email}`);
       return true;
     } catch (error) {
-      console.error('Gmail email error:', error);
-      // In development, still log the code even if Gmail fails
+      console.error('SendGrid email error:', error);
+      // In development, still log the code even if SendGrid fails
       if (process.env.NODE_ENV === 'development') {
         console.log(`\n🔐 [PASSWORD RESET FALLBACK] Code for ${email}: ${code}`);
-        console.log(`   This code expires in 15 minutes (Gmail failed, using fallback)\n`);
+        console.log(`   This code expires in 15 minutes (SendGrid failed, using fallback)\n`);
         return true;
       }
       return false;
@@ -67,22 +64,22 @@ class EmailService {
   }
 
   async sendEmail(params: EmailParams): Promise<boolean> {
-    if (!process.env.GMAIL_APP_PASSWORD) {
+    if (!process.env.SENDGRID_API_KEY) {
       console.log(`[DEV MODE] Email to ${params.to}: ${params.subject}`);
       return true;
     }
 
     try {
-      await this.transporter.sendMail({
-        from: this.fromEmail,
+      await this.mailService.send({
         to: params.to,
+        from: this.fromEmail,
         subject: params.subject,
         text: params.text,
         html: params.html,
       });
       return true;
     } catch (error) {
-      console.error('Gmail email error:', error);
+      console.error('SendGrid email error:', error);
       return false;
     }
   }
