@@ -42,6 +42,7 @@ export default function WalletAuthPage() {
   const [copied, setCopied] = useState(false);
   const [profileImageFile, setProfileImageFile] = useState<File | null>(null);
   const [profileImagePreview, setProfileImagePreview] = useState<string | null>(null);
+  const [confirmationChecked, setConfirmationChecked] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -439,12 +440,8 @@ export default function WalletAuthPage() {
                     type="checkbox"
                     id="confirm-saved"
                     className="rounded"
-                    onChange={(e) => {
-                      const proceedBtn = document.getElementById('proceed-btn') as HTMLButtonElement;
-                      if (proceedBtn) {
-                        proceedBtn.disabled = !e.target.checked;
-                      }
-                    }}
+                    checked={confirmationChecked}
+                    onChange={(e) => setConfirmationChecked(e.target.checked)}
                   />
                   <label htmlFor="confirm-saved" className="text-sm">
                     I have securely saved my wallet address and private key
@@ -452,9 +449,8 @@ export default function WalletAuthPage() {
                 </div>
 
                 <Button 
-                  id="proceed-btn"
                   className="w-full" 
-                  disabled={true}
+                  disabled={!confirmationChecked}
                   onClick={() => {
                     setCreatedWallet(null);
                     window.location.href = '/?tab=marketplace';
