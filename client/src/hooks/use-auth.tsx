@@ -51,14 +51,7 @@ async function apiRequest(path: string, options?: RequestInit) {
     return null;
   }
 
-  // Check if response has JSON content
-  const contentType = response.headers.get('content-type');
-  if (contentType && contentType.includes('application/json')) {
-    return response.json();
-  }
-
-  // For non-JSON responses (like sendStatus), return null
-  return null;
+  return await response.json();
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -69,14 +62,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     data: user,
     error,
     isLoading,
-  } = useQuery<AuthUser | null>({
+  } = useQuery<AuthUser | undefined, Error>({
     queryKey: ["/api/user"],
-    queryFn: async (): Promise<AuthUser | null> => {
+    queryFn: async () => {
       try {
         return await apiRequest("/api/user");
       } catch (error: any) {
-        if (error.message.includes('401')) {
-          return null;
+        if (error.message.includes("401") || error.message.includes("Not authenticated")) {
+          return undefined;
         }
         throw error;
       }
@@ -139,10 +132,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     },
     onSuccess: () => {
       queryClient.setQueryData(["/api/user"], null);
-      queryClient.clear();
       toast({
         title: "Logged out",
-        description: "See you next time!",
+        description: "You have been successfully logged out.",
       });
     },
     onError: (error: Error) => {
@@ -165,8 +157,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     onSuccess: (user: AuthUser) => {
       queryClient.setQueryData(["/api/user"], user);
       toast({
-        title: "Discord connected!",
-        description: `+4 credits earned. You now have ${user.credits} credits.`,
+        title: "Discord Connected!",
+        description: `Connected Discord account: ${user.discordUsername}. You earned 5 bonus credits!`,
       });
     },
     onError: (error: Error) => {
@@ -189,8 +181,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     onSuccess: (user: AuthUser) => {
       queryClient.setQueryData(["/api/user"], user);
       toast({
-        title: "X (Twitter) connected!",
-        description: `+6 credits earned. You now have ${user.credits} credits.`,
+        title: "X Connected!",
+        description: `Connected X account: ${user.xUsername}. You earned 5 bonus credits!`,
       });
     },
     onError: (error: Error) => {
