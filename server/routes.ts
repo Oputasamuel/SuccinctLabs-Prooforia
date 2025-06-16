@@ -2,7 +2,7 @@ import type { Express, Request } from "express";
 import { createServer, type Server } from "http";
 import multer from "multer";
 import { storage } from "./storage";
-import { insertNftSchema } from "@shared/schema";
+import { insertNftSchema, insertBidSchema, insertListingSchema } from "@shared/schema";
 import { sp1Service } from "./services/sp1-service";
 import { ipfsService } from "./services/ipfs-service";
 import { succinctService } from "./services/succinct-service";
@@ -306,6 +306,95 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Get ZK proofs error:", error);
       res.status(500).json({ message: "Failed to fetch ZK proofs" });
+    }
+  });
+
+  // Enhanced NFT Details Route
+  app.get("/api/nfts/:id/details", async (req, res) => {
+    try {
+      const nftId = parseInt(req.params.id);
+      const nftDetails = await storage.getNftWithDetails(nftId);
+      res.json(nftDetails);
+    } catch (error) {
+      console.error("Get NFT details error:", error);
+      res.status(500).json({ message: "Failed to fetch NFT details" });
+    }
+  });
+
+  // Bidding Routes
+  app.post("/api/bids", async (req, res) => {
+    if (!req.isAuthenticated() || !req.user) {
+      return res.status(401).json({ message: "Authentication required" });
+    }
+
+    try {
+      const validatedData = insertBidSchema.parse(req.body);
+      const bid = await storage.createBid({
+        ...validatedData,
+        bidderId: req.user.id,
+      });
+      res.status(201).json(bid);
+    } catch (error) {
+      console.error("Create bid error:", error);
+      res.status(500).json({ message: "Failed to place bid" });
+    }
+  });
+
+  app.get("/api/nfts/:id/bids", async (req, res) => {
+    try {
+      const nftId = parseInt(req.params.id);
+      const bids = await storage.getBidsForNft(nftId);
+      res.json(bids);
+    } catch (error) {
+      console.error("Get bids error:", error);
+      res.status(500).json({ message: "Failed to fetch bids" });
+    }
+  });
+
+  // Listing Routes
+  app.post("/api/listings", async (req, res) => {
+    if (!req.isAuthenticated() || !req.user) {
+      return res.status(401).json({ message: "Authentication required" });
+    }
+
+    try {
+      const validatedData = insertListingSchema.parse(req.body);
+      const listing = await storage.createListing({
+        ...validatedData,
+        sellerId: req.user.id,
+      });
+      res.status(201).json(listing);
+    } catch (error) {
+      console.error("Create listing error:", error);
+      res.status(500).json({ message: "Failed to create listing" });
+    }
+  });
+
+  app.get("/api/nfts/:id/listings", async (req, res) => {
+    try {
+      const nftId = parseInt(req.params.id);
+      const listings = await storage.getListingsForNft(nftId);
+      res.json(listings);
+    } catch (error) {
+      console.error("Get listings error:", error);
+      res.status(500).json({ message: "Failed to fetch listings" });
+    }
+  });
+
+  app.post("/api/listings/:id/buy", async (req, res) => {
+    if (!req.isAuthenticated() || !req.user) {
+      return res.status(401).json({ message: "Authentication required" });
+    }
+
+    try {
+      const listingId = parseInt(req.params.id);
+      const buyerId = req.user.id;
+      
+      const transaction = await storage.buyFromListing(listingId, buyerId);
+      res.status(201).json(transaction);
+    } catch (error) {
+      console.error("Buy from listing error:", error);
+      res.status(500).json({ message: "Failed to purchase from listing" });
     }
   });
 

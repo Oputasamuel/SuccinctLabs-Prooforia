@@ -208,7 +208,7 @@ export default function NFTDetailPopup({ nft, isOpen, onClose }: NFTDetailPopupP
               </div>
               <div className="absolute top-4 right-4">
                 <Badge variant="outline" className="bg-white/90">
-                  #{displayNft.id.toString().padStart(4, '0')}
+                  #{displayNft.id?.toString().padStart(4, '0') || '0000'}
                 </Badge>
               </div>
             </div>
