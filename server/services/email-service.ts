@@ -9,7 +9,7 @@ interface EmailParams {
 
 class EmailService {
   private mailService: MailService;
-  private fromEmail = 'noreply@sp1mint.com'; // Use your verified domain
+  private fromEmail = 'joetrench22@gmail.com'; // Use your verified email
 
   constructor() {
     this.mailService = new MailService();
@@ -19,12 +19,9 @@ class EmailService {
   }
 
   async sendPasswordResetCode(email: string, code: string): Promise<boolean> {
-    // Development mode - log the code to console for testing
-    if (process.env.NODE_ENV === 'development') {
-      console.log(`\n🔐 [PASSWORD RESET] Code for ${email}: ${code}`);
-      console.log(`   This code expires in 15 minutes\n`);
-      return true;
-    }
+    // Always log the code to console for debugging
+    console.log(`\n🔐 [PASSWORD RESET] Code for ${email}: ${code}`);
+    console.log(`   This code expires in 15 minutes\n`);
 
     if (!process.env.SENDGRID_API_KEY) {
       console.log(`[DEV MODE] Password reset code for ${email}: ${code}`);
