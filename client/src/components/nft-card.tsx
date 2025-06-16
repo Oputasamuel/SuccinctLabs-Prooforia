@@ -241,8 +241,8 @@ export default function NFTCard({ nft, viewMode = "grid" }: NFTCardProps) {
               )}
             </div>
             
-            {/* Quick action button - visible on mobile/tablet, appears on hover for desktop */}
-            <div className="mt-4 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-all duration-500 delay-300 transform translate-y-0 md:translate-y-4 md:group-hover:translate-y-0">
+            {/* Action buttons - visible on mobile/tablet, appears on hover for desktop */}
+            <div className="mt-4 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-all duration-500 delay-300 transform translate-y-0 md:translate-y-4 md:group-hover:translate-y-0 space-y-2">
               <Button
                 onClick={handleBuy}
                 disabled={buyMutation.isPending}
@@ -256,6 +256,14 @@ export default function NFTCard({ nft, viewMode = "grid" }: NFTCardProps) {
                     Buy for {formatTokens(nft.price)}
                   </>
                 )}
+              </Button>
+              <Button
+                onClick={() => setShowDetailPopup(true)}
+                variant="outline"
+                className="w-full bg-white/90 hover:bg-white backdrop-blur-sm border border-white/50 text-gray-900"
+              >
+                <Info className="w-4 h-4 mr-2" />
+                View Details
               </Button>
             </div>
           </div>
@@ -326,6 +334,13 @@ export default function NFTCard({ nft, viewMode = "grid" }: NFTCardProps) {
           </div>
         </div>
       </CardContent>
+
+      {/* NFT Detail Popup */}
+      <NFTDetailPopup 
+        nft={nft}
+        isOpen={showDetailPopup}
+        onClose={() => setShowDetailPopup(false)}
+      />
     </Card>
   );
 }

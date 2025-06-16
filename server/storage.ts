@@ -1,9 +1,11 @@
 import { 
-  users, nfts, transactions, zkProofs, favorites,
+  users, nfts, transactions, zkProofs, favorites, listings, bids, nftOwnerships,
   type User, type InsertUser, 
   type Nft, type InsertNft,
   type Transaction, type InsertTransaction,
-  type ZkProof
+  type ZkProof, type Listing, type InsertListing,
+  type Bid, type InsertBid,
+  type NftOwnership, type InsertOwnership
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, or, desc, count, sum } from "drizzle-orm";
@@ -59,6 +61,35 @@ export interface IStorage {
   removeFavorite(userId: number, nftId: number): Promise<void>;
   getFavorites(userId: number): Promise<Nft[]>;
   
+  // Bidding operations
+  createBid(bid: InsertBid): Promise<Bid>;
+  getBidsForNft(nftId: number): Promise<Bid[]>;
+  getUserBids(userId: number): Promise<Bid[]>;
+  acceptBid(bidId: number, sellerId: number): Promise<Transaction>;
+  
+  // Listing operations
+  createListing(listing: InsertListing): Promise<Listing>;
+  getListingsForNft(nftId: number): Promise<Listing[]>;
+  getUserListings(userId: number): Promise<Listing[]>;
+  buyFromListing(listingId: number, buyerId: number): Promise<Transaction>;
+  deactivateListing(listingId: number): Promise<void>;
+  
+  // Ownership operations
+  createOwnership(ownership: InsertOwnership): Promise<NftOwnership>;
+  getOwnershipsForUser(userId: number): Promise<NftOwnership[]>;
+  getOwnershipsForNft(nftId: number): Promise<NftOwnership[]>;
+  transferOwnership(nftId: number, fromUserId: number, toUserId: number, editionNumber: number): Promise<void>;
+  
+  // Enhanced NFT operations
+  getNftWithDetails(nftId: number): Promise<Nft & {
+    listings?: Listing[];
+    bids?: Bid[];
+    ownerships?: NftOwnership[];
+    highestBid?: number;
+    lowestListing?: number;
+    isMintedOut?: boolean;
+  }>;
+  
   // Stats
   getStats(): Promise<{
     totalNfts: number;
@@ -74,10 +105,16 @@ export class MemStorage implements IStorage {
   private transactions: Map<number, Transaction>;
   private zkProofs: Map<number, ZkProof>;
   private favorites: Map<string, { userId: number; nftId: number }>;
+  private listings: Map<number, Listing>;
+  private bids: Map<number, Bid>;
+  private ownerships: Map<number, NftOwnership>;
   private currentUserId: number;
   private currentNftId: number;
   private currentTransactionId: number;
   private currentProofId: number;
+  private currentListingId: number;
+  private currentBidId: number;
+  private currentOwnershipId: number;
 
   constructor() {
     this.users = new Map();
@@ -85,10 +122,16 @@ export class MemStorage implements IStorage {
     this.transactions = new Map();
     this.zkProofs = new Map();
     this.favorites = new Map();
+    this.listings = new Map();
+    this.bids = new Map();
+    this.ownerships = new Map();
     this.currentUserId = 1;
     this.currentNftId = 1;
     this.currentTransactionId = 1;
     this.currentProofId = 1;
+    this.currentListingId = 1;
+    this.currentBidId = 1;
+    this.currentOwnershipId = 1;
 
     // Initialize with some sample data
     this.initializeSampleData();
@@ -391,6 +434,170 @@ export class MemStorage implements IStorage {
     };
     this.users.set(userId, updatedUser);
     return updatedUser;
+  }
+
+  // Bidding operations
+  async createBid(bid: InsertBid): Promise<Bid> {
+    const newBid: Bid = {
+      id: this.currentBidId++,
+      ...bid,
+      isActive: true,
+      createdAt: new Date(),
+      expiresAt: null,
+    };
+    this.bids.set(newBid.id, newBid);
+    return newBid;
+  }
+
+  async getBidsForNft(nftId: number): Promise<Bid[]> {
+    return Array.from(this.bids.values()).filter(bid => 
+      bid.nftId === nftId && bid.isActive
+    ).sort((a, b) => b.amount - a.amount);
+  }
+
+  async getUserBids(userId: number): Promise<Bid[]> {
+    return Array.from(this.bids.values()).filter(bid => 
+      bid.bidderId === userId && bid.isActive
+    );
+  }
+
+  async acceptBid(bidId: number, sellerId: number): Promise<Transaction> {
+    const bid = this.bids.get(bidId);
+    if (!bid) throw new Error("Bid not found");
+    
+    // Create transaction
+    const transaction = await this.createTransaction({
+      nftId: bid.nftId,
+      buyerId: bid.bidderId,
+      sellerId,
+      price: bid.amount,
+      zkProofHash: `proof_${Date.now()}`,
+    });
+
+    // Deactivate bid
+    bid.isActive = false;
+    this.bids.set(bidId, bid);
+
+    return transaction;
+  }
+
+  // Listing operations
+  async createListing(listing: InsertListing): Promise<Listing> {
+    const newListing: Listing = {
+      id: this.currentListingId++,
+      ...listing,
+      isActive: true,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.listings.set(newListing.id, newListing);
+    return newListing;
+  }
+
+  async getListingsForNft(nftId: number): Promise<Listing[]> {
+    return Array.from(this.listings.values()).filter(listing => 
+      listing.nftId === nftId && listing.isActive
+    ).sort((a, b) => a.price - b.price);
+  }
+
+  async getUserListings(userId: number): Promise<Listing[]> {
+    return Array.from(this.listings.values()).filter(listing => 
+      listing.sellerId === userId && listing.isActive
+    );
+  }
+
+  async buyFromListing(listingId: number, buyerId: number): Promise<Transaction> {
+    const listing = this.listings.get(listingId);
+    if (!listing) throw new Error("Listing not found");
+    
+    // Create transaction
+    const transaction = await this.createTransaction({
+      nftId: listing.nftId,
+      buyerId,
+      sellerId: listing.sellerId,
+      price: listing.price,
+      zkProofHash: `proof_${Date.now()}`,
+    });
+
+    // Deactivate listing
+    listing.isActive = false;
+    this.listings.set(listingId, listing);
+
+    return transaction;
+  }
+
+  async deactivateListing(listingId: number): Promise<void> {
+    const listing = this.listings.get(listingId);
+    if (listing) {
+      listing.isActive = false;
+      this.listings.set(listingId, listing);
+    }
+  }
+
+  // Ownership operations
+  async createOwnership(ownership: InsertOwnership): Promise<NftOwnership> {
+    const newOwnership: NftOwnership = {
+      id: this.currentOwnershipId++,
+      ...ownership,
+      acquiredAt: new Date(),
+    };
+    this.ownerships.set(newOwnership.id, newOwnership);
+    return newOwnership;
+  }
+
+  async getOwnershipsForUser(userId: number): Promise<NftOwnership[]> {
+    return Array.from(this.ownerships.values()).filter(ownership => 
+      ownership.ownerId === userId
+    );
+  }
+
+  async getOwnershipsForNft(nftId: number): Promise<NftOwnership[]> {
+    return Array.from(this.ownerships.values()).filter(ownership => 
+      ownership.nftId === nftId
+    );
+  }
+
+  async transferOwnership(nftId: number, fromUserId: number, toUserId: number, editionNumber: number): Promise<void> {
+    const ownership = Array.from(this.ownerships.values()).find(o => 
+      o.nftId === nftId && o.ownerId === fromUserId && o.editionNumber === editionNumber
+    );
+    
+    if (ownership) {
+      ownership.ownerId = toUserId;
+      ownership.acquiredAt = new Date();
+      this.ownerships.set(ownership.id, ownership);
+    }
+  }
+
+  // Enhanced NFT operations
+  async getNftWithDetails(nftId: number): Promise<Nft & {
+    listings?: Listing[];
+    bids?: Bid[];
+    ownerships?: NftOwnership[];
+    highestBid?: number;
+    lowestListing?: number;
+    isMintedOut?: boolean;
+  }> {
+    const nft = await this.getNft(nftId);
+    if (!nft) throw new Error("NFT not found");
+
+    const listings = await this.getListingsForNft(nftId);
+    const bids = await this.getBidsForNft(nftId);
+    const ownerships = await this.getOwnershipsForNft(nftId);
+    
+    const highestBid = bids.length > 0 ? Math.max(...bids.map(b => b.amount)) : undefined;
+    const lowestListing = listings.length > 0 ? Math.min(...listings.map(l => l.price)) : undefined;
+    const isMintedOut = nft.currentEdition >= nft.editionSize;
+
+    return {
+      ...nft,
+      listings,
+      bids,
+      ownerships,
+      highestBid,
+      lowestListing,
+      isMintedOut,
+    };
   }
 
   async getStats(): Promise<{
