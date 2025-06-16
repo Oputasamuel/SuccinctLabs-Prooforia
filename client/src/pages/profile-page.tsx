@@ -42,6 +42,8 @@ export default function ProfilePage() {
   const [location, setLocation] = useLocation();
   const [xUsername, setXUsername] = useState("");
   const [xDialogOpen, setXDialogOpen] = useState(false);
+  const [discordUsername, setDiscordUsername] = useState("");
+  const [discordDialogOpen, setDiscordDialogOpen] = useState(false);
 
   const { data: profile, isLoading } = useQuery<UserProfile>({
     queryKey: ["/api/profile"],
@@ -68,12 +70,19 @@ export default function ProfilePage() {
   });
 
   const connectDiscordMutation = useMutation({
-    mutationFn: async () => {
-      const response = await apiRequest("GET", "/api/auth/discord");
+    mutationFn: async (username: string) => {
+      const response = await apiRequest("POST", "/api/auth/discord/connect", { username });
       return response.json();
     },
     onSuccess: (data) => {
-      window.location.href = data.authUrl;
+      queryClient.setQueryData(["/api/user"], data.user);
+      queryClient.invalidateQueries({ queryKey: ["/api/profile"] });
+      setDiscordDialogOpen(false);
+      setDiscordUsername("");
+      toast({
+        title: "Discord Connected!",
+        description: "Your Discord account has been successfully connected.",
+      });
     },
     onError: (error: Error) => {
       toast({
@@ -599,14 +608,48 @@ export default function ProfilePage() {
                         {user.discordConnected ? 'Connected' : 'Disconnected'}
                       </Badge>
                       {!user.discordConnected && (
-                        <Button
-                          size="sm"
-                          onClick={() => connectDiscordMutation.mutate()}
-                          disabled={connectDiscordMutation.isPending}
-                        >
-                          <LinkIcon className="h-3 w-3 mr-1" />
-                          Connect
-                        </Button>
+                        <Dialog open={discordDialogOpen} onOpenChange={setDiscordDialogOpen}>
+                          <DialogTrigger asChild>
+                            <Button size="sm">
+                              <LinkIcon className="h-3 w-3 mr-1" />
+                              Connect
+                            </Button>
+                          </DialogTrigger>
+                          <DialogContent>
+                            <DialogHeader>
+                              <DialogTitle>Connect Your Discord Account</DialogTitle>
+                              <DialogDescription>
+                                Enter your Discord username to connect your account
+                              </DialogDescription>
+                            </DialogHeader>
+                            <div className="space-y-4">
+                              <div className="space-y-2">
+                                <label className="text-sm font-medium">Discord Username</label>
+                                <Input
+                                  placeholder="Enter your Discord username"
+                                  value={discordUsername}
+                                  onChange={(e) => setDiscordUsername(e.target.value)}
+                                />
+                              </div>
+                              <div className="flex gap-2">
+                                <Button
+                                  variant="outline"
+                                  onClick={() => setDiscordDialogOpen(false)}
+                                  className="flex-1"
+                                >
+                                  Cancel
+                                </Button>
+                                <Button
+                                  onClick={() => connectDiscordMutation.mutate(discordUsername)}
+                                  disabled={!discordUsername.trim() || connectDiscordMutation.isPending}
+                                  className="flex-1"
+                                >
+                                  {connectDiscordMutation.isPending ? "Connecting..." : "Connect"}
+                                </Button>
+                              </div>
+                            </div>
+                          </DialogContent>
+                        </Dialog>
                       )}
                     </div>
                   </div>

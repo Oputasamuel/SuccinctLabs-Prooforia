@@ -19,36 +19,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Setup authentication
   setupAuth(app);
 
-  // Discord OAuth routes
-  app.get("/api/auth/discord", (req, res) => {
-    if (!req.isAuthenticated()) {
-      return res.status(401).json({ message: "Not authenticated" });
-    }
-    const authUrl = discordService.getAuthUrl();
-    res.json({ authUrl });
-  });
-
-  app.get("/api/auth/discord/callback", async (req, res) => {
+  // Discord connection route - simplified for demo
+  app.post("/api/auth/discord/connect", async (req, res) => {
     try {
       if (!req.isAuthenticated()) {
-        return res.redirect("/auth?error=not_authenticated");
+        return res.status(401).json({ message: "Not authenticated" });
       }
 
-      const { code } = req.query;
-      if (!code || typeof code !== 'string') {
-        return res.redirect("/auth?error=no_code");
+      const { username } = req.body;
+      if (!username || typeof username !== 'string') {
+        return res.status(400).json({ message: "Discord username is required" });
       }
 
-      const tokenData = await discordService.exchangeCodeForToken(code);
-      const discordUser = await discordService.getUserInfo(tokenData.access_token);
+      // Simple username validation for Discord
+      const cleanUsername = username.trim();
+      if (!/^[a-zA-Z0-9._]{2,32}$/.test(cleanUsername)) {
+        return res.status(400).json({ message: "Invalid Discord username format" });
+      }
+
+      await storage.connectDiscord(req.user.id, cleanUsername);
       
-      // Connect Discord to current user
-      await storage.connectDiscord(req.user.id, discordUser.username, discordUser.avatar);
-      
-      res.redirect("/?discord=connected");
+      const updatedUser = await storage.getUser(req.user.id);
+      res.json({ user: updatedUser });
     } catch (error) {
-      console.error("Discord OAuth error:", error);
-      res.redirect("/auth?error=discord_failed");
+      console.error("Discord connection error:", error);
+      res.status(500).json({ message: "Failed to connect Discord account" });
     }
   });
 

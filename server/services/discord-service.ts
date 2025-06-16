@@ -19,9 +19,13 @@ class DiscordService {
   private clientId = '1383812613640556679';
   private clientSecret = 'mBj7gItCTA3DOqDmls0VNqXC4zqPDmWJ';
   private getRedirectUri(): string {
-    const host = process.env.REPLIT_DEV_DOMAIN || 'localhost:5000';
-    const protocol = host.includes('localhost') ? 'http' : 'https';
-    return `${protocol}://${host}/api/auth/discord/callback`;
+    // Use the actual Replit domain from environment variables
+    const replitDomain = process.env.REPLIT_DEV_DOMAIN;
+    if (replitDomain) {
+      return `https://${replitDomain}/api/auth/discord/callback`;
+    }
+    // Fallback for local development
+    return 'http://localhost:5000/api/auth/discord/callback';
   }
 
   getAuthUrl(): string {
