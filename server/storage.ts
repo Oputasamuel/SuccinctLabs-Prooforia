@@ -62,7 +62,7 @@ export interface IStorage {
   getFavorites(userId: number): Promise<Nft[]>;
   
   // Bidding operations
-  createBid(bid: InsertBid): Promise<Bid>;
+  createBid(bid: InsertBid & { bidderId: number }): Promise<Bid>;
   getBidsForNft(nftId: number): Promise<Bid[]>;
   getUserBids(userId: number): Promise<Bid[]>;
   acceptBid(bidId: number, sellerId: number): Promise<Transaction>;
@@ -468,10 +468,12 @@ export class MemStorage implements IStorage {
   }
 
   // Bidding operations
-  async createBid(bid: InsertBid): Promise<Bid> {
+  async createBid(bid: InsertBid & { bidderId: number }): Promise<Bid> {
     const newBid: Bid = {
       id: this.currentBidId++,
-      ...bid,
+      nftId: bid.nftId,
+      bidderId: bid.bidderId,
+      amount: bid.amount,
       isActive: true,
       createdAt: new Date(),
       expiresAt: null,
