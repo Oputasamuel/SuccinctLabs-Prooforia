@@ -12,7 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Loader2, Wallet, Zap, Users } from "lucide-react";
 import { registerUserSchema } from "@shared/schema";
 import Header from "@/components/header";
-import { useLocation } from "wouter";
+import { useLocation, Link } from "wouter";
 
 const loginSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
@@ -150,6 +150,14 @@ export default function AuthPage() {
                         "Sign In"
                       )}
                     </Button>
+                    
+                    <div className="text-center">
+                      <Link to="/forgot-password">
+                        <Button variant="link" className="text-sm text-muted-foreground hover:text-primary">
+                          Forgot your password?
+                        </Button>
+                      </Link>
+                    </div>
                   </form>
                 </CardContent>
               </Card>
