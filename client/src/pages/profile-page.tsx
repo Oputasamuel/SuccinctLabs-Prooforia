@@ -11,6 +11,7 @@ import { Wallet, ShoppingBag, Palette, TrendingUp, Copy, Share, Heart, HeartOff,
 import { Link, useLocation } from "wouter";
 import { Nft, Transaction, ZkProof } from "@shared/schema";
 import Header from "@/components/header";
+import UserBidsSection from "@/components/user-bids-section";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useState } from "react";
 
@@ -373,6 +374,14 @@ export default function ProfilePage() {
                       Favorited
                     </Button>
                     <Button
+                      variant={activeTab === "bids" ? "default" : "ghost"}
+                      className="w-full justify-start"
+                      onClick={() => setActiveTab("bids")}
+                    >
+                      <TrendingUp className="h-4 w-4 mr-2" />
+                      My Bids
+                    </Button>
+                    <Button
                       variant={activeTab === "activity" ? "default" : "ghost"}
                       className="w-full justify-start"
                       onClick={() => setActiveTab("activity")}
@@ -575,6 +584,14 @@ export default function ProfilePage() {
                     </CardContent>
                   </Card>
                 )}
+              </div>
+            )}
+
+            {/* My Bids Tab */}
+            {activeTab === "bids" && (
+              <div>
+                <h3 className="text-xl font-semibold mb-6">My Bids</h3>
+                <UserBidsSection />
               </div>
             )}
 
