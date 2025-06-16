@@ -78,14 +78,11 @@ export default function NFTDetailPopup({ nft, isOpen, onClose, defaultTab = "ove
   const bidMutation = useMutation({
     mutationFn: async (amount: number) => {
       if (!nft) throw new Error("No NFT selected");
-      const response = await apiRequest("/api/bids", {
-        method: "POST",
-        body: JSON.stringify({
-          nftId: nft.id,
-          amount,
-        }),
+      const response = await apiRequest("POST", "/api/bids", {
+        nftId: nft.id,
+        amount,
       });
-      return response;
+      return response.json();
     },
     onSuccess: () => {
       toast({

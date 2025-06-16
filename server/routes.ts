@@ -626,6 +626,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
     try {
       const validatedData = insertBidSchema.parse(req.body);
+      
+      // Check if user has enough credits
+      if (user.credits < validatedData.amount) {
+        return res.status(400).json({ message: "Insufficient credits" });
+      }
+      
       const bid = await storage.createBid({
         nftId: validatedData.nftId,
         amount: validatedData.amount,
@@ -634,6 +640,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(201).json(bid);
     } catch (error) {
       console.error("Create bid error:", error);
+      if (error.name === 'ZodError') {
+        return res.status(400).json({ message: "Invalid bid data", details: error.errors });
+      }
       res.status(500).json({ message: "Failed to place bid" });
     }
   });
