@@ -66,7 +66,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     queryKey: ["/api/user"],
     queryFn: async () => {
       try {
-        return await apiRequest("/api/user");
+        const response = await fetch("/api/user", {
+          method: "GET",
+          credentials: "include",
+        });
+        
+        if (response.status === 401) {
+          return undefined;
+        }
+        
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        
+        return await response.json();
       } catch (error: any) {
         if (error.message.includes("401") || error.message.includes("Not authenticated")) {
           return undefined;
@@ -78,10 +91,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const walletLoginMutation = useMutation({
     mutationFn: async (credentials: WalletLoginData): Promise<AuthUser> => {
-      const data = await apiRequest("/api/wallet/login", {
+      const response = await fetch("/api/wallet/login", {
         method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ privateKey: credentials.walletPrivateKey }),
+        credentials: "include",
       });
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ message: "Login failed" }));
+        throw new Error(errorData.message);
+      }
+      
+      const data = await response.json();
       return data.user;
     },
     onSuccess: (user: AuthUser) => {
@@ -102,10 +124,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const createAccountMutation = useMutation({
     mutationFn: async (credentials: CreateAccountData): Promise<AuthUser> => {
-      const data = await apiRequest("/api/wallet/create-account", {
+      const response = await fetch("/api/wallet/create-account", {
         method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(credentials),
+        credentials: "include",
       });
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ message: "Account creation failed" }));
+        throw new Error(errorData.message);
+      }
+      
+      const data = await response.json();
       return data.user;
     },
     onSuccess: (user: AuthUser) => {
@@ -126,9 +157,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logoutMutation = useMutation({
     mutationFn: async (): Promise<void> => {
-      await apiRequest("/api/logout", {
+      const response = await fetch("/api/logout", {
         method: "POST",
+        credentials: "include",
       });
+      
+      if (!response.ok) {
+        throw new Error("Logout failed");
+      }
     },
     onSuccess: () => {
       queryClient.setQueryData(["/api/user"], null);
