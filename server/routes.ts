@@ -684,10 +684,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const sellerId = req.session.userId;
       
       const transaction = await storage.acceptBid(bidId, sellerId);
-      res.status(201).json(transaction);
+      res.status(201).json({ transaction });
     } catch (error) {
       console.error("Accept bid error:", error);
       res.status(500).json({ message: "Failed to accept bid" });
+    }
+  });
+
+  // Reject bid
+  app.post("/api/bids/:id/reject", async (req, res) => {
+    if (!req.session.userId) {
+      return res.status(401).json({ message: "Authentication required" });
+    }
+
+    try {
+      const bidId = parseInt(req.params.id);
+      
+      // Get the bid first to verify ownership
+      const bid = await storage.getBid(bidId);
+      if (!bid) {
+        return res.status(404).json({ message: "Bid not found" });
+      }
+      
+      // Get the NFT to verify the current user is the creator
+      const nft = await storage.getNft(bid.nftId);
+      if (!nft || nft.creatorId !== req.session.userId) {
+        return res.status(403).json({ message: "Not authorized to reject this bid" });
+      }
+      
+      // Mark bid as inactive (rejected)
+      await storage.rejectBid(bidId);
+      res.json({ message: "Bid rejected successfully" });
+    } catch (error) {
+      console.error("Reject bid error:", error);
+      res.status(500).json({ message: "Failed to reject bid" });
     }
   });
 
