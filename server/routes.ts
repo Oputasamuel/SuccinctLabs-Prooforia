@@ -7,6 +7,7 @@ import { sp1Service } from "./services/sp1-service";
 import { ipfsService } from "./services/ipfs-service";
 import { succinctService } from "./services/succinct-service";
 import { setupAuth } from "./auth";
+import { discordService } from "./services/discord-service";
 
 interface MulterRequest extends Request {
   file?: Express.Multer.File;
@@ -17,6 +18,67 @@ const upload = multer({ storage: multer.memoryStorage() });
 export async function registerRoutes(app: Express): Promise<Server> {
   // Setup authentication
   setupAuth(app);
+
+  // Discord OAuth routes
+  app.get("/api/auth/discord", (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Not authenticated" });
+    }
+    const authUrl = discordService.getAuthUrl();
+    res.json({ authUrl });
+  });
+
+  app.get("/api/auth/discord/callback", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.redirect("/auth?error=not_authenticated");
+      }
+
+      const { code } = req.query;
+      if (!code || typeof code !== 'string') {
+        return res.redirect("/auth?error=no_code");
+      }
+
+      const tokenData = await discordService.exchangeCodeForToken(code);
+      const discordUser = await discordService.getUserInfo(tokenData.access_token);
+      
+      // Connect Discord to current user
+      await storage.connectDiscord(req.user.id, discordUser.username, discordUser.avatar);
+      
+      res.redirect("/?discord=connected");
+    } catch (error) {
+      console.error("Discord OAuth error:", error);
+      res.redirect("/auth?error=discord_failed");
+    }
+  });
+
+  // X (Twitter) connection route
+  app.post("/api/auth/x/connect", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+
+      const { username } = req.body;
+      if (!username || typeof username !== 'string') {
+        return res.status(400).json({ message: "X username is required" });
+      }
+
+      // Simple username validation for X
+      const cleanUsername = username.replace('@', '').trim();
+      if (!/^[a-zA-Z0-9_]{1,15}$/.test(cleanUsername)) {
+        return res.status(400).json({ message: "Invalid X username format" });
+      }
+
+      await storage.connectX(req.user.id, cleanUsername);
+      
+      const updatedUser = await storage.getUser(req.user.id);
+      res.json({ user: updatedUser });
+    } catch (error) {
+      console.error("X connection error:", error);
+      res.status(500).json({ message: "Failed to connect X account" });
+    }
+  });
 
   // NFT Routes
   app.get("/api/nfts", async (req, res) => {

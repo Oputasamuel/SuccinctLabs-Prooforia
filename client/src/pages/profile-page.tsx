@@ -3,14 +3,17 @@ import { useAuth } from "@/hooks/use-auth";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useToast } from "@/hooks/use-toast";
-import { Wallet, ShoppingBag, Palette, TrendingUp, Copy, Share, Heart, HeartOff, Settings, Users, Eye, CheckCircle } from "lucide-react";
+import { Wallet, ShoppingBag, Palette, TrendingUp, Copy, Share, Heart, HeartOff, Settings, Users, Eye, CheckCircle, Link as LinkIcon, ExternalLink } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { Nft, Transaction, ZkProof } from "@shared/schema";
 import Header from "@/components/header";
 import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useState } from "react";
 
 interface NftWithCreator extends Nft {
   creator?: {
@@ -37,6 +40,8 @@ export default function ProfilePage() {
   const { user } = useAuth();
   const { toast } = useToast();
   const [location, setLocation] = useLocation();
+  const [xUsername, setXUsername] = useState("");
+  const [xDialogOpen, setXDialogOpen] = useState(false);
 
   const { data: profile, isLoading } = useQuery<UserProfile>({
     queryKey: ["/api/profile"],
@@ -57,6 +62,47 @@ export default function ProfilePage() {
       toast({
         title: "Error",
         description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const connectDiscordMutation = useMutation({
+    mutationFn: async () => {
+      const response = await apiRequest("GET", "/api/auth/discord");
+      return response.json();
+    },
+    onSuccess: (data) => {
+      window.location.href = data.authUrl;
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Discord Connection Failed",
+        description: error.message || "Failed to connect Discord",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const connectXMutation = useMutation({
+    mutationFn: async (username: string) => {
+      const response = await apiRequest("POST", "/api/auth/x/connect", { username });
+      return response.json();
+    },
+    onSuccess: (data) => {
+      queryClient.setQueryData(["/api/user"], data.user);
+      queryClient.invalidateQueries({ queryKey: ["/api/profile"] });
+      setXDialogOpen(false);
+      setXUsername("");
+      toast({
+        title: "X Connected!",
+        description: "Your X account has been successfully connected.",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "X Connection Failed",
+        description: error.message || "Failed to connect X account",
         variant: "destructive",
       });
     },
