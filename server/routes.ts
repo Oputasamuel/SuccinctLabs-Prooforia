@@ -406,7 +406,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       };
 
       // Check if user has enough credits
-      const user = req.user;
+      const user = currentUser;
       const requiredCredits = 5; // Cost to mint an NFT
       
       if (!user.credits || user.credits < requiredCredits) {
@@ -465,11 +465,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
 
       // Deduct credits from user
-      await storage.updateUserCredits(currentUser.id, (currentUser.credits || 0) - nftData.price);
+      await storage.updateUserCredits(currentUser.id, (currentUser.credits || 0) - requiredCredits);
 
       res.status(201).json({
         nft: newNft,
-        message: `NFT minted successfully! ${nftData.price} credits deducted.`
+        message: `NFT minted successfully! ${requiredCredits} credits deducted.`
       });
     } catch (error) {
       console.error("NFT minting error:", error);
