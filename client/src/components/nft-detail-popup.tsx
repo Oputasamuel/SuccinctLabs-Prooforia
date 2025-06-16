@@ -183,6 +183,8 @@ export default function NFTDetailPopup({ nft, isOpen, onClose }: NFTDetailPopupP
   };
 
   if (!nft) return null;
+  
+  if (!currentNft) return null;
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -398,7 +400,7 @@ export default function NFTDetailPopup({ nft, isOpen, onClose }: NFTDetailPopupP
 
               {/* Listings Tab */}
               <TabsContent value="listings" className="space-y-4">
-                {user && displayNft.isOwned && (
+                {user && currentNft.isOwned && (
                   <Card>
                     <CardHeader>
                       <CardTitle className="text-lg">List for Sale</CardTitle>
@@ -436,7 +438,7 @@ export default function NFTDetailPopup({ nft, isOpen, onClose }: NFTDetailPopupP
                   <h3 className="font-semibold mb-3">Active Listings</h3>
                   {currentNft.listings && currentNft.listings.length > 0 ? (
                     <div className="space-y-2">
-                      {displayNft.listings.map((listing) => (
+                      {currentNft.listings.map((listing: any) => (
                         <div key={listing.id} className="flex justify-between items-center p-3 bg-gray-50 rounded">
                           <div>
                             <p className="font-medium">{formatTokens(listing.price)}</p>
@@ -472,7 +474,7 @@ export default function NFTDetailPopup({ nft, isOpen, onClose }: NFTDetailPopupP
                       <div className="flex-1">
                         <p className="text-sm font-medium">NFT Created</p>
                         <p className="text-xs text-gray-500">
-                          by {displayNft.creator?.username} • {new Date(displayNft.createdAt || '').toLocaleDateString()}
+                          by {currentNft.creator?.username} • {new Date(currentNft.createdAt || '').toLocaleDateString()}
                         </p>
                       </div>
                     </div>
