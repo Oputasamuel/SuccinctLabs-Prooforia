@@ -20,6 +20,15 @@ export const users = pgTable("users", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+export const passwordResetTokens = pgTable("password_reset_tokens", {
+  id: serial("id").primaryKey(),
+  email: text("email").notNull(),
+  token: text("token").notNull().unique(),
+  expiresAt: timestamp("expires_at").notNull(),
+  used: boolean("used").default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 export const nfts = pgTable("nfts", {
   id: serial("id").primaryKey(),
   title: text("title").notNull(),
@@ -149,6 +158,12 @@ export const insertOwnershipSchema = createInsertSchema(nftOwnerships).pick({
   editionNumber: true,
 });
 
+export const insertPasswordResetTokenSchema = createInsertSchema(passwordResetTokens).pick({
+  email: true,
+  token: true,
+  expiresAt: true,
+});
+
 // Relations
 export const usersRelations = relations(users, ({ many }) => ({
   nfts: many(nfts),
@@ -252,3 +267,5 @@ export type InsertBid = z.infer<typeof insertBidSchema>;
 export type Bid = typeof bids.$inferSelect;
 export type InsertOwnership = z.infer<typeof insertOwnershipSchema>;
 export type NftOwnership = typeof nftOwnerships.$inferSelect;
+export type InsertPasswordResetToken = z.infer<typeof insertPasswordResetTokenSchema>;
+export type PasswordResetToken = typeof passwordResetTokens.$inferSelect;

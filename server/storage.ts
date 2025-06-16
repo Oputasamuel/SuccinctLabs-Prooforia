@@ -1,11 +1,12 @@
 import { 
-  users, nfts, transactions, zkProofs, favorites, listings, bids, nftOwnerships,
+  users, nfts, transactions, zkProofs, favorites, listings, bids, nftOwnerships, passwordResetTokens,
   type User, type InsertUser, 
   type Nft, type InsertNft,
   type Transaction, type InsertTransaction,
   type ZkProof, type Listing, type InsertListing,
   type Bid, type InsertBid,
-  type NftOwnership, type InsertOwnership
+  type NftOwnership, type InsertOwnership,
+  type PasswordResetToken, type InsertPasswordResetToken
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, or, desc, asc, count, sum } from "drizzle-orm";
@@ -97,6 +98,12 @@ export interface IStorage {
     totalVolume: number;
     communityMembers: number;
   }>;
+  
+  // Password Reset operations
+  createPasswordResetToken(email: string, token: string, expiresAt: Date): Promise<PasswordResetToken>;
+  getPasswordResetToken(token: string): Promise<PasswordResetToken | undefined>;
+  markTokenAsUsed(tokenId: number): Promise<void>;
+  updateUserPassword(email: string, newPassword: string): Promise<User>;
 }
 
 export class MemStorage implements IStorage {
