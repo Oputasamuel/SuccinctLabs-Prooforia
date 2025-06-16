@@ -1,4 +1,6 @@
 import crypto from "crypto";
+import fs from "fs";
+import path from "path";
 
 interface IPFSUploadResult {
   hash: string;
@@ -6,22 +8,32 @@ interface IPFSUploadResult {
 }
 
 class IPFSService {
-  private baseUrl = "https://ipfs.io/ipfs/";
+  private uploadsDir = path.join(process.cwd(), "uploads");
+
+  constructor() {
+    // Ensure uploads directory exists
+    if (!fs.existsSync(this.uploadsDir)) {
+      fs.mkdirSync(this.uploadsDir, { recursive: true });
+    }
+  }
 
   async uploadFile(fileBuffer: Buffer, filename: string): Promise<IPFSUploadResult> {
     try {
-      // In a real implementation, this would upload to IPFS
-      // For this demo, we'll simulate the upload and return a mock IPFS hash
-      
       const hash = this.generateMockHash(fileBuffer);
+      const extension = path.extname(filename);
+      const savedFilename = `${hash}${extension}`;
+      const filePath = path.join(this.uploadsDir, savedFilename);
+      
+      // Save file to local uploads directory
+      fs.writeFileSync(filePath, fileBuffer);
       
       return {
         hash,
-        url: `${this.baseUrl}${hash}`,
+        url: `/uploads/${savedFilename}`,
       };
     } catch (error) {
-      console.error("IPFS file upload failed:", error);
-      throw new Error("Failed to upload file to IPFS");
+      console.error("File upload failed:", error);
+      throw new Error("Failed to upload file");
     }
   }
 
@@ -29,36 +41,47 @@ class IPFSService {
     try {
       const jsonString = JSON.stringify(data, null, 2);
       const buffer = Buffer.from(jsonString, "utf8");
-      
       const hash = this.generateMockHash(buffer);
+      const filename = `${hash}.json`;
+      const filePath = path.join(this.uploadsDir, filename);
+      
+      // Save JSON file to local uploads directory
+      fs.writeFileSync(filePath, jsonString);
       
       return {
         hash,
-        url: `${this.baseUrl}${hash}`,
+        url: `/uploads/${filename}`,
       };
     } catch (error) {
-      console.error("IPFS JSON upload failed:", error);
-      throw new Error("Failed to upload JSON to IPFS");
+      console.error("JSON upload failed:", error);
+      throw new Error("Failed to upload JSON");
     }
   }
 
   async getFile(hash: string): Promise<Buffer> {
     try {
-      // In a real implementation, this would fetch from IPFS
-      // For demo purposes, we'll return an empty buffer
-      return Buffer.alloc(0);
+      // Find file by hash in uploads directory
+      const files = fs.readdirSync(this.uploadsDir);
+      const file = files.find(f => f.startsWith(hash));
+      
+      if (!file) {
+        throw new Error("File not found");
+      }
+      
+      const filePath = path.join(this.uploadsDir, file);
+      return fs.readFileSync(filePath);
     } catch (error) {
-      console.error("IPFS file retrieval failed:", error);
-      throw new Error("Failed to retrieve file from IPFS");
+      console.error("File retrieval failed:", error);
+      throw new Error("Failed to retrieve file");
     }
   }
 
   async pinFile(hash: string): Promise<boolean> {
     try {
-      // In a real implementation, this would pin the file to IPFS
+      // For local storage, files are already "pinned" when saved
       return true;
     } catch (error) {
-      console.error("IPFS file pinning failed:", error);
+      console.error("File pinning failed:", error);
       return false;
     }
   }

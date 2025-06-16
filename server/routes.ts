@@ -1,6 +1,8 @@
 import type { Express, Request } from "express";
 import { createServer, type Server } from "http";
 import multer from "multer";
+import express from "express";
+import path from "path";
 import { storage } from "./storage";
 import { insertNftSchema, insertBidSchema, insertListingSchema } from "@shared/schema";
 import { sp1Service } from "./services/sp1-service";
@@ -18,6 +20,9 @@ const upload = multer({ storage: multer.memoryStorage() });
 export async function registerRoutes(app: Express): Promise<Server> {
   // Setup authentication
   setupAuth(app);
+
+  // Serve uploaded files statically
+  app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
 
   // Discord connection route - simplified for demo
   app.post("/api/auth/discord/connect", async (req, res) => {
