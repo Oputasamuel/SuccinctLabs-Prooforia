@@ -153,8 +153,11 @@ export default function WalletAuthPage() {
                       value={createdWallet.privateKey}
                       readOnly
                       className="font-mono text-sm pr-20"
-                      type={showPrivateKey ? "text" : "password"}
                       rows={3}
+                      style={{ 
+                        WebkitTextSecurity: showPrivateKey ? 'none' : 'disc',
+                        textSecurity: showPrivateKey ? 'none' : 'disc'
+                      }}
                     />
                     <div className="absolute right-2 top-2 flex gap-1">
                       <Button

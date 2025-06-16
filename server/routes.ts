@@ -8,10 +8,8 @@ import { insertNftSchema, insertBidSchema, insertListingSchema } from "@shared/s
 import { sp1Service } from "./services/sp1-service";
 import { ipfsService } from "./services/ipfs-service";
 import { succinctService } from "./services/succinct-service";
-import { setupAuth } from "./auth";
+import { setupWalletAuth } from "./wallet-auth";
 import { discordService } from "./services/discord-service";
-import { emailService } from "./services/email-service";
-import { hashPassword } from "./auth";
 import { walletService } from "./services/wallet-service";
 
 interface MulterRequest extends Request {
@@ -21,8 +19,8 @@ interface MulterRequest extends Request {
 const upload = multer({ storage: multer.memoryStorage() });
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Setup authentication
-  setupAuth(app);
+  // Setup wallet authentication
+  setupWalletAuth(app);
 
   // Serve uploaded files statically
   app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));

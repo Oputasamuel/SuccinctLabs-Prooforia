@@ -6,10 +6,8 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/hooks/use-auth";
 import { ProtectedRoute } from "@/lib/protected-route";
 import Home from "@/pages/home";
-import AuthPage from "@/pages/auth-page";
+import WalletAuthPage from "@/pages/wallet-auth-page";
 import ProfilePage from "@/pages/profile-page";
-import ForgotPasswordPage from "@/pages/forgot-password-page";
-import WalletRecoveryPage from "@/pages/wallet-recovery-page";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -17,9 +15,7 @@ function Router() {
     <Switch>
       <ProtectedRoute path="/" component={Home} />
       <ProtectedRoute path="/profile" component={ProfilePage} />
-      <Route path="/auth" component={AuthPage} />
-      <Route path="/forgot-password" component={ForgotPasswordPage} />
-      <Route path="/wallet-recovery" component={WalletRecoveryPage} />
+      <Route path="/auth" component={WalletAuthPage} />
       <Route component={NotFound} />
     </Switch>
   );

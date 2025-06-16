@@ -50,6 +50,19 @@ class WalletService {
     return Math.floor(Math.random() * 100) + 50; // Mock balance between 50-150
   }
 
+  getAddressFromPrivateKey(privateKey: string): string {
+    try {
+      // Clean the private key (remove 0x prefix if present)
+      const cleanKey = privateKey.startsWith('0x') ? privateKey.slice(2) : privateKey;
+      
+      // Create wallet from private key
+      const wallet = new ethers.Wallet(cleanKey);
+      return wallet.address;
+    } catch (error) {
+      throw new Error('Invalid private key format');
+    }
+  }
+
   async mintNFTWithProof(
     walletAddress: string, 
     privateKey: string, 
