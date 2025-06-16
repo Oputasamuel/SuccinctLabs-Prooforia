@@ -148,6 +148,7 @@ The application uses a PostgreSQL database with the following core entities:
 - **June 16, 2025**: Fixed duplicate NFT detail popup issue by implementing centralized popup system preventing multiple overlapping popups
 - **June 16, 2025**: Added development mode indicators throughout the application to clearly show that ZK proofs and transaction hashes are simulated for development purposes
 - **June 16, 2025**: Updated Community Learn ZK section to redirect to educational Twitter thread explaining zero-knowledge proofs through intuitive analogies
+- **June 16, 2025**: Fixed profile page responsiveness by implementing sidebar dashboard layout for smaller screens with dropdown navigation
 
 ## Changelog
 - June 15, 2025: Complete SP1Mint rebranding and authentication system migration

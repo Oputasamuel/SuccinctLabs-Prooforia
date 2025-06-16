@@ -5,7 +5,6 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useToast } from "@/hooks/use-toast";
 import { Wallet, ShoppingBag, Palette, TrendingUp, Copy, Share, Heart, HeartOff, Settings, Users, Eye, CheckCircle, Link as LinkIcon, ExternalLink, Shield } from "lucide-react";
@@ -36,29 +35,23 @@ interface UserProfile {
   };
 }
 
-export default function ProfilePage() {
+// NFT Profile Card Component
+function NFTProfileCard({ nft, type }: { nft: NftWithCreator; type: "created" | "purchased" | "favorited" }) {
   const { user } = useAuth();
   const { toast } = useToast();
-  const [location, setLocation] = useLocation();
-  const [xUsername, setXUsername] = useState("");
-  const [xDialogOpen, setXDialogOpen] = useState(false);
-  const [discordUsername, setDiscordUsername] = useState("");
-  const [discordDialogOpen, setDiscordDialogOpen] = useState(false);
 
-  const { data: profile, isLoading } = useQuery<UserProfile>({
-    queryKey: ["/api/profile"],
-    enabled: !!user,
-    refetchInterval: 5000, // Refresh every 5 seconds
-    refetchIntervalInBackground: true,
-  });
-
-  const favoriteMutation = useMutation({
-    mutationFn: async ({ nftId, action }: { nftId: number; action: 'add' | 'remove' }) => {
-      const response = await apiRequest("POST", `/api/nfts/${nftId}/favorite`, { action });
+  const toggleFavoriteMutation = useMutation({
+    mutationFn: async (nftId: number) => {
+      const response = await apiRequest("POST", `/api/nfts/${nftId}/favorite`);
+      if (!response.ok) throw new Error("Failed to toggle favorite");
       return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/profile"] });
+      toast({
+        title: "Success",
+        description: "Favorite updated",
+      });
     },
     onError: (error: Error) => {
       toast({
@@ -69,132 +62,229 @@ export default function ProfilePage() {
     },
   });
 
-  const connectDiscordMutation = useMutation({
-    mutationFn: async (username: string) => {
-      const response = await apiRequest("POST", "/api/auth/discord/connect", { username });
-      return response;
-    },
-    onSuccess: (data) => {
-      queryClient.setQueryData(["/api/user"], data.user);
-      queryClient.invalidateQueries({ queryKey: ["/api/profile"] });
-      setDiscordDialogOpen(false);
-      setDiscordUsername("");
-      toast({
-        title: "Discord Connected!",
-        description: "Your Discord account has been successfully connected.",
-      });
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Discord Connection Failed",
-        description: error.message || "Failed to connect Discord",
-        variant: "destructive",
-      });
-    },
+  const isFavorited = type === "favorited";
+
+  const handleToggleFavorite = () => {
+    toggleFavoriteMutation.mutate(nft.id);
+  };
+
+  const handleCopyLink = () => {
+    navigator.clipboard.writeText(`${window.location.origin}/nft/${nft.id}`);
+    toast({
+      title: "Link copied",
+      description: "NFT link copied to clipboard",
+    });
+  };
+
+  const handleShareToX = () => {
+    const text = `Check out this amazing NFT: ${nft.title}`;
+    const url = `${window.location.origin}/nft/${nft.id}`;
+    window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`, '_blank');
+  };
+
+  return (
+    <Card className="overflow-hidden hover:shadow-lg transition-shadow duration-300">
+      <div className="aspect-square relative overflow-hidden">
+        <img
+          src={nft.imageUrl}
+          alt={nft.title}
+          className="w-full h-full object-cover"
+        />
+        <div className="absolute top-3 right-3 flex gap-2">
+          {type === "created" && (
+            <Badge className="bg-green-100 text-green-800 border-green-200">
+              Created
+            </Badge>
+          )}
+          {type === "purchased" && (
+            <Badge className="bg-blue-100 text-blue-800 border-blue-200">
+              Purchased
+            </Badge>
+          )}
+        </div>
+      </div>
+      <CardContent className="p-4">
+        <div className="flex justify-between items-start mb-2">
+          <h3 className="font-semibold text-lg truncate">{nft.title}</h3>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleToggleFavorite}
+            disabled={toggleFavoriteMutation.isPending}
+          >
+            {isFavorited ? (
+              <Heart className="h-4 w-4 fill-red-500 text-red-500" />
+            ) : (
+              <HeartOff className="h-4 w-4" />
+            )}
+          </Button>
+        </div>
+        <p className="text-sm text-gray-600 mb-3 line-clamp-2">
+          {nft.description}
+        </p>
+        <div className="flex justify-between items-center mb-3">
+          <span className="text-lg font-bold">{nft.price} credits</span>
+          <Badge variant="outline">{nft.category}</Badge>
+        </div>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleCopyLink}
+            className="flex-1"
+          >
+            <Copy className="h-4 w-4 mr-1" />
+            Copy Link
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleShareToX}
+            className="flex-1"
+          >
+            <Share className="h-4 w-4 mr-1" />
+            Share
+          </Button>
+        </div>
+        {type === "created" && (
+          <div className="mt-2 text-xs text-gray-500">
+            Edition {nft.currentEdition}/{nft.totalEditions}
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+export default function ProfilePage() {
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const [location, setLocation] = useLocation();
+  const [activeTab, setActiveTab] = useState("overview");
+  const [xUsername, setXUsername] = useState("");
+  const [xDialogOpen, setXDialogOpen] = useState(false);
+  const [discordUsername, setDiscordUsername] = useState("");
+  const [discordDialogOpen, setDiscordDialogOpen] = useState(false);
+
+  const { data: profile, isLoading } = useQuery<UserProfile>({
+    queryKey: ["/api/profile"],
+    enabled: !!user,
+    refetchInterval: 5000,
+    refetchIntervalInBackground: true,
   });
 
   const connectXMutation = useMutation({
     mutationFn: async (username: string) => {
-      const response = await apiRequest("POST", "/api/auth/x/connect", { username });
-      return response;
+      const response = await apiRequest("POST", "/api/connect-x", { username });
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ message: "Failed to connect X account" }));
+        throw new Error(errorData.message);
+      }
+      return response.json();
     },
     onSuccess: (data) => {
       queryClient.setQueryData(["/api/user"], data.user);
-      queryClient.invalidateQueries({ queryKey: ["/api/profile"] });
+      toast({
+        title: "Success",
+        description: "X account connected successfully",
+      });
       setXDialogOpen(false);
       setXUsername("");
-      toast({
-        title: "X Connected!",
-        description: "Your X account has been successfully connected.",
-      });
     },
     onError: (error: Error) => {
       toast({
-        title: "X Connection Failed",
-        description: error.message || "Failed to connect X account",
+        title: "Connection failed",
+        description: error.message,
         variant: "destructive",
       });
     },
   });
 
-  const copyNFTLink = (nftId: number) => {
-    const url = `${window.location.origin}/nft/${nftId}`;
-    navigator.clipboard.writeText(url);
-    toast({
-      title: "Link Copied!",
-      description: "NFT link has been copied to clipboard.",
-    });
-  };
-
-  const shareToX = (nft: NftWithCreator) => {
-    const url = `${window.location.origin}/nft/${nft.id}`;
-    const text = `Check out this amazing NFT: "${nft.title}" on SP1Mint! 🎨✨`;
-    const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`;
-    window.open(twitterUrl, '_blank');
-  };
+  const connectDiscordMutation = useMutation({
+    mutationFn: async (username: string) => {
+      const response = await apiRequest("POST", "/api/connect-discord", { username });
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ message: "Failed to connect Discord account" }));
+        throw new Error(errorData.message);
+      }
+      return response.json();
+    },
+    onSuccess: (data) => {
+      queryClient.setQueryData(["/api/user"], data.user);
+      toast({
+        title: "Success",
+        description: "Discord account connected successfully",
+      });
+      setDiscordDialogOpen(false);
+      setDiscordUsername("");
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Connection failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
 
   if (!user) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <Card className="w-96">
-          <CardHeader>
-            <CardTitle>Access Denied</CardTitle>
-            <CardDescription>Please log in to view your profile.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Link href="/auth" className="text-primary hover:underline">
-              Go to Login
-            </Link>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-          <p>Loading your profile...</p>
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+        <Header />
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <Card className="p-8 text-center">
+            <CardContent>
+              <h2 className="text-xl font-semibold mb-4">Please log in to view your profile</h2>
+              <Link href="/auth">
+                <Button>Go to Login</Button>
+              </Link>
+            </CardContent>
+          </Card>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <Header 
-        activeTab="marketplace" 
-        onTabChange={(tab) => {
-          // Navigate back to home page with the selected tab
-          const searchParams = new URLSearchParams();
-          searchParams.set('tab', tab);
-          setLocation(`/?${searchParams.toString()}`);
-        }} 
-        currentUser={user}
-      />
-      <div className="container mx-auto px-4 py-8 max-w-6xl">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+      <Header />
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Profile Header */}
-        <div className="mb-8">
-          <div className="flex items-center gap-6 mb-6">
-            <Avatar className="h-20 w-20">
-              <AvatarFallback className="text-2xl font-bold bg-primary text-primary-foreground">
+        <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6">
+            <Avatar className="w-20 h-20">
+              <AvatarFallback className="text-2xl font-bold bg-primary text-white">
                 {user.username.charAt(0).toUpperCase()}
               </AvatarFallback>
             </Avatar>
-            <div>
-              <h1 className="text-3xl font-bold">{user.username}</h1>
-              <p className="text-muted-foreground">{user.email}</p>
-              <div className="flex items-center gap-2 mt-2">
-                <Wallet className="h-4 w-4" />
-                <span className="font-semibold">{user.credits || 0} Credits</span>
+            <div className="flex-1">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div>
+                  <h1 className="text-3xl font-bold text-gray-900">{user.username}</h1>
+                  <p className="text-gray-600">{user.email}</p>
+                  <div className="flex items-center gap-4 mt-2">
+                    <div className="flex items-center gap-2">
+                      <Wallet className="h-4 w-4 text-primary" />
+                      <span className="text-sm font-medium">{user.credits} credits</span>
+                    </div>
+                  </div>
+                </div>
+                <div className="flex gap-3">
+                  <Button variant="outline" size="sm">
+                    <Settings className="h-4 w-4 mr-2" />
+                    Settings
+                  </Button>
+                  <Button variant="outline" size="sm">
+                    <Share className="h-4 w-4 mr-2" />
+                    Share Profile
+                  </Button>
+                </div>
               </div>
             </div>
           </div>
 
-          {/* Stats */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {/* Stats Cards */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-6">
             <Card>
               <CardContent className="p-4 text-center">
                 <div className="flex items-center justify-center mb-2">
@@ -234,683 +324,626 @@ export default function ProfilePage() {
           </div>
         </div>
 
-        {/* Profile Sections */}
-        <Tabs defaultValue="overview" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 lg:grid-cols-9 gap-1">
-            <TabsTrigger value="overview" className="text-xs sm:text-sm">Overview</TabsTrigger>
-            <TabsTrigger value="created" className="text-xs sm:text-sm">Created</TabsTrigger>
-            <TabsTrigger value="purchased" className="text-xs sm:text-sm">Purchased</TabsTrigger>
-            <TabsTrigger value="favorited" className="text-xs sm:text-sm">Favorited</TabsTrigger>
-            <TabsTrigger value="activity" className="text-xs sm:text-sm">Activity</TabsTrigger>
-            <TabsTrigger value="proofs" className="text-xs sm:text-sm">My Proofs</TabsTrigger>
-            <TabsTrigger value="wallet" className="text-xs sm:text-sm">Wallet</TabsTrigger>
-            <TabsTrigger value="social" className="text-xs sm:text-sm">Social</TabsTrigger>
-            <TabsTrigger value="settings" className="text-xs sm:text-sm">Settings</TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="overview" className="mt-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Profile Sections with Responsive Layout */}
+        <div className="flex flex-col lg:flex-row gap-6">
+          {/* Sidebar Navigation for larger screens */}
+          <div className="hidden lg:block lg:w-64">
+            <div className="sticky top-6">
               <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Eye className="h-5 w-5" />
-                    Quick Stats
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="flex justify-between">
-                    <span>NFTs Created:</span>
-                    <span className="font-semibold">{profile?.stats.totalCreated || 0}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>NFTs Purchased:</span>
-                    <span className="font-semibold">{profile?.stats.totalPurchased || 0}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Credits Earned:</span>
-                    <span className="font-semibold">{profile?.stats.totalEarned || 0}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Credits Spent:</span>
-                    <span className="font-semibold">{profile?.stats.totalSpent || 0}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Favorited NFTs:</span>
-                    <span className="font-semibold">{profile?.favoritedNfts?.length || 0}</span>
-                  </div>
+                <CardContent className="p-4">
+                  <nav className="space-y-2">
+                    <Button
+                      variant={activeTab === "overview" ? "default" : "ghost"}
+                      className="w-full justify-start"
+                      onClick={() => setActiveTab("overview")}
+                    >
+                      <Eye className="h-4 w-4 mr-2" />
+                      Overview
+                    </Button>
+                    <Button
+                      variant={activeTab === "created" ? "default" : "ghost"}
+                      className="w-full justify-start"
+                      onClick={() => setActiveTab("created")}
+                    >
+                      <Palette className="h-4 w-4 mr-2" />
+                      Created
+                    </Button>
+                    <Button
+                      variant={activeTab === "purchased" ? "default" : "ghost"}
+                      className="w-full justify-start"
+                      onClick={() => setActiveTab("purchased")}
+                    >
+                      <ShoppingBag className="h-4 w-4 mr-2" />
+                      Purchased
+                    </Button>
+                    <Button
+                      variant={activeTab === "favorited" ? "default" : "ghost"}
+                      className="w-full justify-start"
+                      onClick={() => setActiveTab("favorited")}
+                    >
+                      <Heart className="h-4 w-4 mr-2" />
+                      Favorited
+                    </Button>
+                    <Button
+                      variant={activeTab === "activity" ? "default" : "ghost"}
+                      className="w-full justify-start"
+                      onClick={() => setActiveTab("activity")}
+                    >
+                      <TrendingUp className="h-4 w-4 mr-2" />
+                      Activity
+                    </Button>
+                    <Button
+                      variant={activeTab === "proofs" ? "default" : "ghost"}
+                      className="w-full justify-start"
+                      onClick={() => setActiveTab("proofs")}
+                    >
+                      <Shield className="h-4 w-4 mr-2" />
+                      My Proofs
+                    </Button>
+                    <Button
+                      variant={activeTab === "wallet" ? "default" : "ghost"}
+                      className="w-full justify-start"
+                      onClick={() => setActiveTab("wallet")}
+                    >
+                      <Wallet className="h-4 w-4 mr-2" />
+                      Wallet
+                    </Button>
+                    <Button
+                      variant={activeTab === "social" ? "default" : "ghost"}
+                      className="w-full justify-start"
+                      onClick={() => setActiveTab("social")}
+                    >
+                      <Users className="h-4 w-4 mr-2" />
+                      Social
+                    </Button>
+                    <Button
+                      variant={activeTab === "settings" ? "default" : "ghost"}
+                      className="w-full justify-start"
+                      onClick={() => setActiveTab("settings")}
+                    >
+                      <Settings className="h-4 w-4 mr-2" />
+                      Settings
+                    </Button>
+                  </nav>
                 </CardContent>
               </Card>
+            </div>
+          </div>
 
-              <Card>
-                <CardHeader>
-                  <CardTitle>Recent Activity</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {profile?.transactions?.slice(0, 5).map((transaction) => {
-                    const isPurchase = transaction.buyerId === user.id;
-                    return (
-                      <div key={transaction.id} className="flex justify-between items-center py-2 border-b last:border-b-0">
-                        <div>
-                          <p className="font-medium text-sm">
-                            {isPurchase ? "Purchased" : "Sold"} NFT #{transaction.nftId}
-                          </p>
-                          <p className="text-xs text-muted-foreground">
-                            {new Date(transaction.createdAt || '').toLocaleDateString()}
-                          </p>
+          {/* Tab navigation for smaller screens */}
+          <div className="lg:hidden mb-6">
+            <select
+              value={activeTab}
+              onChange={(e) => setActiveTab(e.target.value)}
+              className="w-full p-3 border border-gray-200 rounded-lg bg-white text-sm shadow-sm"
+            >
+              <option value="overview">📊 Overview</option>
+              <option value="created">🎨 Created</option>
+              <option value="purchased">🛍️ Purchased</option>
+              <option value="favorited">❤️ Favorited</option>
+              <option value="activity">📈 Activity</option>
+              <option value="proofs">🛡️ My Proofs</option>
+              <option value="wallet">💰 Wallet</option>
+              <option value="social">👥 Social</option>
+              <option value="settings">⚙️ Settings</option>
+            </select>
+          </div>
+
+          {/* Content Area */}
+          <div className="flex-1">
+            {/* Overview Tab */}
+            {activeTab === "overview" && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Eye className="h-5 w-5" />
+                      Quick Stats
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="flex justify-between">
+                      <span>NFTs Created:</span>
+                      <span className="font-semibold">{profile?.stats.totalCreated || 0}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>NFTs Purchased:</span>
+                      <span className="font-semibold">{profile?.stats.totalPurchased || 0}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Credits Earned:</span>
+                      <span className="font-semibold">{profile?.stats.totalEarned || 0}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Credits Spent:</span>
+                      <span className="font-semibold">{profile?.stats.totalSpent || 0}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Favorited NFTs:</span>
+                      <span className="font-semibold">{profile?.favoritedNfts?.length || 0}</span>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Recent Activity</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {profile?.transactions?.slice(0, 5).map((transaction) => {
+                      const isPurchase = transaction.buyerId === user.id;
+                      return (
+                        <div key={transaction.id} className="flex justify-between items-center py-2 border-b last:border-b-0">
+                          <div>
+                            <p className="font-medium text-sm">
+                              {isPurchase ? "Purchased" : "Sold"} NFT #{transaction.nftId}
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              {new Date(transaction.createdAt || '').toLocaleDateString()}
+                            </p>
+                          </div>
+                          <Badge variant={isPurchase ? "default" : "secondary"}>
+                            {isPurchase ? "-" : "+"}{transaction.price} credits
+                          </Badge>
                         </div>
-                        <Badge variant={isPurchase ? "destructive" : "default"}>
-                          {isPurchase ? '-' : '+'}{transaction.price} Credits
-                        </Badge>
-                      </div>
-                    );
-                  }) || (
-                    <p className="text-muted-foreground text-center py-4">No recent activity</p>
-                  )}
-                </CardContent>
-              </Card>
-            </div>
-          </TabsContent>
-
-          <TabsContent value="created" className="mt-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {profile?.createdNfts?.length ? (
-                profile.createdNfts.map((nft) => (
-                  <NFTProfileCard 
-                    key={nft.id} 
-                    nft={nft} 
-                    type="created" 
-                    onCopyLink={copyNFTLink}
-                    onShareToX={shareToX}
-                    onToggleFavorite={favoriteMutation.mutate}
-                    isFavorited={profile.favoritedNfts?.some(fav => fav.id === nft.id) || false}
-                  />
-                ))
-              ) : (
-                <div className="col-span-full text-center py-12">
-                  <Palette className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                  <p className="text-muted-foreground">You haven't created any NFTs yet.</p>
-                  <Link href="/" className="text-primary hover:underline mt-2 inline-block">
-                    Start Creating
-                  </Link>
-                </div>
-              )}
-            </div>
-          </TabsContent>
-
-          <TabsContent value="purchased" className="mt-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {profile?.purchasedNfts?.length ? (
-                profile.purchasedNfts.map((nft) => (
-                  <NFTProfileCard 
-                    key={nft.id} 
-                    nft={nft} 
-                    type="purchased" 
-                    onCopyLink={copyNFTLink}
-                    onShareToX={shareToX}
-                    onToggleFavorite={favoriteMutation.mutate}
-                    isFavorited={profile.favoritedNfts?.some(fav => fav.id === nft.id) || false}
-                  />
-                ))
-              ) : (
-                <div className="col-span-full text-center py-12">
-                  <ShoppingBag className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                  <p className="text-muted-foreground">You haven't purchased any NFTs yet.</p>
-                  <Link href="/" className="text-primary hover:underline mt-2 inline-block">
-                    Browse Marketplace
-                  </Link>
-                </div>
-              )}
-            </div>
-          </TabsContent>
-
-          <TabsContent value="favorited" className="mt-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {profile?.favoritedNfts?.length ? (
-                profile.favoritedNfts.map((nft) => (
-                  <NFTProfileCard 
-                    key={nft.id} 
-                    nft={nft} 
-                    type="favorited" 
-                    onCopyLink={copyNFTLink}
-                    onShareToX={shareToX}
-                    onToggleFavorite={favoriteMutation.mutate}
-                    isFavorited={true}
-                  />
-                ))
-              ) : (
-                <div className="col-span-full text-center py-12">
-                  <Heart className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                  <p className="text-muted-foreground">You haven't favorited any NFTs yet.</p>
-                  <Link href="/" className="text-primary hover:underline mt-2 inline-block">
-                    Discover NFTs
-                  </Link>
-                </div>
-              )}
-            </div>
-          </TabsContent>
-
-          <TabsContent value="activity" className="mt-6">
-            <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 mb-4">
-              <div className="flex items-center gap-2 text-amber-800">
-                <Shield className="w-4 h-4" />
-                <span className="text-sm font-medium">Development Mode</span>
+                      );
+                    }) || (
+                      <p className="text-muted-foreground text-center py-4">No recent activity</p>
+                    )}
+                  </CardContent>
+                </Card>
               </div>
-              <p className="text-xs text-amber-700 mt-1">
-                Transaction hashes and ZK proofs are simulated for development. In production, these would be real blockchain transactions.
-              </p>
-            </div>
-            <div className="space-y-4">
-              {profile?.transactions?.length ? (
-                profile.transactions.map((transaction) => {
-                  const isPurchase = transaction.buyerId === user.id;
-                  return (
-                    <Card key={transaction.id}>
+            )}
+
+            {/* Created Tab */}
+            {activeTab === "created" && (
+              <div>
+                <h3 className="text-xl font-semibold mb-6">Your Created NFTs</h3>
+                {profile?.createdNfts?.length ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {profile.createdNfts.map((nft) => (
+                      <NFTProfileCard key={nft.id} nft={nft} type="created" />
+                    ))}
+                  </div>
+                ) : (
+                  <Card>
+                    <CardContent className="p-8 text-center">
+                      <Palette className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                      <h4 className="text-lg font-semibold text-gray-900 mb-2">No NFTs Created Yet</h4>
+                      <p className="text-gray-600 mb-4">Start creating your first NFT to see it here.</p>
+                      <Link href="/upload">
+                        <Button>Create Your First NFT</Button>
+                      </Link>
+                    </CardContent>
+                  </Card>
+                )}
+              </div>
+            )}
+
+            {/* Purchased Tab */}
+            {activeTab === "purchased" && (
+              <div>
+                <h3 className="text-xl font-semibold mb-6">Your Purchased NFTs</h3>
+                {profile?.purchasedNfts?.length ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {profile.purchasedNfts.map((nft) => (
+                      <NFTProfileCard key={nft.id} nft={nft} type="purchased" />
+                    ))}
+                  </div>
+                ) : (
+                  <Card>
+                    <CardContent className="p-8 text-center">
+                      <ShoppingBag className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                      <h4 className="text-lg font-semibold text-gray-900 mb-2">No NFTs Purchased Yet</h4>
+                      <p className="text-gray-600 mb-4">Browse the marketplace to discover and purchase amazing NFTs.</p>
+                      <Link href="/marketplace">
+                        <Button>Browse Marketplace</Button>
+                      </Link>
+                    </CardContent>
+                  </Card>
+                )}
+              </div>
+            )}
+
+            {/* Favorited Tab */}
+            {activeTab === "favorited" && (
+              <div>
+                <h3 className="text-xl font-semibold mb-6">Your Favorited NFTs</h3>
+                {profile?.favoritedNfts?.length ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {profile.favoritedNfts.map((nft) => (
+                      <NFTProfileCard key={nft.id} nft={nft} type="favorited" />
+                    ))}
+                  </div>
+                ) : (
+                  <Card>
+                    <CardContent className="p-8 text-center">
+                      <Heart className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                      <h4 className="text-lg font-semibold text-gray-900 mb-2">No Favorited NFTs Yet</h4>
+                      <p className="text-gray-600 mb-4">Heart NFTs you love to save them here.</p>
+                      <Link href="/marketplace">
+                        <Button>Discover NFTs</Button>
+                      </Link>
+                    </CardContent>
+                  </Card>
+                )}
+              </div>
+            )}
+
+            {/* Activity Tab */}
+            {activeTab === "activity" && (
+              <div>
+                <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 mb-4">
+                  <div className="flex items-center gap-2 text-amber-800">
+                    <Shield className="w-4 h-4" />
+                    <span className="text-sm font-medium">Development Mode</span>
+                  </div>
+                  <p className="text-xs text-amber-700 mt-1">
+                    Transaction hashes are simulated for development. In production, these would be real blockchain transactions.
+                  </p>
+                </div>
+                <h3 className="text-xl font-semibold mb-6">Transaction History</h3>
+                {profile?.transactions?.length ? (
+                  <div className="space-y-4">
+                    {profile.transactions.map((transaction) => {
+                      const isPurchase = transaction.buyerId === user.id;
+                      return (
+                        <Card key={transaction.id}>
+                          <CardContent className="p-4">
+                            <div className="flex justify-between items-start">
+                              <div className="flex-1">
+                                <div className="flex items-center gap-2 mb-2">
+                                  {isPurchase ? (
+                                    <ShoppingBag className="h-4 w-4 text-blue-500" />
+                                  ) : (
+                                    <TrendingUp className="h-4 w-4 text-green-500" />
+                                  )}
+                                  <p className="font-medium">
+                                    {isPurchase ? "Purchased" : "Sold"} NFT #{transaction.nftId}
+                                  </p>
+                                  <Badge variant={isPurchase ? "default" : "secondary"}>
+                                    {isPurchase ? "Purchase" : "Sale"}
+                                  </Badge>
+                                </div>
+                                <div className="space-y-1 text-sm">
+                                  <div className="flex justify-between">
+                                    <span className="text-gray-600">Amount:</span>
+                                    <span className="font-medium">
+                                      {isPurchase ? "-" : "+"}{transaction.price} credits
+                                    </span>
+                                  </div>
+                                  <div className="flex justify-between">
+                                    <span className="text-gray-600">Date:</span>
+                                    <span>{new Date(transaction.createdAt || '').toLocaleDateString('en-US', {
+                                      year: 'numeric',
+                                      month: 'short',
+                                      day: 'numeric',
+                                      hour: '2-digit',
+                                      minute: '2-digit'
+                                    })}</span>
+                                  </div>
+                                  <div className="flex justify-between">
+                                    <span className="text-gray-600">Transaction Hash:</span>
+                                    <span className="font-mono text-xs bg-gray-100 px-2 py-1 rounded">
+                                      {transaction.transactionHash || transaction.zkProofHash}
+                                    </span>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <Card>
+                    <CardContent className="p-8 text-center">
+                      <TrendingUp className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                      <h4 className="text-lg font-semibold text-gray-900 mb-2">No Activity Yet</h4>
+                      <p className="text-gray-600">Your transaction history will appear here.</p>
+                    </CardContent>
+                  </Card>
+                )}
+              </div>
+            )}
+
+            {/* My Proofs Tab */}
+            {activeTab === "proofs" && (
+              <div>
+                <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 mb-4">
+                  <div className="flex items-center gap-2 text-amber-800">
+                    <Shield className="w-4 h-4" />
+                    <span className="text-sm font-medium">Development Mode</span>
+                  </div>
+                  <p className="text-xs text-amber-700 mt-1">
+                    These are simulated ZK proofs for development. In production, these would be real SP1 proofs on the blockchain.
+                  </p>
+                </div>
+                <h3 className="text-xl font-semibold mb-6">Your ZK Proofs</h3>
+                {profile?.zkProofs?.length ? (
+                  profile.zkProofs.map((proof) => (
+                    <Card key={proof.id} className="mb-4">
                       <CardContent className="p-4">
                         <div className="flex justify-between items-start">
                           <div className="flex-1">
                             <div className="flex items-center gap-2 mb-2">
-                              <TrendingUp className="h-4 w-4 text-primary" />
-                              <p className="font-medium">
-                                {isPurchase ? "Purchased NFT" : "Sold NFT"} #{transaction.nftId}
+                              <CheckCircle className="h-4 w-4 text-green-500" />
+                              <p className="font-medium capitalize">
+                                {proof.proofType} Proof
                               </p>
-                              <Badge variant={isPurchase ? "destructive" : "default"}>
-                                {isPurchase ? "Purchase" : "Sale"}
-                              </Badge>
-                            </div>
-                            <p className="text-sm text-muted-foreground mb-1">
-                              Transaction ID: #{transaction.id}
-                            </p>
-                            <p className="text-sm text-muted-foreground">
-                              {new Date(transaction.createdAt || '').toLocaleDateString('en-US', {
-                                year: 'numeric',
-                                month: 'long',
-                                day: 'numeric',
-                                hour: '2-digit',
-                                minute: '2-digit'
-                              })}
-                            </p>
-                          </div>
-                          <div className="text-right">
-                            <p className={`text-lg font-bold ${isPurchase ? 'text-red-500' : 'text-green-500'}`}>
-                              {isPurchase ? '-' : '+'}{transaction.price} Credits
-                            </p>
-                            {transaction.zkProofHash && (
-                              <Badge variant="outline" className="mt-1">
+                              <Badge variant="default" className="bg-green-100 text-green-800">
                                 ZK Verified
                               </Badge>
-                            )}
+                            </div>
+                            <div className="space-y-2 text-sm">
+                              <div>
+                                <span className="text-gray-600">Proof Hash:</span>
+                                <div className="font-mono text-xs bg-gray-100 p-2 rounded mt-1 break-all">
+                                  {proof.proofHash}
+                                </div>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-gray-600">Generated:</span>
+                                <span className="text-xs">
+                                  {new Date(proof.createdAt || '').toLocaleDateString('en-US', {
+                                    year: 'numeric',
+                                    month: 'short',
+                                    day: 'numeric',
+                                    hour: '2-digit',
+                                    minute: '2-digit'
+                                  })}
+                                </span>
+                              </div>
+                            </div>
                           </div>
                         </div>
                       </CardContent>
                     </Card>
-                  );
-                })
-              ) : (
-                <div className="text-center py-12">
-                  <TrendingUp className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                  <p className="text-muted-foreground">No activity yet.</p>
-                  <p className="text-sm text-muted-foreground mt-2">
-                    Your NFT transactions will appear here.
-                  </p>
-                </div>
-              )}
-            </div>
-          </TabsContent>
-
-          <TabsContent value="proofs" className="mt-6">
-            <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 mb-4">
-              <div className="flex items-center gap-2 text-amber-800">
-                <Shield className="w-4 h-4" />
-                <span className="text-sm font-medium">Development Mode</span>
-              </div>
-              <p className="text-xs text-amber-700 mt-1">
-                These are simulated ZK proofs for development. In production, these would be real SP1 proofs on the blockchain.
-              </p>
-            </div>
-            <div className="space-y-4">
-              {profile?.zkProofs?.length ? (
-                profile.zkProofs.map((proof) => (
-                  <Card key={proof.id}>
-                    <CardContent className="p-4">
-                      <div className="flex justify-between items-start">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-2">
-                            <CheckCircle className="h-4 w-4 text-green-500" />
-                            <p className="font-medium capitalize">
-                              {proof.proofType} Proof
-                            </p>
-                            <Badge variant="default" className="bg-green-100 text-green-800">
-                              ZK Verified
-                            </Badge>
-                          </div>
-                          <div className="space-y-1">
-                            <p className="text-sm text-muted-foreground">
-                              Proof Hash: <code className="text-xs bg-muted px-1 rounded">{proof.proofHash.slice(0, 16)}...{proof.proofHash.slice(-8)}</code>
-                            </p>
-                            <p className="text-sm text-muted-foreground">
-                              Generated: {new Date(proof.createdAt || '').toLocaleDateString('en-US', {
-                                year: 'numeric',
-                                month: 'long',
-                                day: 'numeric',
-                                hour: '2-digit',
-                                minute: '2-digit'
-                              })}
-                            </p>
-                            <p className="text-sm text-muted-foreground">
-                              Wallet: <code className="text-xs bg-muted px-1 rounded">{user.walletAddress.slice(0, 8)}...{user.walletAddress.slice(-6)}</code>
-                            </p>
-                          </div>
-                        </div>
-                        <div className="text-right">
-                          <Badge variant={proof.proofType === "mint" ? "default" : "secondary"}>
-                            {proof.proofType === "mint" ? "Minting" : "Transfer"}
-                          </Badge>
-                          <div className="mt-2">
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => {
-                                navigator.clipboard.writeText(proof.proofHash);
-                                toast({ title: "Copied!", description: "Proof hash copied to clipboard." });
-                              }}
-                            >
-                              <Copy className="h-3 w-3 mr-1" />
-                              Copy Hash
-                            </Button>
-                          </div>
-                        </div>
-                      </div>
+                  ))
+                ) : (
+                  <Card>
+                    <CardContent className="p-8 text-center">
+                      <Shield className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                      <h4 className="text-lg font-semibold text-gray-900 mb-2">No ZK Proofs Yet</h4>
+                      <p className="text-gray-600">Proofs will appear here when you mint or purchase NFTs.</p>
                     </CardContent>
                   </Card>
-                ))
-              ) : (
-                <div className="text-center py-12">
-                  <CheckCircle className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                  <p className="text-muted-foreground">No ZK proofs generated yet.</p>
-                  <p className="text-sm text-muted-foreground mt-2">
-                    Proofs will appear here when you mint or purchase NFTs.
-                  </p>
-                </div>
-              )}
-            </div>
-          </TabsContent>
+                )}
+              </div>
+            )}
 
-          <TabsContent value="wallet" className="mt-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Wallet className="h-5 w-5" />
-                    Wallet Information
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Wallet Address</label>
-                    <div className="flex items-center gap-2">
-                      <code className="flex-1 p-2 bg-muted rounded text-sm break-all">
+            {/* Wallet Tab */}
+            {activeTab === "wallet" && (
+              <div>
+                <h3 className="text-xl font-semibold mb-6">Wallet Details</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <Wallet className="h-5 w-5" />
+                        Wallet Address
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="bg-gray-100 p-3 rounded-lg font-mono text-sm break-all">
                         {user.walletAddress}
-                      </code>
+                      </div>
                       <Button
-                        size="sm"
                         variant="outline"
+                        size="sm"
+                        className="mt-2 w-full"
                         onClick={() => {
                           navigator.clipboard.writeText(user.walletAddress);
-                          toast({ title: "Copied!", description: "Wallet address copied to clipboard." });
+                          toast({
+                            title: "Copied",
+                            description: "Wallet address copied to clipboard",
+                          });
                         }}
                       >
-                        <Copy className="h-3 w-3" />
+                        <Copy className="h-4 w-4 mr-2" />
+                        Copy Address
                       </Button>
-                    </div>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="font-medium">Current Balance:</span>
-                    <span className="text-2xl font-bold text-primary">{user.credits || 0} Credits</span>
-                  </div>
-                </CardContent>
-              </Card>
+                    </CardContent>
+                  </Card>
 
-              <Card>
-                <CardHeader>
-                  <CardTitle>Transaction History</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2 max-h-64 overflow-y-auto">
-                    {profile?.transactions?.map((transaction) => (
-                      <div key={transaction.id} className="flex justify-between items-center p-2 rounded border">
-                        <div>
-                          <p className="text-sm font-medium">
-                            {transaction.transactionType === "purchase" ? "Purchase" : "Sale"}
-                          </p>
-                          <p className="text-xs text-muted-foreground">
-                            {new Date(transaction.createdAt || '').toLocaleDateString()}
-                          </p>
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Balance</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-3xl font-bold text-primary mb-2">
+                        {user.credits} credits
+                      </div>
+                      <p className="text-sm text-gray-600">
+                        Available for purchasing and minting NFTs
+                      </p>
+                    </CardContent>
+                  </Card>
+                </div>
+              </div>
+            )}
+
+            {/* Social Tab */}
+            {activeTab === "social" && (
+              <div>
+                <h3 className="text-xl font-semibold mb-6">Social Connections</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <div className="w-5 h-5 bg-black rounded"></div>
+                        X (Twitter)
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      {user.xConnected ? (
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="font-medium">{user.xUsername}</p>
+                            <Badge className="bg-green-100 text-green-800">
+                              Connected
+                            </Badge>
+                          </div>
+                          <Button variant="outline" size="sm">
+                            Disconnect
+                          </Button>
                         </div>
-                        <span className={`font-semibold ${transaction.buyerId === user.id ? 'text-red-500' : 'text-green-500'}`}>
-                          {transaction.buyerId === user.id ? '-' : '+'}{transaction.price} Credits
-                        </span>
-                      </div>
-                    )) || (
-                      <p className="text-muted-foreground text-center py-4">No transactions yet</p>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          </TabsContent>
-
-          <TabsContent value="social" className="mt-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Users className="h-5 w-5" />
-                    Social Connections
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="flex items-center justify-between p-3 border rounded">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 bg-blue-500 rounded flex items-center justify-center">
-                        <span className="text-white text-sm font-bold">D</span>
-                      </div>
-                      <div>
-                        <p className="font-medium">Discord</p>
-                        <p className="text-sm text-muted-foreground">
-                          {user.discordConnected ? user.discordUsername || 'Connected' : 'Not connected'}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Badge variant={user.discordConnected ? "default" : "outline"}>
-                        {user.discordConnected ? 'Connected' : 'Disconnected'}
-                      </Badge>
-                      {!user.discordConnected && (
-                        <Dialog open={discordDialogOpen} onOpenChange={setDiscordDialogOpen}>
-                          <DialogTrigger asChild>
-                            <Button size="sm">
-                              <LinkIcon className="h-3 w-3 mr-1" />
-                              Connect
-                            </Button>
-                          </DialogTrigger>
-                          <DialogContent>
-                            <DialogHeader>
-                              <DialogTitle>Connect Your Discord Account</DialogTitle>
-                              <DialogDescription>
-                                Enter your Discord username to connect your account
-                              </DialogDescription>
-                            </DialogHeader>
-                            <div className="space-y-4">
-                              <div className="space-y-2">
-                                <label className="text-sm font-medium">Discord Username</label>
+                      ) : (
+                        <div>
+                          <p className="text-gray-600 mb-4">Connect your X account to earn bonus credits</p>
+                          <Dialog open={xDialogOpen} onOpenChange={setXDialogOpen}>
+                            <DialogTrigger asChild>
+                              <Button className="w-full">
+                                <LinkIcon className="h-4 w-4 mr-2" />
+                                Connect X Account
+                              </Button>
+                            </DialogTrigger>
+                            <DialogContent>
+                              <DialogHeader>
+                                <DialogTitle>Connect X Account</DialogTitle>
+                                <DialogDescription>
+                                  Enter your X username to connect your account and earn 5 bonus credits.
+                                </DialogDescription>
+                              </DialogHeader>
+                              <div className="space-y-4">
                                 <Input
-                                  placeholder="Enter your Discord username"
-                                  value={discordUsername}
-                                  onChange={(e) => setDiscordUsername(e.target.value)}
-                                />
-                              </div>
-                              <div className="flex gap-2">
-                                <Button
-                                  variant="outline"
-                                  onClick={() => setDiscordDialogOpen(false)}
-                                  className="flex-1"
-                                >
-                                  Cancel
-                                </Button>
-                                <Button
-                                  onClick={() => connectDiscordMutation.mutate(discordUsername)}
-                                  disabled={!discordUsername.trim() || connectDiscordMutation.isPending}
-                                  className="flex-1"
-                                >
-                                  {connectDiscordMutation.isPending ? "Connecting..." : "Connect"}
-                                </Button>
-                              </div>
-                            </div>
-                          </DialogContent>
-                        </Dialog>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="flex items-center justify-between p-3 border rounded">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 bg-black rounded flex items-center justify-center">
-                        <span className="text-white text-sm font-bold">X</span>
-                      </div>
-                      <div>
-                        <p className="font-medium">X (Twitter)</p>
-                        <p className="text-sm text-muted-foreground">
-                          {user.xConnected ? `@${user.xUsername}` : 'Not connected'}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Badge variant={user.xConnected ? "default" : "outline"}>
-                        {user.xConnected ? 'Connected' : 'Disconnected'}
-                      </Badge>
-                      {!user.xConnected && (
-                        <Dialog open={xDialogOpen} onOpenChange={setXDialogOpen}>
-                          <DialogTrigger asChild>
-                            <Button size="sm">
-                              <LinkIcon className="h-3 w-3 mr-1" />
-                              Connect
-                            </Button>
-                          </DialogTrigger>
-                          <DialogContent>
-                            <DialogHeader>
-                              <DialogTitle>Connect Your X Account</DialogTitle>
-                              <DialogDescription>
-                                Enter your X (Twitter) username to connect your account
-                              </DialogDescription>
-                            </DialogHeader>
-                            <div className="space-y-4">
-                              <div className="space-y-2">
-                                <label className="text-sm font-medium">X Username</label>
-                                <Input
-                                  placeholder="Enter your X username (without @)"
+                                  placeholder="Your X username (without @)"
                                   value={xUsername}
                                   onChange={(e) => setXUsername(e.target.value)}
                                 />
-                              </div>
-                              <div className="flex gap-2">
-                                <Button
-                                  variant="outline"
-                                  onClick={() => setXDialogOpen(false)}
-                                  className="flex-1"
-                                >
-                                  Cancel
-                                </Button>
                                 <Button
                                   onClick={() => connectXMutation.mutate(xUsername)}
-                                  disabled={!xUsername.trim() || connectXMutation.isPending}
-                                  className="flex-1"
+                                  disabled={!xUsername || connectXMutation.isPending}
+                                  className="w-full"
                                 >
-                                  {connectXMutation.isPending ? "Connecting..." : "Connect"}
+                                  {connectXMutation.isPending ? "Connecting..." : "Connect Account"}
                                 </Button>
                               </div>
-                            </div>
-                          </DialogContent>
-                        </Dialog>
+                            </DialogContent>
+                          </Dialog>
+                        </div>
                       )}
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+                    </CardContent>
+                  </Card>
 
-              <Card>
-                <CardHeader>
-                  <CardTitle>Social Stats</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="flex justify-between">
-                    <span>Profile Views:</span>
-                    <span className="font-semibold">847</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>NFTs Shared:</span>
-                    <span className="font-semibold">{profile?.stats.totalCreated || 0}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Community Rank:</span>
-                    <Badge variant="outline">Creator</Badge>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          </TabsContent>
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <div className="w-5 h-5 bg-indigo-500 rounded"></div>
+                        Discord
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      {user.discordConnected ? (
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="font-medium">{user.discordUsername}</p>
+                            <Badge className="bg-green-100 text-green-800">
+                              Connected
+                            </Badge>
+                          </div>
+                          <Button variant="outline" size="sm">
+                            Disconnect
+                          </Button>
+                        </div>
+                      ) : (
+                        <div>
+                          <p className="text-gray-600 mb-4">Connect your Discord account to earn bonus credits</p>
+                          <Dialog open={discordDialogOpen} onOpenChange={setDiscordDialogOpen}>
+                            <DialogTrigger asChild>
+                              <Button className="w-full">
+                                <LinkIcon className="h-4 w-4 mr-2" />
+                                Connect Discord
+                              </Button>
+                            </DialogTrigger>
+                            <DialogContent>
+                              <DialogHeader>
+                                <DialogTitle>Connect Discord Account</DialogTitle>
+                                <DialogDescription>
+                                  Enter your Discord username to connect your account and earn 5 bonus credits.
+                                </DialogDescription>
+                              </DialogHeader>
+                              <div className="space-y-4">
+                                <Input
+                                  placeholder="Your Discord username"
+                                  value={discordUsername}
+                                  onChange={(e) => setDiscordUsername(e.target.value)}
+                                />
+                                <Button
+                                  onClick={() => connectDiscordMutation.mutate(discordUsername)}
+                                  disabled={!discordUsername || connectDiscordMutation.isPending}
+                                  className="w-full"
+                                >
+                                  {connectDiscordMutation.isPending ? "Connecting..." : "Connect Account"}
+                                </Button>
+                              </div>
+                            </DialogContent>
+                          </Dialog>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                </div>
+              </div>
+            )}
 
-          <TabsContent value="settings" className="mt-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Settings className="h-5 w-5" />
-                    Account Settings
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Username</label>
-                    <div className="flex items-center gap-2">
-                      <input
-                        type="text"
-                        value={user.username}
-                        disabled
-                        className="flex-1 p-2 border rounded bg-muted"
-                      />
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Email</label>
-                    <div className="flex items-center gap-2">
-                      <input
-                        type="email"
-                        value={user.email}
-                        disabled
-                        className="flex-1 p-2 border rounded bg-muted"
-                      />
-                    </div>
-                  </div>
-                  <Button variant="outline" className="w-full">
-                    Edit Profile
-                  </Button>
-                </CardContent>
-              </Card>
+            {/* Settings Tab */}
+            {activeTab === "settings" && (
+              <div>
+                <h3 className="text-xl font-semibold mb-6">Account Settings</h3>
+                <Card>
+                  <CardContent className="p-6">
+                    <div className="space-y-6">
+                      <div>
+                        <h4 className="text-lg font-medium mb-2">Profile Information</h4>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                              Username
+                            </label>
+                            <Input value={user.username} disabled />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                              Email
+                            </label>
+                            <Input value={user.email} disabled />
+                          </div>
+                        </div>
+                      </div>
 
-              <Card>
-                <CardHeader>
-                  <CardTitle>Preferences</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <span>Email Notifications</span>
-                    <Badge variant="outline">Enabled</Badge>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span>Public Profile</span>
-                    <Badge variant="outline">Visible</Badge>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span>NFT Notifications</span>
-                    <Badge variant="outline">Enabled</Badge>
-                  </div>
-                  <Button variant="outline" className="w-full">
-                    Update Preferences
-                  </Button>
-                </CardContent>
-              </Card>
-            </div>
-          </TabsContent>
-        </Tabs>
+                      <div>
+                        <h4 className="text-lg font-medium mb-2">Preferences</h4>
+                        <div className="space-y-4">
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <p className="font-medium">Email Notifications</p>
+                              <p className="text-sm text-gray-600">Receive updates about your NFTs</p>
+                            </div>
+                            <Button variant="outline" size="sm">
+                              Configure
+                            </Button>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <p className="font-medium">Privacy Settings</p>
+                              <p className="text-sm text-gray-600">Control who can see your profile</p>
+                            </div>
+                            <Button variant="outline" size="sm">
+                              Manage
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            )}
+          </div>
+        </div>
       </div>
     </div>
-  );
-}
-
-interface NFTProfileCardProps {
-  nft: NftWithCreator;
-  type: "created" | "purchased" | "favorited";
-  onCopyLink: (nftId: number) => void;
-  onShareToX: (nft: NftWithCreator) => void;
-  onToggleFavorite: (data: { nftId: number; action: 'add' | 'remove' }) => void;
-  isFavorited: boolean;
-}
-
-function NFTProfileCard({ nft, type, onCopyLink, onShareToX, onToggleFavorite, isFavorited }: NFTProfileCardProps) {
-  return (
-    <Card className="group hover:shadow-lg transition-shadow duration-200">
-      <div className="aspect-square relative overflow-hidden rounded-t-lg">
-        <img
-          src={nft.imageUrl}
-          alt={nft.title}
-          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
-        />
-        <div className="absolute top-2 right-2">
-          <Badge variant={type === "created" ? "default" : type === "purchased" ? "secondary" : "outline"}>
-            {type === "created" ? "Created" : type === "purchased" ? "Owned" : "Favorited"}
-          </Badge>
-        </div>
-        <div className="absolute top-2 left-2">
-          <Button
-            size="sm"
-            variant={isFavorited ? "default" : "outline"}
-            className="h-8 w-8 p-0"
-            onClick={() => onToggleFavorite({ 
-              nftId: nft.id, 
-              action: isFavorited ? 'remove' : 'add' 
-            })}
-          >
-            {isFavorited ? <Heart className="h-4 w-4 fill-current" /> : <HeartOff className="h-4 w-4" />}
-          </Button>
-        </div>
-      </div>
-      
-      <CardContent className="p-4">
-        <h3 className="font-semibold text-lg mb-2 line-clamp-1">{nft.title}</h3>
-        {nft.description && (
-          <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
-            {nft.description}
-          </p>
-        )}
-        
-        <div className="flex justify-between items-center mb-3">
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-medium">{nft.price} Credits</span>
-            <Badge variant="outline" className="text-xs">
-              {nft.category}
-            </Badge>
-          </div>
-        </div>
-
-        <div className="flex gap-2">
-          <Button
-            size="sm"
-            variant="outline"
-            className="flex-1"
-            onClick={() => onCopyLink(nft.id)}
-          >
-            <Copy className="h-3 w-3 mr-1" />
-            Copy Link
-          </Button>
-          <Button
-            size="sm"
-            variant="outline"
-            className="flex-1"
-            onClick={() => onShareToX(nft)}
-          >
-            <Share className="h-3 w-3 mr-1" />
-            Share to X
-          </Button>
-        </div>
-
-        {(type === "created" || type === "purchased") && (
-          <div className="mt-3 pt-3 border-t">
-            <Badge variant={nft.isListed ? "default" : "secondary"}>
-              {nft.isListed ? "Listed" : "Unlisted"}
-            </Badge>
-          </div>
-        )}
-      </CardContent>
-    </Card>
   );
 }
