@@ -23,15 +23,18 @@ export default function MarketplaceSection() {
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [selectedNft, setSelectedNft] = useState<NftWithCreator | null>(null);
   const [showDetailPopup, setShowDetailPopup] = useState(false);
+  const [defaultTab, setDefaultTab] = useState<string>("overview");
 
-  const handleViewDetails = (nft: NftWithCreator) => {
+  const handleViewDetails = (nft: NftWithCreator, tab: string = "overview") => {
     setSelectedNft(nft);
+    setDefaultTab(tab);
     setShowDetailPopup(true);
   };
 
   const handleClosePopup = () => {
     setShowDetailPopup(false);
     setSelectedNft(null);
+    setDefaultTab("overview");
   };
 
   const { data: nfts, isLoading } = useQuery<NftWithCreator[]>({
@@ -166,6 +169,7 @@ export default function MarketplaceSection() {
         nft={selectedNft}
         isOpen={showDetailPopup}
         onClose={handleClosePopup}
+        defaultTab={defaultTab}
       />
     </section>
   );

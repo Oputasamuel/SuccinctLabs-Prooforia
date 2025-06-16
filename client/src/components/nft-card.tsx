@@ -21,7 +21,7 @@ interface NftWithCreator extends Nft {
 interface NFTCardProps {
   nft: NftWithCreator;
   viewMode?: "grid" | "list";
-  onViewDetails?: () => void;
+  onViewDetails?: (tab?: string) => void;
 }
 
 export default function NFTCard({ nft, viewMode = "grid", onViewDetails }: NFTCardProps) {
@@ -114,7 +114,7 @@ export default function NFTCard({ nft, viewMode = "grid", onViewDetails }: NFTCa
     
     // If minted out, open the details popup and switch to bidding tab
     if (isMintedOut && onViewDetails) {
-      onViewDetails();
+      onViewDetails("bids");
       return;
     }
     
@@ -282,7 +282,7 @@ export default function NFTCard({ nft, viewMode = "grid", onViewDetails }: NFTCa
                 )}
               </Button>
               <Button
-                onClick={onViewDetails}
+                onClick={() => onViewDetails?.()}
                 variant="outline"
                 className="w-full bg-white/90 hover:bg-white backdrop-blur-sm border border-white/50 text-gray-900"
               >

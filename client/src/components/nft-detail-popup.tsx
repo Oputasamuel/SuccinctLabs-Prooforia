@@ -31,12 +31,18 @@ interface NFTDetailPopupProps {
   nft: NftWithCreator | null;
   isOpen: boolean;
   onClose: () => void;
+  defaultTab?: string;
 }
 
-export default function NFTDetailPopup({ nft, isOpen, onClose }: NFTDetailPopupProps) {
+export default function NFTDetailPopup({ nft, isOpen, onClose, defaultTab = "overview" }: NFTDetailPopupProps) {
   const [bidAmount, setBidAmount] = useState("");
   const [listingPrice, setListingPrice] = useState("");
-  const [activeTab, setActiveTab] = useState("overview");
+  const [activeTab, setActiveTab] = useState(defaultTab);
+
+  // Reset active tab when defaultTab changes
+  useEffect(() => {
+    setActiveTab(defaultTab);
+  }, [defaultTab]);
   const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
