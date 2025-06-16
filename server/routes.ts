@@ -28,8 +28,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Discord connection route - simplified for demo
   app.post("/api/auth/discord/connect", async (req, res) => {
     try {
-      if (!req.isAuthenticated()) {
+      if (!req.session.userId) {
         return res.status(401).json({ message: "Not authenticated" });
+      }
+
+      const user = await storage.getUser(req.session.userId);
+      if (!user) {
+        return res.status(401).json({ message: "User not found" });
       }
 
       const { username } = req.body;
@@ -43,9 +48,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Invalid Discord username format" });
       }
 
-      await storage.connectDiscord(req.user.id, cleanUsername);
+      await storage.connectDiscord(user.id, cleanUsername);
       
-      const updatedUser = await storage.getUser(req.user.id);
+      const updatedUser = await storage.getUser(user.id);
       res.json({ user: updatedUser });
     } catch (error) {
       console.error("Discord connection error:", error);
@@ -56,8 +61,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // X (Twitter) connection route
   app.post("/api/auth/x/connect", async (req, res) => {
     try {
-      if (!req.isAuthenticated()) {
+      if (!req.session.userId) {
         return res.status(401).json({ message: "Not authenticated" });
+      }
+
+      const user = await storage.getUser(req.session.userId);
+      if (!user) {
+        return res.status(401).json({ message: "User not found" });
       }
 
       const { username } = req.body;
@@ -71,9 +81,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Invalid X username format" });
       }
 
-      await storage.connectX(req.user.id, cleanUsername);
+      await storage.connectX(user.id, cleanUsername);
       
-      const updatedUser = await storage.getUser(req.user.id);
+      const updatedUser = await storage.getUser(user.id);
       res.json({ user: updatedUser });
     } catch (error) {
       console.error("X connection error:", error);
@@ -470,12 +480,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // NFT Purchase/Buy Route
   app.post("/api/nfts/:id/buy", async (req, res) => {
     try {
-      if (!req.isAuthenticated() || !req.user) {
+      if (!req.session.userId) {
         return res.status(401).json({ message: "Authentication required" });
       }
 
+      const user = await storage.getUser(req.session.userId);
+      if (!user) {
+        return res.status(401).json({ message: "User not found" });
+      }
+
       const nftId = parseInt(req.params.id);
-      const buyerId = req.user.id;
+      const buyerId = user.id;
 
       const nft = await storage.getNft(nftId);
       if (!nft) {
@@ -600,8 +615,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Bidding Routes
   app.post("/api/bids", async (req, res) => {
-    if (!req.isAuthenticated() || !req.user) {
+    if (!req.session.userId) {
       return res.status(401).json({ message: "Authentication required" });
+    }
+
+    const user = await storage.getUser(req.session.userId);
+    if (!user) {
+      return res.status(401).json({ message: "User not found" });
     }
 
     try {
@@ -609,7 +629,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const bid = await storage.createBid({
         nftId: validatedData.nftId,
         amount: validatedData.amount,
-        bidderId: req.user.id,
+        bidderId: user.id,
       });
       res.status(201).json(bid);
     } catch (error) {
