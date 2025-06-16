@@ -506,10 +506,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Check if buyer has enough credits
-      const buyer = req.user;
+      const buyer = user;
       const requiredCredits = nft.price;
       
-      if (!buyer.credits || buyer.credits < requiredCredits) {
+      if (!buyer || !buyer.credits || buyer.credits < requiredCredits) {
         return res.status(400).json({ 
           message: `Insufficient credits. You need ${requiredCredits} credits to purchase this NFT.` 
         });

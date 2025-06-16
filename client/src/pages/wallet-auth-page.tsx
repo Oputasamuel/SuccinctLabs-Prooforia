@@ -15,6 +15,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { Redirect } from "wouter";
 import Header from "@/components/header";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 const createAccountSchema = z.object({
   displayName: z.string().min(1, "Display name is required").max(50, "Display name too long"),
@@ -452,6 +453,78 @@ export default function WalletAuthPage() {
           </div>
         </div>
       </div>
+
+      {/* Private Key Display Dialog */}
+      <Dialog open={!!createdWallet} onOpenChange={() => {}}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-center">Your Wallet Private Key</DialogTitle>
+            <DialogDescription className="text-center">
+              Save this private key securely. This is your only way to access your account.
+            </DialogDescription>
+          </DialogHeader>
+          
+          {createdWallet && (
+            <div className="space-y-4">
+              <div className="bg-gray-50 p-4 rounded-lg border">
+                <div className="flex items-center justify-between mb-2">
+                  <label className="text-sm font-medium">Private Key</label>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setShowPrivateKey(!showPrivateKey)}
+                    >
+                      {showPrivateKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        navigator.clipboard.writeText(createdWallet.privateKey);
+                        setCopied(true);
+                        setTimeout(() => setCopied(false), 2000);
+                        toast({
+                          title: "Copied!",
+                          description: "Private key copied to clipboard",
+                        });
+                      }}
+                    >
+                      <Copy className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+                <div 
+                  className="font-mono text-sm break-all p-2 bg-white border rounded"
+                  style={{ 
+                    WebkitTextSecurity: showPrivateKey ? 'none' : 'disc',
+                    textSecurity: showPrivateKey ? 'none' : 'disc'
+                  }}
+                >
+                  {showPrivateKey ? createdWallet.privateKey : '••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••'}
+                </div>
+              </div>
+
+              <Alert>
+                <AlertDescription>
+                  Warning: Never share your private key with anyone. Store it in a secure location. 
+                  You'll need this key to log in to your account.
+                </AlertDescription>
+              </Alert>
+
+              <Button 
+                className="w-full" 
+                onClick={() => {
+                  setCreatedWallet(null);
+                  window.location.href = '/?tab=marketplace';
+                }}
+              >
+                Proceed to Marketplace
+              </Button>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
