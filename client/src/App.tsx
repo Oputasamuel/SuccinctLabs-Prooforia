@@ -9,6 +9,7 @@ import Home from "@/pages/home";
 import AuthPage from "@/pages/auth-page";
 import ProfilePage from "@/pages/profile-page";
 import ForgotPasswordPage from "@/pages/forgot-password-page";
+import WalletRecoveryPage from "@/pages/wallet-recovery-page";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -18,6 +19,7 @@ function Router() {
       <ProtectedRoute path="/profile" component={ProfilePage} />
       <Route path="/auth" component={AuthPage} />
       <Route path="/forgot-password" component={ForgotPasswordPage} />
+      <Route path="/wallet-recovery" component={WalletRecoveryPage} />
       <Route component={NotFound} />
     </Switch>
   );

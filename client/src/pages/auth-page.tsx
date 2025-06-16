@@ -151,10 +151,16 @@ export default function AuthPage() {
                       )}
                     </Button>
                     
-                    <div className="text-center">
+                    <div className="text-center space-y-2">
                       <Link to="/forgot-password">
                         <Button variant="link" className="text-sm text-muted-foreground hover:text-primary">
                           Forgot your password?
+                        </Button>
+                      </Link>
+                      <div className="text-xs text-muted-foreground">or</div>
+                      <Link to="/wallet-recovery">
+                        <Button variant="link" className="text-sm text-muted-foreground hover:text-primary">
+                          Recover with wallet private key
                         </Button>
                       </Link>
                     </div>

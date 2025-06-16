@@ -12,6 +12,7 @@ import { setupAuth } from "./auth";
 import { discordService } from "./services/discord-service";
 import { emailService } from "./services/email-service";
 import { hashPassword } from "./auth";
+import { walletService } from "./services/wallet-service";
 
 interface MulterRequest extends Request {
   file?: Express.Multer.File;
@@ -185,6 +186,59 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Reset password error:", error);
       res.status(500).json({ message: "Failed to reset password" });
+    }
+  });
+
+  // Wallet Recovery Route
+  app.post("/api/auth/wallet-recovery", async (req, res) => {
+    try {
+      const { email, privateKey, newPassword } = req.body;
+      
+      if (!email || !privateKey || !newPassword) {
+        return res.status(400).json({ message: "Email, private key, and new password are required" });
+      }
+
+      if (newPassword.length < 4) {
+        return res.status(400).json({ message: "Password must be at least 4 characters long" });
+      }
+
+      // Find user by email
+      const user = await storage.getUserByEmail(email);
+      if (!user) {
+        return res.status(400).json({ message: "No account found with this email address" });
+      }
+
+      // Clean the private key input (remove 0x prefix if present)
+      const cleanPrivateKey = privateKey.startsWith('0x') ? privateKey.slice(2) : privateKey;
+      
+      // Decrypt the stored private key and compare
+      try {
+        const decryptedPrivateKey = crypto.createDecipher('aes-256-cbc', 'sp1mint-secret-key')
+          .update(user.walletPrivateKey, 'hex', 'utf8') + 
+          crypto.createDecipher('aes-256-cbc', 'sp1mint-secret-key')
+          .final('utf8');
+        
+        const storedCleanKey = decryptedPrivateKey.startsWith('0x') ? 
+          decryptedPrivateKey.slice(2) : decryptedPrivateKey;
+
+        if (cleanPrivateKey.toLowerCase() !== storedCleanKey.toLowerCase()) {
+          return res.status(400).json({ message: "Private key does not match this account" });
+        }
+      } catch (error) {
+        console.error("Private key decryption error:", error);
+        return res.status(500).json({ message: "Failed to verify private key" });
+      }
+
+      // Hash the new password
+      const hashedPassword = await hashPassword(newPassword);
+      
+      // Update the user's password
+      await storage.updateUserPassword(email, hashedPassword);
+
+      res.json({ message: "Account recovered successfully" });
+    } catch (error) {
+      console.error("Wallet recovery error:", error);
+      res.status(500).json({ message: "Failed to recover account" });
     }
   });
 
