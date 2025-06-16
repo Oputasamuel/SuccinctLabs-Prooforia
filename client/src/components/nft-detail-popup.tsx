@@ -65,8 +65,10 @@ export default function NFTDetailPopup({ nft, isOpen, onClose }: NFTDetailPopupP
     refetchInterval: 5000,
   });
 
-  const mintedOutPercentage = nft ? (nft.currentEdition / nft.editionSize) * 100 : 0;
+  const currentNft = nftDetails || nft;
+  const mintedOutPercentage = currentNft ? (currentNft.currentEdition / currentNft.editionSize) * 100 : 0;
   const isMintedOut = mintedOutPercentage >= 100;
+  const remainingEditions = currentNft ? currentNft.editionSize - currentNft.currentEdition : 0;
 
   // Place bid mutation
   const placeBidMutation = useMutation({
@@ -182,8 +184,6 @@ export default function NFTDetailPopup({ nft, isOpen, onClose }: NFTDetailPopupP
 
   if (!nft) return null;
 
-  const displayNft = nftDetails || nft;
-
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
@@ -224,11 +224,11 @@ export default function NFTDetailPopup({ nft, isOpen, onClose }: NFTDetailPopupP
                 </div>
                 <Progress value={mintedOutPercentage} className="mb-2" />
                 <div className="flex justify-between text-xs text-gray-500">
-                  <span>0</span>
-                  <span className={isMintedOut ? "text-red-600 font-medium" : ""}>
-                    {isMintedOut ? "MINTED OUT" : "Available"}
+                  <span>Minted: {displayNft.currentEdition}</span>
+                  <span className={isMintedOut ? "text-red-600 font-medium" : "text-green-600"}>
+                    {isMintedOut ? "MINTED OUT" : `${remainingEditions} Available`}
                   </span>
-                  <span>{displayNft.editionSize}</span>
+                  <span>Total: {displayNft.editionSize}</span>
                 </div>
               </CardContent>
             </Card>
