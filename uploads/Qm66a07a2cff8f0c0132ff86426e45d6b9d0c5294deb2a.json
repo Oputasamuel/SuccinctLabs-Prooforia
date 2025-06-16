@@ -1,0 +1,19 @@
+{
+  "name": "jo",
+  "description": "jo",
+  "image": "/uploads/Qm115399d66da05d57977e7a607d3b7f6da6daa128fa7c.jpg",
+  "attributes": [
+    {
+      "trait_type": "Category",
+      "value": "Digital Art"
+    },
+    {
+      "trait_type": "Edition Size",
+      "value": 1
+    },
+    {
+      "trait_type": "Creator",
+      "value": "hnj"
+    }
+  ]
+}
