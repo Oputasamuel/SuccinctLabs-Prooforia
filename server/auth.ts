@@ -219,6 +219,14 @@ export function setupAuth(app: Express) {
         return res.status(400).json({ message: "Discord username is required" });
       }
 
+      // Validate Discord username pattern (supports both legacy #discriminator and new @username formats)
+      const discordPattern = /^[a-zA-Z0-9_.]{2,32}(#[0-9]{4})?$|^@[a-zA-Z0-9_.]{2,32}$/;
+      if (!discordPattern.test(discordUsername)) {
+        return res.status(400).json({ 
+          message: "Invalid Discord username format. Use either 'username#1234' or '@username' format." 
+        });
+      }
+
       const updatedUser = await storage.connectDiscord(req.user.id, discordUsername, discordAvatar);
       
       const publicUser = {
@@ -253,7 +261,16 @@ export function setupAuth(app: Express) {
         return res.status(400).json({ message: "X username is required" });
       }
 
-      const updatedUser = await storage.connectX(req.user.id, xUsername);
+      // Validate X (Twitter) username pattern (with or without @ symbol)
+      const cleanUsername = xUsername.startsWith('@') ? xUsername.slice(1) : xUsername;
+      const xPattern = /^[a-zA-Z0-9_]{1,15}$/;
+      if (!xPattern.test(cleanUsername)) {
+        return res.status(400).json({ 
+          message: "Invalid X username format. Must be 1-15 characters, letters, numbers, and underscores only." 
+        });
+      }
+
+      const updatedUser = await storage.connectX(req.user.id, cleanUsername);
       
       const publicUser = {
         id: updatedUser.id,
