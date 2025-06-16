@@ -1,8 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
 import { Heart, CheckCircle, Database, ShoppingCart, Eye, Calendar, Hash, Palette } from "lucide-react";
@@ -26,7 +26,20 @@ export default function NFTCard({ nft, viewMode = "grid" }: NFTCardProps) {
   const [isLiked, setIsLiked] = useState(false);
   const queryClient = useQueryClient();
   const { toast } = useToast();
-  const { refreshUser } = useAuth();
+  const { refreshUser, user } = useAuth();
+
+  // Check if this NFT is in user's favorites
+  const { data: profile } = useQuery({
+    queryKey: ["/api/profile"],
+    enabled: !!user,
+  });
+
+  useEffect(() => {
+    if (profile?.favoritedNfts) {
+      const isFavorited = profile.favoritedNfts.some(favNft => favNft.id === nft.id);
+      setIsLiked(isFavorited);
+    }
+  }, [profile, nft.id]);
 
   const buyMutation = useMutation({
     mutationFn: async () => {
@@ -53,12 +66,43 @@ export default function NFTCard({ nft, viewMode = "grid" }: NFTCardProps) {
     },
   });
 
+  const favoriteMutation = useMutation({
+    mutationFn: async () => {
+      const action = isLiked ? "remove" : "add";
+      const response = await apiRequest("POST", `/api/nfts/${nft.id}/favorite`, { action });
+      return response.json();
+    },
+    onSuccess: () => {
+      setIsLiked(!isLiked);
+      queryClient.invalidateQueries({ queryKey: ["/api/profile"] });
+      toast({
+        title: isLiked ? "Removed from Favorites" : "Added to Favorites",
+        description: `${nft.title} ${isLiked ? "removed from" : "added to"} your favorites`,
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update favorites",
+        variant: "destructive",
+      });
+    },
+  });
+
   const handleBuy = () => {
     buyMutation.mutate();
   };
 
   const toggleLike = () => {
-    setIsLiked(!isLiked);
+    if (!user) {
+      toast({
+        title: "Authentication Required",
+        description: "Please log in to add NFTs to your favorites",
+        variant: "destructive",
+      });
+      return;
+    }
+    favoriteMutation.mutate();
   };
 
   if (viewMode === "list") {
