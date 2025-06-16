@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Gavel, Clock, TrendingUp } from "lucide-react";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 
 interface Bid {
   id: number;
@@ -88,31 +88,39 @@ export default function UserBidsSection() {
     );
   }
 
-  const bidsWithNftData: NftWithBid[] = userBids.map((bid: Bid) => ({
-    ...bid,
-    nft: nftDetails[bid.nftId],
-  }));
+  const bidsWithNftData: NftWithBid[] = useMemo(() => 
+    userBids.map((bid: Bid) => ({
+      ...bid,
+      nft: nftDetails[bid.nftId],
+    })), [userBids, nftDetails]
+  );
 
-  const filteredBids = bidsWithNftData.filter((bid) => {
-    const isHighestBid = currentHighestBids[bid.nftId] === bid.amount;
-    
-    switch (activeFilter) {
-      case "active":
-        return bid.isActive && isHighestBid;
-      case "outbid":
-        return bid.isActive && !isHighestBid;
-      default:
-        return true;
-    }
-  });
+  const filteredBids = useMemo(() => 
+    bidsWithNftData.filter((bid) => {
+      const isHighestBid = currentHighestBids[bid.nftId] === bid.amount;
+      
+      switch (activeFilter) {
+        case "active":
+          return bid.isActive && isHighestBid;
+        case "outbid":
+          return bid.isActive && !isHighestBid;
+        default:
+          return true;
+      }
+    }), [bidsWithNftData, currentHighestBids, activeFilter]
+  );
 
-  const activeBidsCount = bidsWithNftData.filter((bid) => 
-    bid.isActive && currentHighestBids[bid.nftId] === bid.amount
-  ).length;
+  const activeBidsCount = useMemo(() => 
+    bidsWithNftData.filter((bid) => 
+      bid.isActive && currentHighestBids[bid.nftId] === bid.amount
+    ).length, [bidsWithNftData, currentHighestBids]
+  );
 
-  const outbidCount = bidsWithNftData.filter((bid) => 
-    bid.isActive && currentHighestBids[bid.nftId] !== bid.amount
-  ).length;
+  const outbidCount = useMemo(() => 
+    bidsWithNftData.filter((bid) => 
+      bid.isActive && currentHighestBids[bid.nftId] !== bid.amount
+    ).length, [bidsWithNftData, currentHighestBids]
+  );
 
   return (
     <div className="space-y-6" key="user-bids-section">
