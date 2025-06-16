@@ -29,9 +29,9 @@ class EmailService {
     }
 
     try {
-      await this.mailService.send({
+      const result = await this.mailService.send({
         to: email,
-        from: 'noreply@sp1mint.com', // You'll need to verify this domain in SendGrid
+        from: this.fromEmail, // Use verified sender email
         subject: 'SP1Mint - Password Reset Code',
         text: `Your password reset code is: ${code}. This code will expire in 15 minutes.`,
         html: `
@@ -49,6 +49,7 @@ class EmailService {
           </div>
         `,
       });
+      console.log(`✅ SendGrid API call successful for ${email}`);
       return true;
     } catch (error) {
       console.error('SendGrid email error:', error);
