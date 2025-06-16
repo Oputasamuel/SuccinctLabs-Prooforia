@@ -8,7 +8,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { Heart, CheckCircle, Database, ShoppingCart, Eye, Calendar, Hash, Palette, Info } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { formatTokens } from "@/lib/utils";
-import NFTDetailPopup from "./nft-detail-popup";
+
 import type { Nft } from "@shared/schema";
 
 interface NftWithCreator extends Nft {
@@ -335,12 +335,6 @@ export default function NFTCard({ nft, viewMode = "grid", onViewDetails }: NFTCa
         </div>
       </CardContent>
 
-      {/* NFT Detail Popup */}
-      <NFTDetailPopup 
-        nft={nft}
-        isOpen={showDetailPopup}
-        onClose={() => setShowDetailPopup(false)}
-      />
     </Card>
   );
 }
