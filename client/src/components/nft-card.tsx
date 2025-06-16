@@ -29,14 +29,21 @@ export default function NFTCard({ nft, viewMode = "grid" }: NFTCardProps) {
   const { refreshUser, user } = useAuth();
 
   // Check if this NFT is in user's favorites
-  const { data: profile } = useQuery({
+  const { data: profile } = useQuery<{
+    favoritedNfts: Nft[];
+    createdNfts: Nft[];
+    purchasedNfts: Nft[];
+    transactions: any[];
+    zkProofs: any[];
+    stats: any;
+  }>({
     queryKey: ["/api/profile"],
     enabled: !!user,
   });
 
   useEffect(() => {
     if (profile?.favoritedNfts) {
-      const isFavorited = profile.favoritedNfts.some(favNft => favNft.id === nft.id);
+      const isFavorited = profile.favoritedNfts.some((favNft) => favNft.id === nft.id);
       setIsLiked(isFavorited);
     }
   }, [profile, nft.id]);

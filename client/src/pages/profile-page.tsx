@@ -230,21 +230,24 @@ export default function ProfilePage() {
                   <CardTitle>Recent Activity</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  {profile?.transactions?.slice(0, 5).map((transaction) => (
-                    <div key={transaction.id} className="flex justify-between items-center py-2 border-b last:border-b-0">
-                      <div>
-                        <p className="font-medium text-sm">
-                          {transaction.transactionType === "purchase" ? "Purchased" : "Sold"} NFT
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          {new Date(transaction.createdAt || '').toLocaleDateString()}
-                        </p>
+                  {profile?.transactions?.slice(0, 5).map((transaction) => {
+                    const isPurchase = transaction.buyerId === user.id;
+                    return (
+                      <div key={transaction.id} className="flex justify-between items-center py-2 border-b last:border-b-0">
+                        <div>
+                          <p className="font-medium text-sm">
+                            {isPurchase ? "Purchased" : "Sold"} NFT #{transaction.nftId}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            {new Date(transaction.createdAt || '').toLocaleDateString()}
+                          </p>
+                        </div>
+                        <Badge variant={isPurchase ? "destructive" : "default"}>
+                          {isPurchase ? '-' : '+'}{transaction.price} Credits
+                        </Badge>
                       </div>
-                      <Badge variant="outline">
-                        {transaction.price} Credits
-                      </Badge>
-                    </div>
-                  )) || (
+                    );
+                  }) || (
                     <p className="text-muted-foreground text-center py-4">No recent activity</p>
                   )}
                 </CardContent>
@@ -333,47 +336,50 @@ export default function ProfilePage() {
           <TabsContent value="activity" className="mt-6">
             <div className="space-y-4">
               {profile?.transactions?.length ? (
-                profile.transactions.map((transaction) => (
-                  <Card key={transaction.id}>
-                    <CardContent className="p-4">
-                      <div className="flex justify-between items-start">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-2">
-                            <TrendingUp className="h-4 w-4 text-primary" />
-                            <p className="font-medium">
-                              {transaction.transactionType === "purchase" ? "Purchased NFT" : "Sold NFT"}
+                profile.transactions.map((transaction) => {
+                  const isPurchase = transaction.buyerId === user.id;
+                  return (
+                    <Card key={transaction.id}>
+                      <CardContent className="p-4">
+                        <div className="flex justify-between items-start">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-2">
+                              <TrendingUp className="h-4 w-4 text-primary" />
+                              <p className="font-medium">
+                                {isPurchase ? "Purchased NFT" : "Sold NFT"} #{transaction.nftId}
+                              </p>
+                              <Badge variant={isPurchase ? "destructive" : "default"}>
+                                {isPurchase ? "Purchase" : "Sale"}
+                              </Badge>
+                            </div>
+                            <p className="text-sm text-muted-foreground mb-1">
+                              Transaction ID: #{transaction.id}
                             </p>
-                            <Badge variant={transaction.transactionType === "purchase" ? "destructive" : "default"}>
-                              {transaction.transactionType === "purchase" ? "Purchase" : "Sale"}
-                            </Badge>
+                            <p className="text-sm text-muted-foreground">
+                              {new Date(transaction.createdAt || '').toLocaleDateString('en-US', {
+                                year: 'numeric',
+                                month: 'long',
+                                day: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit'
+                              })}
+                            </p>
                           </div>
-                          <p className="text-sm text-muted-foreground mb-1">
-                            Transaction ID: #{transaction.id}
-                          </p>
-                          <p className="text-sm text-muted-foreground">
-                            {new Date(transaction.createdAt || '').toLocaleDateString('en-US', {
-                              year: 'numeric',
-                              month: 'long',
-                              day: 'numeric',
-                              hour: '2-digit',
-                              minute: '2-digit'
-                            })}
-                          </p>
+                          <div className="text-right">
+                            <p className={`text-lg font-bold ${isPurchase ? 'text-red-500' : 'text-green-500'}`}>
+                              {isPurchase ? '-' : '+'}{transaction.price} Credits
+                            </p>
+                            {transaction.zkProofHash && (
+                              <Badge variant="outline" className="mt-1">
+                                ZK Verified
+                              </Badge>
+                            )}
+                          </div>
                         </div>
-                        <div className="text-right">
-                          <p className={`text-lg font-bold ${transaction.buyerId === user.id ? 'text-red-500' : 'text-green-500'}`}>
-                            {transaction.buyerId === user.id ? '-' : '+'}{transaction.price} Credits
-                          </p>
-                          {transaction.zkProofHash && (
-                            <Badge variant="outline" className="mt-1">
-                              ZK Verified
-                            </Badge>
-                          )}
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))
+                      </CardContent>
+                    </Card>
+                  );
+                })
               ) : (
                 <div className="text-center py-12">
                   <TrendingUp className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
