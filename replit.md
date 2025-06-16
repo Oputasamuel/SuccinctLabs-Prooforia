@@ -152,6 +152,10 @@ The application uses a PostgreSQL database with the following core entities:
 - **June 16, 2025**: Resolved React duplicate key warnings by implementing unique composite keys for all mapped elements in profile page
 - **June 16, 2025**: Fixed header authentication state - sign-in button now disappears when logged in and shows user profile instead
 - **June 16, 2025**: Removed share profile button and integrated settings button to automatically select Settings tab in profile navigation
+- **June 16, 2025**: Implemented complete password reset system with email verification using SendGrid service
+- **June 16, 2025**: Added secure 6-digit code generation with 15-minute expiration and database token storage
+- **June 16, 2025**: Created 3-step password reset flow: email entry, code verification, and new password setup
+- **June 16, 2025**: Added "Forgot Password?" link to authentication page for easy access to reset functionality
 
 ## Changelog
 - June 15, 2025: Complete SP1Mint rebranding and authentication system migration
