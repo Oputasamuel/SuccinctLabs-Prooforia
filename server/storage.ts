@@ -668,20 +668,14 @@ export class DatabaseStorage implements IStorage {
     return user || undefined;
   }
 
-  async getUserByUsername(username: string): Promise<User | undefined> {
-    const [user] = await db.select().from(users).where(eq(users.username, username));
-    return user || undefined;
-  }
-
-  async getUserByEmail(email: string): Promise<User | undefined> {
-    const [user] = await db.select().from(users).where(eq(users.email, email));
+  async getUserByWalletAddress(walletAddress: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.walletAddress, walletAddress));
     return user || undefined;
   }
 
   async createUser(userData: {
-    username: string;
-    email: string;
-    password: string;
+    displayName: string;
+    profilePicture?: string;
     walletAddress: string;
     walletPrivateKey: string;
     walletPublicKey: string;
@@ -689,15 +683,12 @@ export class DatabaseStorage implements IStorage {
     const [user] = await db
       .insert(users)
       .values({
-        username: userData.username,
-        email: userData.email,
-        password: userData.password,
+        displayName: userData.displayName,
+        profilePicture: userData.profilePicture,
         walletAddress: userData.walletAddress,
         walletPrivateKey: userData.walletPrivateKey,
         walletPublicKey: userData.walletPublicKey,
         credits: 10,
-        discordConnected: false,
-        xConnected: false,
       })
       .returning();
     return user;
