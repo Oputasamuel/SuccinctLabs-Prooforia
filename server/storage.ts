@@ -502,6 +502,30 @@ export class MemStorage implements IStorage {
     const bid = this.bids.get(bidId);
     if (!bid) throw new Error("Bid not found");
     
+    // Get buyer and seller
+    const buyer = this.users.get(bid.bidderId);
+    const seller = this.users.get(sellerId);
+    
+    if (!buyer || !seller) throw new Error("User not found");
+    
+    // Check if buyer has enough credits
+    if ((buyer.credits || 0) < bid.amount) {
+      throw new Error("Buyer has insufficient credits");
+    }
+    
+    // Transfer credits
+    const updatedBuyer = {
+      ...buyer,
+      credits: (buyer.credits || 0) - bid.amount
+    };
+    const updatedSeller = {
+      ...seller,
+      credits: (seller.credits || 0) + bid.amount
+    };
+    
+    this.users.set(bid.bidderId, updatedBuyer);
+    this.users.set(sellerId, updatedSeller);
+    
     // Create transaction
     const transaction = await this.createTransaction({
       nftId: bid.nftId,
@@ -510,6 +534,9 @@ export class MemStorage implements IStorage {
       price: bid.amount,
       zkProofHash: `proof_${Date.now()}`,
     });
+
+    // Transfer ownership
+    await this.transferOwnership(bid.nftId, sellerId, bid.bidderId, 1);
 
     // Deactivate bid
     bid.isActive = false;
@@ -973,14 +1000,36 @@ export class DatabaseStorage implements IStorage {
     const bid = await db.select().from(bids).where(eq(bids.id, bidId)).limit(1);
     if (!bid[0]) throw new Error("Bid not found");
 
+    // Get buyer and seller for credit transfer
+    const buyer = await this.getUser(bid[0].bidderId);
+    const seller = await this.getUser(sellerId);
+    
+    if (!buyer || !seller) throw new Error("User not found");
+    
+    // Check if buyer has enough credits
+    if ((buyer.credits || 0) < bid[0].amount) {
+      throw new Error("Buyer has insufficient credits");
+    }
+    
+    // Transfer credits
+    await db.update(users)
+      .set({ credits: (buyer.credits || 0) - bid[0].amount })
+      .where(eq(users.id, bid[0].bidderId));
+      
+    await db.update(users)
+      .set({ credits: (seller.credits || 0) + bid[0].amount })
+      .where(eq(users.id, sellerId));
+
     const transaction = await this.createTransaction({
       buyerId: bid[0].bidderId,
       sellerId,
       nftId: bid[0].nftId,
       price: bid[0].amount,
-      type: "purchase",
       zkProofHash: `proof_${Date.now()}`
     });
+
+    // Transfer ownership
+    await this.transferOwnership(bid[0].nftId, sellerId, bid[0].bidderId, 1);
 
     // Deactivate the accepted bid
     await db.update(bids).set({ isActive: false }).where(eq(bids.id, bidId));
