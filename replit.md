@@ -151,7 +151,7 @@ The application uses a PostgreSQL database with the following core entities:
 - **June 16, 2025**: Fixed profile page responsiveness by implementing sidebar dashboard layout for smaller screens with dropdown navigation
 - **June 16, 2025**: Resolved React duplicate key warnings by implementing unique composite keys for all mapped elements in profile page
 - **June 16, 2025**: Fixed header authentication state - sign-in button now disappears when logged in and shows user profile instead
-- **June 16, 2025**: Removed share profile button and replaced settings button with functional dropdown menu containing profile management options
+- **June 16, 2025**: Removed share profile button and integrated settings button to automatically select Settings tab in profile navigation
 
 ## Changelog
 - June 15, 2025: Complete SP1Mint rebranding and authentication system migration

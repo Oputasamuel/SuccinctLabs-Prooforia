@@ -5,10 +5,9 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useToast } from "@/hooks/use-toast";
-import { Wallet, ShoppingBag, Palette, TrendingUp, Copy, Share, Heart, HeartOff, Settings, Users, Eye, CheckCircle, Link as LinkIcon, ExternalLink, Shield, User, Bell, Key } from "lucide-react";
+import { Wallet, ShoppingBag, Palette, TrendingUp, Copy, Share, Heart, HeartOff, Settings, Users, Eye, CheckCircle, Link as LinkIcon, ExternalLink, Shield } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { Nft, Transaction, ZkProof } from "@shared/schema";
 import Header from "@/components/header";
@@ -271,37 +270,14 @@ export default function ProfilePage() {
                   </div>
                 </div>
                 <div className="flex gap-3">
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="outline" size="sm">
-                        <Settings className="h-4 w-4 mr-2" />
-                        Settings
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem>
-                        <User className="h-4 w-4 mr-2" />
-                        Edit Profile
-                      </DropdownMenuItem>
-                      <DropdownMenuItem>
-                        <Shield className="h-4 w-4 mr-2" />
-                        Privacy Settings
-                      </DropdownMenuItem>
-                      <DropdownMenuItem>
-                        <Bell className="h-4 w-4 mr-2" />
-                        Notifications
-                      </DropdownMenuItem>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem>
-                        <Wallet className="h-4 w-4 mr-2" />
-                        Wallet Settings
-                      </DropdownMenuItem>
-                      <DropdownMenuItem>
-                        <Key className="h-4 w-4 mr-2" />
-                        Security
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => setActiveTab("settings")}
+                  >
+                    <Settings className="h-4 w-4 mr-2" />
+                    Settings
+                  </Button>
                 </div>
               </div>
             </div>
