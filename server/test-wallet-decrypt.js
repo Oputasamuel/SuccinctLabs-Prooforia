@@ -6,7 +6,7 @@ import { eq } from 'drizzle-orm';
 async function testDecryption() {
   try {
     // Get the user's encrypted private key
-    const [user] = await db.select().from(users).where(eq(users.email, 'zedef0808@gmail.com'));
+    const [user] = await db.select().from(users).where(eq(users.displayName, 'Samuel.IP'));
     
     if (!user) {
       console.log('User not found');
