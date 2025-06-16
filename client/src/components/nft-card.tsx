@@ -5,9 +5,10 @@ import { Badge } from "@/components/ui/badge";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
-import { Heart, CheckCircle, Database, ShoppingCart, Eye, Calendar, Hash, Palette } from "lucide-react";
+import { Heart, CheckCircle, Database, ShoppingCart, Eye, Calendar, Hash, Palette, Info } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { formatTokens } from "@/lib/utils";
+import NFTDetailPopup from "./nft-detail-popup";
 import type { Nft } from "@shared/schema";
 
 interface NftWithCreator extends Nft {
@@ -24,6 +25,7 @@ interface NFTCardProps {
 
 export default function NFTCard({ nft, viewMode = "grid" }: NFTCardProps) {
   const [isLiked, setIsLiked] = useState(false);
+  const [showDetailPopup, setShowDetailPopup] = useState(false);
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const { refreshUser, user } = useAuth();

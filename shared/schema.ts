@@ -67,6 +67,34 @@ export const favorites = pgTable("favorites", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+export const listings = pgTable("listings", {
+  id: serial("id").primaryKey(),
+  nftId: integer("nft_id").references(() => nfts.id).notNull(),
+  sellerId: integer("seller_id").references(() => users.id).notNull(),
+  price: integer("price").notNull(), // in credits
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const bids = pgTable("bids", {
+  id: serial("id").primaryKey(),
+  nftId: integer("nft_id").references(() => nfts.id).notNull(),
+  bidderId: integer("bidder_id").references(() => users.id).notNull(),
+  amount: integer("amount").notNull(), // in credits
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  expiresAt: timestamp("expires_at"), // Optional bid expiration
+});
+
+export const nftOwnerships = pgTable("nft_ownerships", {
+  id: serial("id").primaryKey(),
+  nftId: integer("nft_id").references(() => nfts.id).notNull(),
+  ownerId: integer("owner_id").references(() => users.id).notNull(),
+  editionNumber: integer("edition_number").notNull(), // Which edition they own
+  acquiredAt: timestamp("acquired_at").defaultNow(),
+});
+
 export const insertUserSchema = createInsertSchema(users).pick({
   username: true,
   email: true,
@@ -104,12 +132,33 @@ export const insertTransactionSchema = createInsertSchema(transactions).pick({
   price: true,
 });
 
+export const insertListingSchema = createInsertSchema(listings).pick({
+  nftId: true,
+  sellerId: true,
+  price: true,
+});
+
+export const insertBidSchema = createInsertSchema(bids).pick({
+  nftId: true,
+  bidderId: true,
+  amount: true,
+});
+
+export const insertOwnershipSchema = createInsertSchema(nftOwnerships).pick({
+  nftId: true,
+  ownerId: true,
+  editionNumber: true,
+});
+
 // Relations
 export const usersRelations = relations(users, ({ many }) => ({
   nfts: many(nfts),
   transactions: many(transactions),
   zkProofs: many(zkProofs),
   favorites: many(favorites),
+  listings: many(listings),
+  bids: many(bids),
+  ownerships: many(nftOwnerships),
 }));
 
 export const nftsRelations = relations(nfts, ({ one, many }) => ({
@@ -119,6 +168,42 @@ export const nftsRelations = relations(nfts, ({ one, many }) => ({
   }),
   transactions: many(transactions),
   favorites: many(favorites),
+  listings: many(listings),
+  bids: many(bids),
+  ownerships: many(nftOwnerships),
+}));
+
+export const listingsRelations = relations(listings, ({ one }) => ({
+  nft: one(nfts, {
+    fields: [listings.nftId],
+    references: [nfts.id],
+  }),
+  seller: one(users, {
+    fields: [listings.sellerId],
+    references: [users.id],
+  }),
+}));
+
+export const bidsRelations = relations(bids, ({ one }) => ({
+  nft: one(nfts, {
+    fields: [bids.nftId],
+    references: [nfts.id],
+  }),
+  bidder: one(users, {
+    fields: [bids.bidderId],
+    references: [users.id],
+  }),
+}));
+
+export const nftOwnershipsRelations = relations(nftOwnerships, ({ one }) => ({
+  nft: one(nfts, {
+    fields: [nftOwnerships.nftId],
+    references: [nfts.id],
+  }),
+  owner: one(users, {
+    fields: [nftOwnerships.ownerId],
+    references: [users.id],
+  }),
 }));
 
 export const transactionsRelations = relations(transactions, ({ one }) => ({
@@ -162,3 +247,9 @@ export type InsertTransaction = z.infer<typeof insertTransactionSchema>;
 export type Transaction = typeof transactions.$inferSelect;
 export type ZkProof = typeof zkProofs.$inferSelect;
 export type Favorite = typeof favorites.$inferSelect;
+export type InsertListing = z.infer<typeof insertListingSchema>;
+export type Listing = typeof listings.$inferSelect;
+export type InsertBid = z.infer<typeof insertBidSchema>;
+export type Bid = typeof bids.$inferSelect;
+export type InsertOwnership = z.infer<typeof insertOwnershipSchema>;
+export type NftOwnership = typeof nftOwnerships.$inferSelect;
