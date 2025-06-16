@@ -184,11 +184,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const connectDiscordMutation = useMutation({
     mutationFn: async (data: { discordUsername: string; discordAvatar?: string }): Promise<AuthUser> => {
-      const response = await apiRequest("/api/connect/discord", {
+      const response = await fetch("/api/connect/discord", {
         method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
+        credentials: "include",
       });
-      return response.user;
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ message: "Discord connection failed" }));
+        throw new Error(errorData.message);
+      }
+      
+      const result = await response.json();
+      return result.user;
     },
     onSuccess: (user: AuthUser) => {
       queryClient.setQueryData(["/api/user"], user);
@@ -208,11 +217,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const connectXMutation = useMutation({
     mutationFn: async (data: { xUsername: string }): Promise<AuthUser> => {
-      const response = await apiRequest("/api/connect/x", {
+      const response = await fetch("/api/connect/x", {
         method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
+        credentials: "include",
       });
-      return response.user;
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ message: "X connection failed" }));
+        throw new Error(errorData.message);
+      }
+      
+      const result = await response.json();
+      return result.user;
     },
     onSuccess: (user: AuthUser) => {
       queryClient.setQueryData(["/api/user"], user);
