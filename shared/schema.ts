@@ -6,6 +6,8 @@ import { z } from "zod";
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
   displayName: text("display_name").notNull(),
+  email: text("email").notNull().unique(),
+  password: text("password").notNull(),
   profilePicture: text("profile_picture"),
   walletAddress: text("wallet_address").notNull().unique(),
   walletPrivateKey: text("wallet_private_key").notNull().unique(),
@@ -19,7 +21,14 @@ export const users = pgTable("users", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
-// Password reset tokens removed - using wallet-only authentication
+export const passwordResetTokens = pgTable("password_reset_tokens", {
+  id: serial("id").primaryKey(),
+  email: text("email").notNull(),
+  token: text("token").notNull().unique(),
+  expiresAt: timestamp("expires_at").notNull(),
+  isUsed: boolean("is_used").default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+});
 
 export const nfts = pgTable("nfts", {
   id: serial("id").primaryKey(),
@@ -99,6 +108,21 @@ export const nftOwnerships = pgTable("nft_ownerships", {
 export const insertUserSchema = createInsertSchema(users).pick({
   displayName: true,
   profilePicture: true,
+});
+
+export const registerUserSchema = insertUserSchema.extend({
+  email: z.string().email("Please enter a valid email address"),
+  password: z.string().min(6, "Password must be at least 6 characters"),
+  confirmPassword: z.string().min(6, "Please confirm your password"),
+  profilePictureFile: z.any().optional(),
+}).refine((data) => data.password === data.confirmPassword, {
+  message: "Passwords don't match",
+  path: ["confirmPassword"],
+});
+
+export const loginUserSchema = z.object({
+  email: z.string().email("Please enter a valid email address"),
+  password: z.string().min(1, "Password is required"),
 });
 
 export const createAccountSchema = insertUserSchema.extend({
@@ -255,4 +279,4 @@ export type InsertBid = z.infer<typeof insertBidSchema>;
 export type Bid = typeof bids.$inferSelect;
 export type InsertOwnership = z.infer<typeof insertOwnershipSchema>;
 export type NftOwnership = typeof nftOwnerships.$inferSelect;
-// Password reset types removed - wallet-only authentication
+export type PasswordResetToken = typeof passwordResetTokens.$inferSelect;
