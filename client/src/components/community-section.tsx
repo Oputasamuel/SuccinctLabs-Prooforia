@@ -383,16 +383,16 @@ export default function CommunitySection({ onNavigateToUpload }: CommunitySectio
                     What are Zero-Knowledge Proofs?
                   </h4>
                   <p className="text-gray-600 mb-6">
-                    Learn the fundamentals of ZK technology and how it enables private,
-                    verifiable transactions.
+                    Discover how zero-knowledge proofs work through an intuitive analogy. 
+                    Learn about the magic door that proves you know a secret without revealing it.
                   </p>
                   <Button 
                     variant="outline" 
                     className="w-full"
-                    onClick={() => window.open('https://docs.succinct.xyz/getting-started/what-is-sp1.html', '_blank')}
+                    onClick={() => window.open('https://x.com/nair_advaith/status/1928243095537340645', '_blank')}
                   >
                     <ExternalLink className="w-4 h-4 mr-2" />
-                    Read Guide
+                    Read Twitter Thread
                   </Button>
                 </CardContent>
               </Card>
@@ -403,7 +403,7 @@ export default function CommunitySection({ onNavigateToUpload }: CommunitySectio
                   </h4>
                   <p className="text-gray-600 mb-6">
                     Dive deep into SP1 zkVM technology and learn how to build with
-                    zero-knowledge proofs.
+                    zero-knowledge proofs in practice.
                   </p>
                   <Button 
                     variant="outline" 
