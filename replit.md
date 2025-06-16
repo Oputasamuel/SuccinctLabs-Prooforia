@@ -156,6 +156,10 @@ The application uses a PostgreSQL database with the following core entities:
 - **June 16, 2025**: Added secure 6-digit code generation with 15-minute expiration and database token storage
 - **June 16, 2025**: Created 3-step password reset flow: email entry, code verification, and new password setup
 - **June 16, 2025**: Added "Forgot Password?" link to authentication page for easy access to reset functionality
+- **June 16, 2025**: Implemented uploadable profile pictures during user creation replacing URL input with file upload component
+- **June 16, 2025**: Fixed profile page navigation tabs - marketplace, community, and upload art buttons now properly redirect to home with correct tab selection
+- **June 16, 2025**: Added multer middleware for profile image handling with 5MB file size limit and image type validation
+- **June 16, 2025**: Enhanced wallet auth page with drag-and-drop profile picture upload interface and preview functionality
 
 ## Changelog
 - June 15, 2025: Complete SP1Mint rebranding and authentication system migration

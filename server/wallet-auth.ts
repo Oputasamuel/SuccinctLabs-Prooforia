@@ -56,10 +56,16 @@ export function setupWalletAuth(app: Express) {
   // Create account with wallet generation
   app.post("/api/wallet/create-account", upload.single('profileImage'), async (req: Request & {file?: Express.Multer.File}, res) => {
     try {
-      const { displayName, profilePicture } = req.body;
+      const { displayName } = req.body;
 
       if (!displayName) {
         return res.status(400).json({ message: "Display name is required" });
+      }
+
+      // Handle profile image file if uploaded
+      let profilePictureUrl = null;
+      if (req.file) {
+        profilePictureUrl = `/uploads/${req.file.filename}`;
       }
 
       // Generate new wallet
@@ -74,7 +80,7 @@ export function setupWalletAuth(app: Express) {
       // Create user with wallet
       const user = await storage.createUser({
         displayName,
-        profilePicture: profilePicture || null,
+        profilePicture: profilePictureUrl,
         walletAddress: walletData.address,
         walletPrivateKey: walletService.encryptPrivateKey(walletData.privateKey),
         walletPublicKey: walletData.publicKey,

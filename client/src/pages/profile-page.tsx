@@ -247,7 +247,15 @@ export default function ProfilePage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
-      <Header activeTab="marketplace" onTabChange={() => {}} />
+      <Header 
+        activeTab="marketplace" 
+        onTabChange={(tab) => {
+          // Navigate back to home page with the selected tab
+          const searchParams = new URLSearchParams();
+          searchParams.set('tab', tab);
+          setLocation(`/?${searchParams.toString()}`);
+        }} 
+      />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Profile Header */}
         <div className="bg-white rounded-lg shadow-sm p-6 mb-6">

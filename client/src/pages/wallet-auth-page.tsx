@@ -312,12 +312,52 @@ export default function WalletAuthPage() {
                       </div>
 
                       <div className="space-y-2">
-                        <Label htmlFor="profilePicture">Profile Picture URL (Optional)</Label>
-                        <Input
-                          id="profilePicture"
-                          {...createForm.register("profilePicture")}
-                          placeholder="https://example.com/image.jpg"
-                        />
+                        <Label>Profile Picture (Optional)</Label>
+                        <div className="flex flex-col gap-3">
+                          {profileImagePreview ? (
+                            <div className="relative w-24 h-24 mx-auto">
+                              <img
+                                src={profileImagePreview}
+                                alt="Profile preview"
+                                className="w-24 h-24 rounded-full object-cover border-2 border-primary/20"
+                              />
+                              <Button
+                                type="button"
+                                variant="destructive"
+                                size="sm"
+                                className="absolute -top-2 -right-2 h-6 w-6 rounded-full p-0"
+                                onClick={removeProfileImage}
+                              >
+                                <X className="h-3 w-3" />
+                              </Button>
+                            </div>
+                          ) : (
+                            <div 
+                              onClick={() => fileInputRef.current?.click()}
+                              className="w-24 h-24 mx-auto border-2 border-dashed border-primary/30 rounded-full flex items-center justify-center cursor-pointer hover:border-primary/50 transition-colors"
+                            >
+                              <Upload className="h-6 w-6 text-primary/50" />
+                            </div>
+                          )}
+                          
+                          <input
+                            ref={fileInputRef}
+                            type="file"
+                            accept="image/*"
+                            onChange={handleFileSelect}
+                            className="hidden"
+                          />
+                          
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => fileInputRef.current?.click()}
+                            className="mx-auto"
+                          >
+                            {profileImagePreview ? "Change Image" : "Upload Image"}
+                          </Button>
+                        </div>
                       </div>
 
                       <Alert>
