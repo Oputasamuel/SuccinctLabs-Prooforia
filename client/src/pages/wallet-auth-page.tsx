@@ -358,113 +358,115 @@ export default function WalletAuthPage() {
       </div>
 
       {/* Private Key Display Dialog */}
-      <Dialog open={!!createdWallet} onOpenChange={() => {}}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle className="text-center">Your Wallet Details</DialogTitle>
-            <DialogDescription className="text-center">
-              Save both your wallet address and private key securely. You'll need the private key to access your account.
-            </DialogDescription>
-          </DialogHeader>
-          
-          {createdWallet && (
-            <div className="space-y-4">
-              {/* Wallet Address */}
-              <div className="bg-gray-50 p-4 rounded-lg border">
-                <div className="flex items-center justify-between mb-2">
-                  <label className="text-sm font-medium">Wallet Address</label>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      navigator.clipboard.writeText(createdWallet.user.walletAddress);
-                      toast({
-                        title: "Copied!",
-                        description: "Wallet address copied to clipboard",
-                      });
-                    }}
-                  >
-                    <Copy className="h-4 w-4" />
-                  </Button>
-                </div>
-                <div className="font-mono text-xs break-all p-2 bg-white border rounded">
-                  {createdWallet.user.walletAddress}
-                </div>
+      {createdWallet && (
+        <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg shadow-lg max-w-md w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="text-center mb-6">
+                <h2 className="text-xl font-semibold mb-2">Your Wallet Details</h2>
+                <p className="text-sm text-gray-600">
+                  Save both your wallet address and private key securely. You'll need the private key to access your account.
+                </p>
               </div>
-
-              {/* Private Key */}
-              <div className="bg-gray-50 p-4 rounded-lg border">
-                <div className="flex items-center justify-between mb-2">
-                  <label className="text-sm font-medium">Private Key</label>
-                  <div className="flex gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setShowPrivateKey(!showPrivateKey)}
-                    >
-                      {showPrivateKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                    </Button>
+          
+              <div className="space-y-4">
+                {/* Wallet Address */}
+                <div className="bg-gray-50 p-4 rounded-lg border">
+                  <div className="flex items-center justify-between mb-2">
+                    <label className="text-sm font-medium">Wallet Address</label>
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={() => {
-                        navigator.clipboard.writeText(createdWallet.privateKey);
-                        setCopied(true);
-                        setTimeout(() => setCopied(false), 2000);
+                        navigator.clipboard.writeText(createdWallet.user.walletAddress);
                         toast({
                           title: "Copied!",
-                          description: "Private key copied to clipboard",
+                          description: "Wallet address copied to clipboard",
                         });
                       }}
                     >
                       <Copy className="h-4 w-4" />
                     </Button>
                   </div>
+                  <div className="font-mono text-xs break-all p-2 bg-white border rounded">
+                    {createdWallet.user.walletAddress}
+                  </div>
                 </div>
-                <div className="font-mono text-xs break-all p-2 bg-white border rounded">
-                  {showPrivateKey ? createdWallet.privateKey : '••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••'}
+
+                {/* Private Key */}
+                <div className="bg-gray-50 p-4 rounded-lg border">
+                  <div className="flex items-center justify-between mb-2">
+                    <label className="text-sm font-medium">Private Key</label>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setShowPrivateKey(!showPrivateKey)}
+                      >
+                        {showPrivateKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          navigator.clipboard.writeText(createdWallet.privateKey);
+                          setCopied(true);
+                          setTimeout(() => setCopied(false), 2000);
+                          toast({
+                            title: "Copied!",
+                            description: "Private key copied to clipboard",
+                          });
+                        }}
+                      >
+                        <Copy className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                  <div className="font-mono text-xs break-all p-2 bg-white border rounded">
+                    {showPrivateKey ? createdWallet.privateKey : '••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••'}
+                  </div>
                 </div>
-              </div>
 
-              <Alert>
-                <AlertDescription>
-                  <strong>Important:</strong> Save both your wallet address and private key securely. 
-                  Your private key is the only way to access your account. Never share it with anyone.
-                </AlertDescription>
-              </Alert>
+                <Alert>
+                  <AlertDescription>
+                    <strong>Important:</strong> Save both your wallet address and private key securely. 
+                    Your private key is the only way to access your account. Never share it with anyone.
+                  </AlertDescription>
+                </Alert>
 
-              <div className="flex items-center gap-2 p-3 bg-blue-50 rounded-lg">
-                <input
-                  type="checkbox"
-                  id="confirm-saved"
-                  className="rounded"
-                  onChange={(e) => {
-                    const proceedBtn = document.getElementById('proceed-btn') as HTMLButtonElement;
-                    if (proceedBtn) {
-                      proceedBtn.disabled = !e.target.checked;
-                    }
+                <div className="flex items-center gap-2 p-3 bg-blue-50 rounded-lg">
+                  <input
+                    type="checkbox"
+                    id="confirm-saved"
+                    className="rounded"
+                    onChange={(e) => {
+                      const proceedBtn = document.getElementById('proceed-btn') as HTMLButtonElement;
+                      if (proceedBtn) {
+                        proceedBtn.disabled = !e.target.checked;
+                      }
+                    }}
+                  />
+                  <label htmlFor="confirm-saved" className="text-sm">
+                    I have securely saved my wallet address and private key
+                  </label>
+                </div>
+
+                <Button 
+                  id="proceed-btn"
+                  className="w-full" 
+                  disabled={true}
+                  onClick={() => {
+                    setCreatedWallet(null);
+                    window.location.href = '/?tab=marketplace';
                   }}
-                />
-                <label htmlFor="confirm-saved" className="text-sm">
-                  I have securely saved my wallet address and private key
-                </label>
+                >
+                  Proceed to Marketplace
+                </Button>
               </div>
-
-              <Button 
-                id="proceed-btn"
-                className="w-full" 
-                disabled={true}
-                onClick={() => {
-                  setCreatedWallet(null);
-                  window.location.href = '/?tab=marketplace';
-                }}
-              >
-                Proceed to Marketplace
-              </Button>
             </div>
-          )}
-        </DialogContent>
-      </Dialog>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
