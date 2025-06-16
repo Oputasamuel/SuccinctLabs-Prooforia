@@ -128,6 +128,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get detailed NFT data with listings, bids, and ownership
+  app.get("/api/nfts/:id/details", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const nftWithDetails = await storage.getNftWithDetails(id);
+      
+      // Get creator info
+      const creator = await storage.getUser(nftWithDetails.creatorId);
+      const response = {
+        ...nftWithDetails,
+        creator: creator ? { id: creator.id, username: creator.username } : null
+      };
+
+      res.json(response);
+    } catch (error) {
+      console.error("Get NFT details error:", error);
+      if (error.message === "NFT not found") {
+        return res.status(404).json({ message: "NFT not found" });
+      }
+      res.status(500).json({ message: "Failed to fetch NFT details" });
+    }
+  });
+
   // NFT Minting Route
   app.post("/api/nfts/mint", upload.single("image"), async (req: MulterRequest, res) => {
     try {

@@ -75,7 +75,7 @@ export default function NFTDetailPopup({ nft, isOpen, onClose }: NFTDetailPopupP
         nftId: nft!.id,
         amount,
       });
-      return res.json();
+      return res;
     },
     onSuccess: () => {
       toast({ title: "Bid placed successfully!" });
@@ -98,7 +98,7 @@ export default function NFTDetailPopup({ nft, isOpen, onClose }: NFTDetailPopupP
         nftId: nft!.id,
         price,
       });
-      return res.json();
+      return res;
     },
     onSuccess: () => {
       toast({ title: "NFT listed for sale!" });
@@ -118,7 +118,7 @@ export default function NFTDetailPopup({ nft, isOpen, onClose }: NFTDetailPopupP
   const buyFromListingMutation = useMutation({
     mutationFn: async (listingId: number) => {
       const res = await apiRequest("POST", `/api/listings/${listingId}/buy`);
-      return res.json();
+      return res;
     },
     onSuccess: () => {
       toast({ title: "Purchase successful!" });
@@ -138,7 +138,7 @@ export default function NFTDetailPopup({ nft, isOpen, onClose }: NFTDetailPopupP
   const buyNewMintMutation = useMutation({
     mutationFn: async () => {
       const res = await apiRequest("POST", "/api/nfts/buy", { nftId: nft!.id });
-      return res.json();
+      return res;
     },
     onSuccess: () => {
       toast({ title: "NFT minted successfully!" });
