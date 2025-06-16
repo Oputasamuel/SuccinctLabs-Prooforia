@@ -895,20 +895,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Favorites Routes
   app.post("/api/nfts/:id/favorite", async (req, res) => {
-    if (!req.isAuthenticated()) {
+    // Check both session-based auth (wallet) and passport auth
+    const isWalletAuth = req.session && req.session.userId;
+    const isPassportAuth = req.isAuthenticated && req.isAuthenticated() && req.user;
+    
+    if (!isWalletAuth && !isPassportAuth) {
+      console.log("Auth check failed - Session userId:", req.session?.userId, "Passport auth:", isPassportAuth);
       return res.status(401).json({ message: "Authentication required" });
     }
 
     try {
       const nftId = parseInt(req.params.id);
-      const userId = req.user.id;
+      const userId = req.session?.userId || req.user?.id;
       const { action } = req.body;
 
+      if (!userId) {
+        return res.status(401).json({ message: "User ID not found" });
+      }
+
       if (action === 'add') {
-        await storage.addFavorite(userId, nftId);
+        await storage.addFavorite(userId!, nftId);
         res.json({ message: "Added to favorites" });
       } else if (action === 'remove') {
-        await storage.removeFavorite(userId, nftId);
+        await storage.removeFavorite(userId!, nftId);
         res.json({ message: "Removed from favorites" });
       } else {
         res.status(400).json({ message: "Invalid action" });
