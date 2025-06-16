@@ -137,8 +137,8 @@ export default function Footer({ onTabChange }: FooterProps) {
           </div>
         </div>
 
-        <div className="border-t border-gray-800 mt-12 pt-8 flex flex-col md:flex-row justify-center items-center">
-          <div className="flex space-x-6">
+        <div className="border-t border-gray-800 mt-12 pt-8 flex flex-col md:flex-row justify-between items-center">
+          <div className="flex space-x-6 mb-4 md:mb-0">
             <a 
               href="https://succinct.xyz/privacy" 
               target="_blank" 
@@ -154,6 +154,17 @@ export default function Footer({ onTabChange }: FooterProps) {
               className="text-gray-400 hover:text-primary text-sm transition-colors"
             >
               Terms of Service
+            </a>
+          </div>
+          <div className="text-gray-400 text-sm">
+            Made by{' '}
+            <a 
+              href="https://x.com/chizaramch?s=21" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="text-primary hover:text-primary/80 transition-colors font-medium"
+            >
+              samuel.ip
             </a>
           </div>
         </div>
