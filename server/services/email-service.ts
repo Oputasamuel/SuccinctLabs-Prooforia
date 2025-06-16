@@ -19,15 +19,22 @@ class EmailService {
   }
 
   async sendPasswordResetCode(email: string, code: string): Promise<boolean> {
+    // Development mode - log the code to console for testing
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`\n🔐 [PASSWORD RESET] Code for ${email}: ${code}`);
+      console.log(`   This code expires in 15 minutes\n`);
+      return true;
+    }
+
     if (!process.env.SENDGRID_API_KEY) {
       console.log(`[DEV MODE] Password reset code for ${email}: ${code}`);
-      return true; // Return success in development mode
+      return true;
     }
 
     try {
       await this.mailService.send({
         to: email,
-        from: this.fromEmail,
+        from: 'noreply@sp1mint.com', // You'll need to verify this domain in SendGrid
         subject: 'SP1Mint - Password Reset Code',
         text: `Your password reset code is: ${code}. This code will expire in 15 minutes.`,
         html: `
@@ -48,6 +55,12 @@ class EmailService {
       return true;
     } catch (error) {
       console.error('SendGrid email error:', error);
+      // In development, still log the code even if SendGrid fails
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`\n🔐 [PASSWORD RESET FALLBACK] Code for ${email}: ${code}`);
+        console.log(`   This code expires in 15 minutes (SendGrid failed, using fallback)\n`);
+        return true;
+      }
       return false;
     }
   }
