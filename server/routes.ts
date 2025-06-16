@@ -213,17 +213,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Decrypt the stored private key and compare
       try {
-        const decryptedPrivateKey = crypto.createDecipher('aes-256-cbc', 'sp1mint-secret-key')
-          .update(user.walletPrivateKey, 'hex', 'utf8') + 
-          crypto.createDecipher('aes-256-cbc', 'sp1mint-secret-key')
-          .final('utf8');
+        console.log('Attempting to decrypt private key for user:', user.email);
+        const decryptedPrivateKey = walletService.decryptPrivateKey(user.walletPrivateKey);
+        console.log('Successfully decrypted private key');
         
         const storedCleanKey = decryptedPrivateKey.startsWith('0x') ? 
           decryptedPrivateKey.slice(2) : decryptedPrivateKey;
 
+        console.log('Comparing keys - Input:', cleanPrivateKey.substring(0, 10) + '...', 
+                   'Stored:', storedCleanKey.substring(0, 10) + '...');
+
         if (cleanPrivateKey.toLowerCase() !== storedCleanKey.toLowerCase()) {
           return res.status(400).json({ message: "Private key does not match this account" });
         }
+        
+        console.log('Private key verification successful');
       } catch (error) {
         console.error("Private key decryption error:", error);
         return res.status(500).json({ message: "Failed to verify private key" });
@@ -239,6 +243,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Wallet recovery error:", error);
       res.status(500).json({ message: "Failed to recover account" });
+    }
+  });
+
+  // Temporary debug endpoint to get decrypted private key for testing
+  app.get("/api/debug/private-key/:email", async (req, res) => {
+    try {
+      const { email } = req.params;
+      const user = await storage.getUserByEmail(email);
+      
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      const decryptedKey = walletService.decryptPrivateKey(user.walletPrivateKey);
+      
+      res.json({ 
+        email: user.email,
+        walletAddress: user.walletAddress,
+        privateKey: decryptedKey 
+      });
+    } catch (error) {
+      console.error("Debug endpoint error:", error);
+      res.status(500).json({ message: "Failed to decrypt private key" });
     }
   });
 
