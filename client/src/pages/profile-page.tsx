@@ -8,7 +8,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useToast } from "@/hooks/use-toast";
-import { Wallet, ShoppingBag, Palette, TrendingUp, Copy, Share, Heart, HeartOff, Settings, Users, Eye, CheckCircle, Link as LinkIcon, ExternalLink } from "lucide-react";
+import { Wallet, ShoppingBag, Palette, TrendingUp, Copy, Share, Heart, HeartOff, Settings, Users, Eye, CheckCircle, Link as LinkIcon, ExternalLink, Shield } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { Nft, Transaction, ZkProof } from "@shared/schema";
 import Header from "@/components/header";
@@ -390,6 +390,15 @@ export default function ProfilePage() {
           </TabsContent>
 
           <TabsContent value="activity" className="mt-6">
+            <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 mb-4">
+              <div className="flex items-center gap-2 text-amber-800">
+                <Shield className="w-4 h-4" />
+                <span className="text-sm font-medium">Development Mode</span>
+              </div>
+              <p className="text-xs text-amber-700 mt-1">
+                Transaction hashes and ZK proofs are simulated for development. In production, these would be real blockchain transactions.
+              </p>
+            </div>
             <div className="space-y-4">
               {profile?.transactions?.length ? (
                 profile.transactions.map((transaction) => {
@@ -449,6 +458,15 @@ export default function ProfilePage() {
           </TabsContent>
 
           <TabsContent value="proofs" className="mt-6">
+            <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 mb-4">
+              <div className="flex items-center gap-2 text-amber-800">
+                <Shield className="w-4 h-4" />
+                <span className="text-sm font-medium">Development Mode</span>
+              </div>
+              <p className="text-xs text-amber-700 mt-1">
+                These are simulated ZK proofs for development. In production, these would be real SP1 proofs on the blockchain.
+              </p>
+            </div>
             <div className="space-y-4">
               {profile?.zkProofs?.length ? (
                 profile.zkProofs.map((proof) => (
