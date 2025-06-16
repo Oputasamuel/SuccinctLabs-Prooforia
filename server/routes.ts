@@ -346,8 +346,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // NFT Minting Route
   app.post("/api/nfts/mint", upload.single("image"), async (req: MulterRequest, res) => {
     try {
-      if (!req.isAuthenticated() || !req.user) {
+      if (!req.session.userId) {
         return res.status(401).json({ message: "Authentication required" });
+      }
+
+      const currentUser = await storage.getUser(req.session.userId);
+      if (!currentUser) {
+        return res.status(401).json({ message: "User not found" });
       }
 
       if (!req.file) {
@@ -411,7 +416,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         attributes: [
           { trait_type: "Category", value: nftData.category },
           { trait_type: "Edition Size", value: nftData.editionSize },
-          { trait_type: "Creator", value: user.username }
+          { trait_type: "Creator", value: user.displayName }
         ]
       };
 
@@ -699,12 +704,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Profile Route - Enhanced with favorited NFTs
   app.get("/api/profile", async (req, res) => {
-    if (!req.isAuthenticated()) {
+    if (!req.session.userId) {
       return res.status(401).json({ message: "Authentication required" });
     }
 
     try {
-      const userId = req.user.id;
+      const userId = req.session.userId;
 
       // Get created NFTs
       const createdNfts = await storage.getNfts({ creatorId: userId });
