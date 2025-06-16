@@ -80,14 +80,6 @@ export default function UserBidsSection() {
     refetchInterval: 5000,
   });
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-      </div>
-    );
-  }
-
   const bidsWithNftData: NftWithBid[] = useMemo(() => 
     userBids.map((bid: Bid) => ({
       ...bid,
@@ -121,6 +113,14 @@ export default function UserBidsSection() {
       bid.isActive && currentHighestBids[bid.nftId] !== bid.amount
     ).length, [bidsWithNftData, currentHighestBids]
   );
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6" key="user-bids-section">
