@@ -21,11 +21,11 @@ interface NftWithCreator extends Nft {
 interface NFTCardProps {
   nft: NftWithCreator;
   viewMode?: "grid" | "list";
+  onViewDetails?: () => void;
 }
 
-export default function NFTCard({ nft, viewMode = "grid" }: NFTCardProps) {
+export default function NFTCard({ nft, viewMode = "grid", onViewDetails }: NFTCardProps) {
   const [isLiked, setIsLiked] = useState(false);
-  const [showDetailPopup, setShowDetailPopup] = useState(false);
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const { refreshUser, user } = useAuth();
@@ -258,7 +258,7 @@ export default function NFTCard({ nft, viewMode = "grid" }: NFTCardProps) {
                 )}
               </Button>
               <Button
-                onClick={() => setShowDetailPopup(true)}
+                onClick={onViewDetails}
                 variant="outline"
                 className="w-full bg-white/90 hover:bg-white backdrop-blur-sm border border-white/50 text-gray-900"
               >

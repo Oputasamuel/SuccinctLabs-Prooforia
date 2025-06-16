@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ShoppingBag, Grid3X3, List, Filter } from "lucide-react";
 import NFTCard from "@/components/nft-card";
+import NFTDetailPopup from "@/components/nft-detail-popup";
 import type { Nft } from "@shared/schema";
 
 interface NftWithCreator extends Nft {
@@ -20,6 +21,18 @@ export default function MarketplaceSection() {
   const [category, setCategory] = useState<string>("all");
   const [sortBy, setSortBy] = useState<string>("recent");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+  const [selectedNft, setSelectedNft] = useState<NftWithCreator | null>(null);
+  const [showDetailPopup, setShowDetailPopup] = useState(false);
+
+  const handleViewDetails = (nft: NftWithCreator) => {
+    setSelectedNft(nft);
+    setShowDetailPopup(true);
+  };
+
+  const handleClosePopup = () => {
+    setShowDetailPopup(false);
+    setSelectedNft(null);
+  };
 
   const { data: nfts, isLoading } = useQuery<NftWithCreator[]>({
     queryKey: ["/api/nfts", { category: category === "all" || !category ? undefined : category }],
@@ -129,7 +142,12 @@ export default function MarketplaceSection() {
                 : "grid-cols-1"
             }`}>
               {filteredNfts.map((nft) => (
-                <NFTCard key={nft.id} nft={nft} viewMode={viewMode} />
+                <NFTCard 
+                  key={nft.id} 
+                  nft={nft} 
+                  viewMode={viewMode}
+                  onViewDetails={() => handleViewDetails(nft)}
+                />
               ))}
             </div>
 
@@ -142,6 +160,13 @@ export default function MarketplaceSection() {
           </>
         )}
       </div>
+
+      {/* Centralized NFT Detail Popup */}
+      <NFTDetailPopup 
+        nft={selectedNft}
+        isOpen={showDetailPopup}
+        onClose={handleClosePopup}
+      />
     </section>
   );
 }
