@@ -72,7 +72,7 @@ export default function ProfilePage() {
   const connectDiscordMutation = useMutation({
     mutationFn: async (username: string) => {
       const response = await apiRequest("POST", "/api/auth/discord/connect", { username });
-      return response.json();
+      return response;
     },
     onSuccess: (data) => {
       queryClient.setQueryData(["/api/user"], data.user);
@@ -96,7 +96,7 @@ export default function ProfilePage() {
   const connectXMutation = useMutation({
     mutationFn: async (username: string) => {
       const response = await apiRequest("POST", "/api/auth/x/connect", { username });
-      return response.json();
+      return response;
     },
     onSuccess: (data) => {
       queryClient.setQueryData(["/api/user"], data.user);
