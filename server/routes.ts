@@ -9,6 +9,7 @@ import { sp1Service } from "./services/sp1-service";
 import { ipfsService } from "./services/ipfs-service";
 import { succinctService } from "./services/succinct-service";
 import { setupWalletAuth } from "./wallet-auth";
+import { setupAuth, hashPassword } from "./auth";
 import { discordService } from "./services/discord-service";
 import { walletService } from "./services/wallet-service";
 
@@ -19,7 +20,8 @@ interface MulterRequest extends Request {
 const upload = multer({ storage: multer.memoryStorage() });
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Setup wallet authentication
+  // Setup authentication
+  setupAuth(app);
   setupWalletAuth(app);
 
   // Serve uploaded files statically
@@ -117,6 +119,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       await storage.createPasswordResetToken(email, resetCode, expiresAt);
       
       // Send email with reset code
+      const { emailService } = await import("./services/email-service");
       const emailSent = await emailService.sendPasswordResetCode(email, resetCode);
       
       if (!emailSent) {
@@ -295,7 +298,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const creator = await storage.getUser(nft.creatorId);
           return {
             ...nft,
-            creator: creator ? { id: creator.id, username: creator.username } : null
+            creator: creator ? { id: creator.id, username: creator.displayName } : null
           };
         })
       );
