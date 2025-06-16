@@ -139,6 +139,7 @@ The application uses a PostgreSQL database with the following core entities:
 - **June 16, 2025**: Login and signup functionality fully operational with PostgreSQL database integration
 - **June 16, 2025**: Fixed logout JSON parsing error - resolved "Unexpected token 'O', 'OK' is not valid JSON"
 - **June 16, 2025**: Fixed Create Account button - added missing confirm password field and proper form validation
+- **June 16, 2025**: Fixed NFT purchase errors - updated database to mark all NFTs as available for sale
 
 ## Changelog
 - June 15, 2025: Complete SP1Mint rebranding and authentication system migration
