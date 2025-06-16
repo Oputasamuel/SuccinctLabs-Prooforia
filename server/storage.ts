@@ -13,12 +13,10 @@ import { eq, and, or, desc, asc, count, sum } from "drizzle-orm";
 export interface IStorage {
   // User operations
   getUser(id: number): Promise<User | undefined>;
-  getUserByUsername(username: string): Promise<User | undefined>;
-  getUserByEmail(email: string): Promise<User | undefined>;
+  getUserByWalletAddress(walletAddress: string): Promise<User | undefined>;
   createUser(userData: {
-    username: string;
-    email: string;
-    password: string;
+    displayName: string;
+    profilePicture?: string;
     walletAddress: string;
     walletPrivateKey: string;
     walletPublicKey: string;
@@ -98,11 +96,7 @@ export interface IStorage {
     communityMembers: number;
   }>;
   
-  // Password Reset operations
-  createPasswordResetToken(email: string, token: string, expiresAt: Date): Promise<PasswordResetToken>;
-  getPasswordResetToken(token: string): Promise<PasswordResetToken | undefined>;
-  markTokenAsUsed(tokenId: number): Promise<void>;
-  updateUserPassword(email: string, newPassword: string): Promise<User>;
+  // Wallet-based authentication - no password operations needed
 }
 
 export class MemStorage implements IStorage {
@@ -236,12 +230,8 @@ export class MemStorage implements IStorage {
     return this.users.get(id);
   }
 
-  async getUserByUsername(username: string): Promise<User | undefined> {
-    return Array.from(this.users.values()).find(user => user.username === username);
-  }
-
-  async getUserByEmail(email: string): Promise<User | undefined> {
-    return Array.from(this.users.values()).find(user => user.email === email);
+  async getUserByWalletAddress(walletAddress: string): Promise<User | undefined> {
+    return Array.from(this.users.values()).find(user => user.walletAddress === walletAddress);
   }
 
   async createDiscordUser(userData: {
@@ -295,9 +285,8 @@ export class MemStorage implements IStorage {
   }
 
   async createUser(userData: {
-    username: string;
-    email: string;
-    password: string;
+    displayName: string;
+    profilePicture?: string;
     walletAddress: string;
     walletPrivateKey: string;
     walletPublicKey: string;
@@ -305,9 +294,8 @@ export class MemStorage implements IStorage {
     const id = this.currentUserId++;
     const user: User = {
       id,
-      username: userData.username,
-      email: userData.email,
-      password: userData.password,
+      displayName: userData.displayName,
+      profilePicture: userData.profilePicture || null,
       walletAddress: userData.walletAddress,
       walletPrivateKey: userData.walletPrivateKey,
       walletPublicKey: userData.walletPublicKey,

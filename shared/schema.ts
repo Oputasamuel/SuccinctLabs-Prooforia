@@ -255,5 +255,4 @@ export type InsertBid = z.infer<typeof insertBidSchema>;
 export type Bid = typeof bids.$inferSelect;
 export type InsertOwnership = z.infer<typeof insertOwnershipSchema>;
 export type NftOwnership = typeof nftOwnerships.$inferSelect;
-export type InsertPasswordResetToken = z.infer<typeof insertPasswordResetTokenSchema>;
-export type PasswordResetToken = typeof passwordResetTokens.$inferSelect;
+// Password reset types removed - wallet-only authentication
