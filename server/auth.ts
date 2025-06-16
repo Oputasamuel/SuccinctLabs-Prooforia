@@ -135,7 +135,7 @@ export function setupAuth(app: Express) {
         if (err) return next(err);
         const publicUser = {
           id: user.id,
-          username: user.username,
+          username: user.displayName,
           email: user.email,
           walletAddress: user.walletAddress,
           credits: user.credits,
@@ -231,7 +231,7 @@ export function setupAuth(app: Express) {
       
       const publicUser = {
         id: updatedUser.id,
-        username: updatedUser.username,
+        username: updatedUser.displayName,
         email: updatedUser.email,
         walletAddress: updatedUser.walletAddress,
         credits: updatedUser.credits,
@@ -274,7 +274,7 @@ export function setupAuth(app: Express) {
       
       const publicUser = {
         id: updatedUser.id,
-        username: updatedUser.username,
+        username: updatedUser.displayName,
         email: updatedUser.email,
         walletAddress: updatedUser.walletAddress,
         credits: updatedUser.credits,

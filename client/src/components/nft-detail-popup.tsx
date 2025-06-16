@@ -78,11 +78,14 @@ export default function NFTDetailPopup({ nft, isOpen, onClose, defaultTab = "ove
   const bidMutation = useMutation({
     mutationFn: async (amount: number) => {
       if (!nft) throw new Error("No NFT selected");
-      const response = await apiRequest("POST", "/api/bids", {
-        nftId: nft.id,
-        amount,
+      const response = await apiRequest("/api/bids", {
+        method: "POST",
+        body: JSON.stringify({
+          nftId: nft.id,
+          amount,
+        }),
       });
-      return response.json();
+      return response;
     },
     onSuccess: () => {
       toast({
@@ -90,6 +93,11 @@ export default function NFTDetailPopup({ nft, isOpen, onClose, defaultTab = "ove
         description: `Your bid of ${bidAmount} credits has been placed`,
       });
       setBidAmount("");
+      // Invalidate relevant queries to refresh data
+      queryClient.invalidateQueries({ queryKey: ["/api/nfts", nft?.id, "bids"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/nfts", nft?.id, "details"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/user/bids"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/user"] });
     },
     onError: (error: any) => {
       toast({

@@ -649,6 +649,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get user's bids
+  app.get("/api/user/bids", async (req, res) => {
+    if (!req.session.userId) {
+      return res.status(401).json({ message: "Authentication required" });
+    }
+
+    try {
+      const userBids = await storage.getUserBids(req.session.userId);
+      res.json(userBids);
+    } catch (error) {
+      console.error("Get user bids error:", error);
+      res.status(500).json({ message: "Failed to fetch user bids" });
+    }
+  });
+
   // Listing Routes
   app.post("/api/listings", async (req, res) => {
     if (!req.isAuthenticated() || !req.user) {
