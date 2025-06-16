@@ -8,7 +8,7 @@ import {
   type NftOwnership, type InsertOwnership
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, and, or, desc, count, sum } from "drizzle-orm";
+import { eq, and, or, desc, asc, count, sum } from "drizzle-orm";
 
 export interface IStorage {
   // User operations
@@ -931,7 +931,7 @@ export class DatabaseStorage implements IStorage {
       buyerId: bid[0].bidderId,
       sellerId,
       nftId: bid[0].nftId,
-      amount: bid[0].amount,
+      price: bid[0].amount,
       type: "purchase",
       zkProofHash: `proof_${Date.now()}`
     });
@@ -964,7 +964,7 @@ export class DatabaseStorage implements IStorage {
       buyerId,
       sellerId: listing[0].sellerId,
       nftId: listing[0].nftId,
-      amount: listing[0].price,
+      price: listing[0].price,
       type: "purchase",
       zkProofHash: `proof_${Date.now()}`
     });
@@ -986,7 +986,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getOwnershipsForUser(userId: number): Promise<NftOwnership[]> {
-    return await db.select().from(nftOwnerships).where(eq(nftOwnerships.userId, userId));
+    return await db.select().from(nftOwnerships).where(eq(nftOwnerships.ownerId, userId));
   }
 
   async getOwnershipsForNft(nftId: number): Promise<NftOwnership[]> {
@@ -996,10 +996,10 @@ export class DatabaseStorage implements IStorage {
   async transferOwnership(nftId: number, fromUserId: number, toUserId: number, editionNumber: number): Promise<void> {
     // Update ownership record
     await db.update(nftOwnerships)
-      .set({ userId: toUserId })
+      .set({ ownerId: toUserId })
       .where(and(
         eq(nftOwnerships.nftId, nftId),
-        eq(nftOwnerships.userId, fromUserId),
+        eq(nftOwnerships.ownerId, fromUserId),
         eq(nftOwnerships.editionNumber, editionNumber)
       ));
   }
