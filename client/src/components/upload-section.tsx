@@ -54,6 +54,7 @@ export default function UploadSection({ currentUser }: UploadSectionProps) {
         description: `Transaction: ${data.transactionHash?.slice(0, 10)}... | Proof: ${data.proofHash?.slice(0, 10)}...`,
       });
       queryClient.invalidateQueries({ queryKey: ["/api/nfts"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/profile"] });
       refreshUser(); // Update user credits in real-time
       resetForm();
     },

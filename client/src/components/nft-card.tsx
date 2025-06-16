@@ -41,6 +41,7 @@ export default function NFTCard({ nft, viewMode = "grid" }: NFTCardProps) {
         description: `You successfully purchased ${nft.title}`,
       });
       queryClient.invalidateQueries({ queryKey: ["/api/nfts"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/profile"] });
       refreshUser(); // Update user credits in real-time
     },
     onError: (error: any) => {

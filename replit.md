@@ -124,6 +124,7 @@ The application uses a PostgreSQL database with the following core entities:
 - **June 15, 2025**: Reduced NFT prices to 1-2 credits for easy testing and minting functionality
 - **June 15, 2025**: Enhanced mobile responsiveness with hamburger menu navigation and adaptive layouts
 - **June 15, 2025**: Updated footer branding from "Succinct Labs" to "SP1Mint" and removed copyright text
+- **June 16, 2025**: Fixed profile data real-time updates - overview stats and recent activities now auto-refresh every 5 seconds
 
 ## Changelog
 - June 15, 2025: Complete SP1Mint rebranding and authentication system migration

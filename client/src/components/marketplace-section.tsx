@@ -23,6 +23,8 @@ export default function MarketplaceSection() {
 
   const { data: nfts, isLoading } = useQuery<NftWithCreator[]>({
     queryKey: ["/api/nfts", { category: category === "all" || !category ? undefined : category }],
+    refetchInterval: 5000, // Refresh every 5 seconds
+    refetchIntervalInBackground: true,
   });
 
   const filteredNfts = nfts || [];
