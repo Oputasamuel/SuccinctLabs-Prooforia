@@ -1,6 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -14,19 +14,18 @@ import { formatTokens } from "@/lib/utils";
 import { 
   Heart, 
   ShoppingCart, 
-  TrendingUp, 
-  Clock, 
-  Users, 
   CheckCircle, 
   Database, 
   Gavel,
   DollarSign,
   Timer,
-  Trophy,
   Wallet,
   AlertCircle,
   Copy,
-  ExternalLink
+  ExternalLink,
+  TrendingUp,
+  Clock,
+  Users
 } from "lucide-react";
 import type { Nft, Listing, Bid, NftOwnership } from "@shared/schema";
 
@@ -66,95 +65,102 @@ export default function NFTDetailPopup({ nft, isOpen, onClose }: NFTDetailPopupP
   });
 
   const currentNft = nftDetails || nft;
-  const mintedOutPercentage = currentNft ? (currentNft.currentEdition / currentNft.editionSize) * 100 : 0;
+  
+  if (!currentNft) return null;
+
+  const mintedOutPercentage = (currentNft.currentEdition / currentNft.editionSize) * 100;
   const isMintedOut = mintedOutPercentage >= 100;
-  const remainingEditions = currentNft ? currentNft.editionSize - currentNft.currentEdition : 0;
+  const remainingEditions = currentNft.editionSize - currentNft.currentEdition;
 
-  // Place bid mutation
-  const placeBidMutation = useMutation({
-    mutationFn: async (amount: number) => {
-      const res = await apiRequest("POST", "/api/bids", {
-        nftId: nft!.id,
-        amount,
+  // Purchase mutation
+  const purchaseMutation = useMutation({
+    mutationFn: async () => {
+      const response = await apiRequest("POST", "/api/nfts/purchase", {
+        nftId: currentNft.id,
       });
-      return res;
+      return response.json();
     },
     onSuccess: () => {
-      toast({ title: "Bid placed successfully!" });
-      setBidAmount("");
-      queryClient.invalidateQueries({ queryKey: ["/api/nfts"] });
-    },
-    onError: (error: Error) => {
       toast({
-        title: "Failed to place bid",
-        description: error.message,
-        variant: "destructive",
+        title: "Purchase successful!",
+        description: `You've successfully purchased ${currentNft.title}`,
       });
-    },
-  });
-
-  // Create listing mutation
-  const createListingMutation = useMutation({
-    mutationFn: async (price: number) => {
-      const res = await apiRequest("POST", "/api/listings", {
-        nftId: nft!.id,
-        price,
-      });
-      return res;
-    },
-    onSuccess: () => {
-      toast({ title: "NFT listed for sale!" });
-      setListingPrice("");
       queryClient.invalidateQueries({ queryKey: ["/api/nfts"] });
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Failed to create listing",
-        description: error.message,
-        variant: "destructive",
-      });
-    },
-  });
-
-  // Buy from listing mutation
-  const buyFromListingMutation = useMutation({
-    mutationFn: async (listingId: number) => {
-      const res = await apiRequest("POST", `/api/listings/${listingId}/buy`);
-      return res;
-    },
-    onSuccess: () => {
-      toast({ title: "Purchase successful!" });
-      queryClient.invalidateQueries({ queryKey: ["/api/nfts"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/user"] });
       onClose();
     },
-    onError: (error: Error) => {
+    onError: (error: any) => {
       toast({
         title: "Purchase failed",
-        description: error.message,
+        description: error.message || "Something went wrong",
         variant: "destructive",
       });
     },
   });
 
-  // Buy new mint mutation
-  const buyNewMintMutation = useMutation({
-    mutationFn: async () => {
-      const res = await apiRequest("POST", "/api/nfts/buy", { nftId: nft!.id });
-      return res;
+  // Bid mutation
+  const bidMutation = useMutation({
+    mutationFn: async (amount: number) => {
+      const response = await apiRequest("POST", "/api/bids", {
+        nftId: currentNft.id,
+        amount,
+      });
+      return response.json();
     },
     onSuccess: () => {
-      toast({ title: "NFT minted successfully!" });
-      queryClient.invalidateQueries({ queryKey: ["/api/nfts"] });
-      onClose();
-    },
-    onError: (error: Error) => {
       toast({
-        title: "Minting failed",
-        description: error.message,
+        title: "Bid placed successfully!",
+        description: `Your bid of ${bidAmount} credits has been placed`,
+      });
+      setBidAmount("");
+      queryClient.invalidateQueries({ queryKey: ["/api/nfts", currentNft.id, "details"] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Bid failed",
+        description: error.message || "Something went wrong",
         variant: "destructive",
       });
     },
   });
+
+  // Listing mutation
+  const createListingMutation = useMutation({
+    mutationFn: async (price: number) => {
+      const response = await apiRequest("POST", "/api/listings", {
+        nftId: currentNft.id,
+        price,
+      });
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Listing created successfully!",
+        description: `Your NFT is now listed for ${listingPrice} credits`,
+      });
+      setListingPrice("");
+      queryClient.invalidateQueries({ queryKey: ["/api/nfts", currentNft.id, "details"] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Listing failed",
+        description: error.message || "Something went wrong",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handlePurchase = () => {
+    if (!user) {
+      toast({
+        title: "Authentication required",
+        description: "Please log in to purchase NFTs",
+        variant: "destructive",
+      });
+      return;
+    }
+    purchaseMutation.mutate();
+  };
 
   const handlePlaceBid = () => {
     const amount = parseInt(bidAmount);
@@ -166,7 +172,7 @@ export default function NFTDetailPopup({ nft, isOpen, onClose }: NFTDetailPopupP
       });
       return;
     }
-    placeBidMutation.mutate(amount);
+    bidMutation.mutate(amount);
   };
 
   const handleCreateListing = () => {
@@ -182,13 +188,14 @@ export default function NFTDetailPopup({ nft, isOpen, onClose }: NFTDetailPopupP
     createListingMutation.mutate(price);
   };
 
-  if (!nft || !currentNft) return null;
-
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-2xl font-bold">{currentNft.title}</DialogTitle>
+          <DialogDescription>
+            NFT Details and Marketplace Actions
+          </DialogDescription>
         </DialogHeader>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -215,56 +222,60 @@ export default function NFTDetailPopup({ nft, isOpen, onClose }: NFTDetailPopupP
 
             {/* Edition Progress */}
             <Card>
-              <CardContent className="pt-6">
-                <div className="flex justify-between items-center mb-2">
-                  <span className="text-sm font-medium">Edition Progress</span>
-                  <span className="text-sm text-gray-600">
-                    {currentNft.currentEdition} / {currentNft.editionSize}
-                  </span>
-                </div>
-                <Progress value={mintedOutPercentage} className="mb-2" />
-                <div className="flex justify-between text-xs text-gray-500">
-                  <span>Minted: {currentNft.currentEdition}</span>
-                  <span className={isMintedOut ? "text-red-600 font-medium" : "text-green-600"}>
-                    {isMintedOut ? "MINTED OUT" : `${remainingEditions} Available`}
-                  </span>
-                  <span>Total: {currentNft.editionSize}</span>
+              <CardContent className="p-4">
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm font-medium">Edition Progress</span>
+                    <span className="text-sm text-gray-600">
+                      {currentNft.currentEdition} / {currentNft.editionSize}
+                    </span>
+                  </div>
+                  <Progress value={mintedOutPercentage} className="h-2" />
+                  <div className="flex justify-between text-xs text-gray-500">
+                    <span>{Math.round(mintedOutPercentage)}% Minted</span>
+                    <span>{remainingEditions} Remaining</span>
+                  </div>
+                  {isMintedOut && (
+                    <Badge variant="destructive" className="w-full justify-center">
+                      MINTED OUT
+                    </Badge>
+                  )}
                 </div>
               </CardContent>
             </Card>
 
-            {/* Quick Stats */}
-            <div className="grid grid-cols-2 gap-4">
-              <Card>
-                <CardContent className="pt-4">
-                  <div className="flex items-center space-x-2">
-                    <Wallet className="w-4 h-4 text-blue-500" />
-                    <div>
-                      <p className="text-xs text-gray-500">Original Price</p>
-                      <p className="font-semibold">{formatTokens(currentNft.price)}</p>
-                    </div>
+            {/* Pricing Info */}
+            <Card>
+              <CardContent className="p-4">
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-gray-600">Current Price</span>
+                    <span className="text-lg font-bold">{formatTokens(currentNft.price)}</span>
                   </div>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardContent className="pt-4">
-                  <div className="flex items-center space-x-2">
-                    <Trophy className="w-4 h-4 text-yellow-500" />
-                    <div>
-                      <p className="text-xs text-gray-500">Highest Bid</p>
-                      <p className="font-semibold">
-                        {currentNft.highestBid ? formatTokens(currentNft.highestBid) : "No bids"}
-                      </p>
+                  {currentNft.highestBid && (
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-gray-600">Highest Bid</span>
+                      <span className="text-md font-semibold text-green-600">
+                        {formatTokens(currentNft.highestBid)}
+                      </span>
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
+                  )}
+                  {currentNft.lowestListing && (
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-gray-600">Lowest Listing</span>
+                      <span className="text-md font-semibold text-blue-600">
+                        {formatTokens(currentNft.lowestListing)}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
           </div>
 
-          {/* Right Column - Tabs and Actions */}
+          {/* Right Column - Tabs */}
           <div className="space-y-6">
-            <Tabs value={activeTab} onValueChange={setActiveTab}>
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
               <TabsList className="grid w-full grid-cols-4">
                 <TabsTrigger value="overview">Overview</TabsTrigger>
                 <TabsTrigger value="bids">Bids</TabsTrigger>
@@ -275,8 +286,10 @@ export default function NFTDetailPopup({ nft, isOpen, onClose }: NFTDetailPopupP
               {/* Overview Tab */}
               <TabsContent value="overview" className="space-y-4">
                 <div>
-                  <h3 className="font-semibold mb-2">Description</h3>
-                  <p className="text-gray-600 text-sm">{currentNft.description}</p>
+                  <h3 className="font-semibold mb-3">Description</h3>
+                  <p className="text-gray-600 text-sm leading-relaxed">
+                    {currentNft.description || "No description available."}
+                  </p>
                 </div>
 
                 <div>
@@ -304,35 +317,60 @@ export default function NFTDetailPopup({ nft, isOpen, onClose }: NFTDetailPopupP
                   </div>
                 </div>
 
-                {/* Action Buttons */}
+                {/* Purchase/Bid Actions */}
                 <div className="space-y-3">
-                  {!isMintedOut && (
-                    <Button
-                      onClick={() => buyNewMintMutation.mutate()}
-                      disabled={buyNewMintMutation.isPending}
+                  {!isMintedOut && currentNft.isListed && (
+                    <Button 
+                      onClick={handlePurchase}
+                      disabled={purchaseMutation.isPending}
                       className="w-full"
                     >
-                      {buyNewMintMutation.isPending ? (
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" />
-                      ) : (
-                        <>
-                          <ShoppingCart className="w-4 h-4 mr-2" />
-                          Mint for {formatTokens(currentNft.price)}
-                        </>
-                      )}
+                      <ShoppingCart className="w-4 h-4 mr-2" />
+                      {purchaseMutation.isPending ? "Processing..." : `Buy for ${formatTokens(currentNft.price)}`}
                     </Button>
                   )}
 
-                  {user && (
-                    <div className="grid grid-cols-2 gap-2">
-                      <Button variant="outline" onClick={() => setActiveTab("bids")}>
+                  {/* Bidding */}
+                  <div className="space-y-2">
+                    <div className="flex gap-2">
+                      <Input
+                        type="number"
+                        placeholder="Enter bid amount"
+                        value={bidAmount}
+                        onChange={(e) => setBidAmount(e.target.value)}
+                        className="flex-1"
+                      />
+                      <Button 
+                        onClick={handlePlaceBid}
+                        disabled={bidMutation.isPending || !bidAmount}
+                        variant="outline"
+                      >
                         <Gavel className="w-4 h-4 mr-2" />
-                        Place Bid
+                        {bidMutation.isPending ? "Placing..." : "Place Bid"}
                       </Button>
-                      <Button variant="outline">
-                        <Heart className="w-4 h-4 mr-2" />
-                        Favorite
-                      </Button>
+                    </div>
+                  </div>
+
+                  {/* Listing (if owner) */}
+                  {currentNft.isOwned && (
+                    <div className="space-y-2">
+                      <div className="flex gap-2">
+                        <Input
+                          type="number"
+                          placeholder="Enter listing price"
+                          value={listingPrice}
+                          onChange={(e) => setListingPrice(e.target.value)}
+                          className="flex-1"
+                        />
+                        <Button 
+                          onClick={handleCreateListing}
+                          disabled={createListingMutation.isPending || !listingPrice}
+                          variant="outline"
+                        >
+                          <DollarSign className="w-4 h-4 mr-2" />
+                          {createListingMutation.isPending ? "Listing..." : "List for Sale"}
+                        </Button>
+                      </div>
                     </div>
                   )}
                 </div>
@@ -340,45 +378,11 @@ export default function NFTDetailPopup({ nft, isOpen, onClose }: NFTDetailPopupP
 
               {/* Bids Tab */}
               <TabsContent value="bids" className="space-y-4">
-                {user && (
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="text-lg">Place a Bid</CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      <div>
-                        <label className="text-sm font-medium">Bid Amount (Credits)</label>
-                        <Input
-                          type="number"
-                          value={bidAmount}
-                          onChange={(e) => setBidAmount(e.target.value)}
-                          placeholder="Enter bid amount..."
-                          min="1"
-                        />
-                      </div>
-                      <Button
-                        onClick={handlePlaceBid}
-                        disabled={placeBidMutation.isPending}
-                        className="w-full"
-                      >
-                        {placeBidMutation.isPending ? (
-                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" />
-                        ) : (
-                          <>
-                            <Gavel className="w-4 h-4 mr-2" />
-                            Place Bid
-                          </>
-                        )}
-                      </Button>
-                    </CardContent>
-                  </Card>
-                )}
-
                 <div>
                   <h3 className="font-semibold mb-3">Current Bids</h3>
                   {currentNft.bids && currentNft.bids.length > 0 ? (
                     <div className="space-y-2">
-                      {currentNft.bids.map((bid: any) => (
+                      {currentNft.bids.map((bid) => (
                         <div key={bid.id} className="flex justify-between items-center p-3 bg-gray-50 rounded">
                           <div>
                             <p className="font-medium">{formatTokens(bid.amount)}</p>
@@ -391,71 +395,33 @@ export default function NFTDetailPopup({ nft, isOpen, onClose }: NFTDetailPopupP
                       ))}
                     </div>
                   ) : (
-                    <p className="text-gray-500 text-sm">No bids placed yet.</p>
+                    <p className="text-gray-500 text-center py-8">No bids placed yet</p>
                   )}
                 </div>
               </TabsContent>
 
               {/* Listings Tab */}
               <TabsContent value="listings" className="space-y-4">
-                {user && currentNft.isOwned && (
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="text-lg">List for Sale</CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      <div>
-                        <label className="text-sm font-medium">Listing Price (Credits)</label>
-                        <Input
-                          type="number"
-                          value={listingPrice}
-                          onChange={(e) => setListingPrice(e.target.value)}
-                          placeholder="Enter listing price..."
-                          min="1"
-                        />
-                      </div>
-                      <Button
-                        onClick={handleCreateListing}
-                        disabled={createListingMutation.isPending}
-                        className="w-full"
-                      >
-                        {createListingMutation.isPending ? (
-                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" />
-                        ) : (
-                          <>
-                            <DollarSign className="w-4 h-4 mr-2" />
-                            Create Listing
-                          </>
-                        )}
-                      </Button>
-                    </CardContent>
-                  </Card>
-                )}
-
                 <div>
                   <h3 className="font-semibold mb-3">Active Listings</h3>
                   {currentNft.listings && currentNft.listings.length > 0 ? (
                     <div className="space-y-2">
-                      {currentNft.listings.map((listing: any) => (
+                      {currentNft.listings.map((listing) => (
                         <div key={listing.id} className="flex justify-between items-center p-3 bg-gray-50 rounded">
                           <div>
                             <p className="font-medium">{formatTokens(listing.price)}</p>
                             <p className="text-xs text-gray-500">
-                              Listed {new Date(listing.createdAt || '').toLocaleDateString()}
+                              Listed {new Date(listing.createdAt || '').toLocaleString()}
                             </p>
                           </div>
-                          <Button
-                            size="sm"
-                            onClick={() => buyFromListingMutation.mutate(listing.id)}
-                            disabled={buyFromListingMutation.isPending}
-                          >
-                            Buy Now
-                          </Button>
+                          <Badge variant={listing.isActive ? "default" : "secondary"}>
+                            {listing.isActive ? "Active" : "Inactive"}
+                          </Badge>
                         </div>
                       ))}
                     </div>
                   ) : (
-                    <p className="text-gray-500 text-sm">No active listings.</p>
+                    <p className="text-gray-500 text-center py-8">No active listings</p>
                   )}
                 </div>
               </TabsContent>
