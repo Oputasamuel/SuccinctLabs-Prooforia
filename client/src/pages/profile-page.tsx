@@ -388,14 +388,6 @@ export default function ProfilePage() {
                       Favorited
                     </Button>
                     <Button
-                      variant={activeTab === "bids" ? "default" : "ghost"}
-                      className="w-full justify-start"
-                      onClick={() => setActiveTab("bids")}
-                    >
-                      <TrendingUp className="h-4 w-4 mr-2" />
-                      My Bids
-                    </Button>
-                    <Button
                       variant={activeTab === "activity" ? "default" : "ghost"}
                       className="w-full justify-start"
                       onClick={() => setActiveTab("activity")}
