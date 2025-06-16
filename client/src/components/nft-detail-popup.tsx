@@ -182,9 +182,7 @@ export default function NFTDetailPopup({ nft, isOpen, onClose }: NFTDetailPopupP
     createListingMutation.mutate(price);
   };
 
-  if (!nft) return null;
-  
-  if (!currentNft) return null;
+  if (!nft || !currentNft) return null;
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>

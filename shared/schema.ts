@@ -140,7 +140,6 @@ export const insertListingSchema = createInsertSchema(listings).pick({
 
 export const insertBidSchema = createInsertSchema(bids).pick({
   nftId: true,
-  bidderId: true,
   amount: true,
 });
 

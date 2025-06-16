@@ -410,7 +410,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const validatedData = insertBidSchema.parse(req.body);
       const bid = await storage.createBid({
-        ...validatedData,
+        nftId: validatedData.nftId,
+        amount: validatedData.amount,
         bidderId: req.user.id,
       });
       res.status(201).json(bid);
