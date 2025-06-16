@@ -148,7 +148,7 @@ function NFTProfileCard({ nft, type }: { nft: NftWithCreator; type: "created" | 
         </div>
         {type === "created" && (
           <div className="mt-2 text-xs text-gray-500">
-            Edition {nft.currentEdition}/{nft.totalEditions}
+            Edition {nft.currentEdition}/{nft.totalEditions || nft.currentEdition}
           </div>
         )}
       </CardContent>
@@ -470,10 +470,10 @@ export default function ProfilePage() {
                     <CardTitle>Recent Activity</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    {profile?.transactions?.slice(0, 5).map((transaction) => {
+                    {profile?.transactions?.slice(0, 5).map((transaction, index) => {
                       const isPurchase = transaction.buyerId === user.id;
                       return (
-                        <div key={transaction.id} className="flex justify-between items-center py-2 border-b last:border-b-0">
+                        <div key={`transaction-${transaction.id}-${index}`} className="flex justify-between items-center py-2 border-b last:border-b-0">
                           <div>
                             <p className="font-medium text-sm">
                               {isPurchase ? "Purchased" : "Sold"} NFT #{transaction.nftId}
@@ -501,8 +501,8 @@ export default function ProfilePage() {
                 <h3 className="text-xl font-semibold mb-6">Your Created NFTs</h3>
                 {profile?.createdNfts?.length ? (
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {profile.createdNfts.map((nft) => (
-                      <NFTProfileCard key={nft.id} nft={nft} type="created" />
+                    {profile.createdNfts.map((nft, index) => (
+                      <NFTProfileCard key={`created-${nft.id}-${index}`} nft={nft} type="created" />
                     ))}
                   </div>
                 ) : (
@@ -526,8 +526,8 @@ export default function ProfilePage() {
                 <h3 className="text-xl font-semibold mb-6">Your Purchased NFTs</h3>
                 {profile?.purchasedNfts?.length ? (
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {profile.purchasedNfts.map((nft) => (
-                      <NFTProfileCard key={nft.id} nft={nft} type="purchased" />
+                    {profile.purchasedNfts.map((nft, index) => (
+                      <NFTProfileCard key={`purchased-${nft.id}-${index}`} nft={nft} type="purchased" />
                     ))}
                   </div>
                 ) : (
@@ -551,8 +551,8 @@ export default function ProfilePage() {
                 <h3 className="text-xl font-semibold mb-6">Your Favorited NFTs</h3>
                 {profile?.favoritedNfts?.length ? (
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {profile.favoritedNfts.map((nft) => (
-                      <NFTProfileCard key={nft.id} nft={nft} type="favorited" />
+                    {profile.favoritedNfts.map((nft, index) => (
+                      <NFTProfileCard key={`favorited-${nft.id}-${index}`} nft={nft} type="favorited" />
                     ))}
                   </div>
                 ) : (
@@ -585,10 +585,10 @@ export default function ProfilePage() {
                 <h3 className="text-xl font-semibold mb-6">Transaction History</h3>
                 {profile?.transactions?.length ? (
                   <div className="space-y-4">
-                    {profile.transactions.map((transaction) => {
+                    {profile.transactions.map((transaction, index) => {
                       const isPurchase = transaction.buyerId === user.id;
                       return (
-                        <Card key={transaction.id}>
+                        <Card key={`activity-${transaction.id}-${index}`}>
                           <CardContent className="p-4">
                             <div className="flex justify-between items-start">
                               <div className="flex-1">
@@ -662,8 +662,8 @@ export default function ProfilePage() {
                 </div>
                 <h3 className="text-xl font-semibold mb-6">Your ZK Proofs</h3>
                 {profile?.zkProofs?.length ? (
-                  profile.zkProofs.map((proof) => (
-                    <Card key={proof.id} className="mb-4">
+                  profile.zkProofs.map((proof, index) => (
+                    <Card key={`proof-${proof.id}-${index}`} className="mb-4">
                       <CardContent className="p-4">
                         <div className="flex justify-between items-start">
                           <div className="flex-1">
