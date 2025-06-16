@@ -77,7 +77,7 @@ export default function Header({ activeTab, onTabChange }: HeaderProps) {
                 </div>
                 <div className="flex items-center space-x-2">
                   <Link href="/profile" className="text-sm font-medium text-gray-900 hover:text-primary">
-                    {currentUser.username}
+                    {currentUser.displayName}
                   </Link>
                   <Button
                     variant="ghost"
@@ -167,7 +167,7 @@ export default function Header({ activeTab, onTabChange }: HeaderProps) {
                       className="text-sm font-medium text-gray-900 hover:text-primary"
                       onClick={() => setIsMobileMenuOpen(false)}
                     >
-                      {currentUser.username}
+                      {currentUser.displayName}
                     </Link>
                     <div className="flex items-center space-x-2 bg-gray-50 rounded-lg px-3 py-1">
                       <Zap className="w-4 h-4 text-purple-600" />

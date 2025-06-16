@@ -5,36 +5,26 @@ import {
   UseMutationResult,
   useQueryClient,
 } from "@tanstack/react-query";
-import { registerUserSchema } from "@shared/schema";
-import { z } from "zod";
+import { User } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
 
-export type AuthUser = {
-  id: number;
-  username: string;
-  email: string;
-  walletAddress: string;
-  credits: number;
-  discordConnected: boolean;
-  discordUsername?: string;
-  discordAvatar?: string;
-  xConnected: boolean;
-  xUsername?: string;
+export type AuthUser = User;
+
+type WalletLoginData = {
+  walletPrivateKey: string;
 };
 
-type LoginData = {
-  email: string;
-  password: string;
+type CreateAccountData = {
+  displayName: string;
+  profilePicture?: string;
 };
-
-type RegisterData = z.infer<typeof registerUserSchema>;
 
 type AuthContextType = {
   user: AuthUser | null;
   isLoading: boolean;
   error: Error | null;
-  loginMutation: UseMutationResult<AuthUser, Error, LoginData>;
-  registerMutation: UseMutationResult<AuthUser, Error, RegisterData>;
+  walletLoginMutation: UseMutationResult<AuthUser, Error, WalletLoginData>;
+  createAccountMutation: UseMutationResult<AuthUser, Error, CreateAccountData>;
   logoutMutation: UseMutationResult<void, Error, void>;
   connectDiscordMutation: UseMutationResult<AuthUser, Error, { discordUsername: string; discordAvatar?: string }>;
   connectXMutation: UseMutationResult<AuthUser, Error, { xUsername: string }>;
@@ -93,9 +83,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     },
   });
 
-  const loginMutation = useMutation({
-    mutationFn: async (credentials: LoginData): Promise<AuthUser> => {
-      const data = await apiRequest("/api/login", {
+  const walletLoginMutation = useMutation({
+    mutationFn: async (credentials: WalletLoginData): Promise<AuthUser> => {
+      const data = await apiRequest("/api/wallet/login", {
         method: "POST",
         body: JSON.stringify(credentials),
       });
@@ -105,7 +95,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       queryClient.setQueryData(["/api/user"], user);
       toast({
         title: "Welcome back!",
-        description: `Logged in as ${user.username}`,
+        description: `Logged in as ${user.displayName}`,
       });
     },
     onError: (error: Error) => {
@@ -117,9 +107,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     },
   });
 
-  const registerMutation = useMutation({
-    mutationFn: async (credentials: RegisterData): Promise<AuthUser> => {
-      const data = await apiRequest("/api/register", {
+  const createAccountMutation = useMutation({
+    mutationFn: async (credentials: CreateAccountData): Promise<AuthUser> => {
+      const data = await apiRequest("/api/wallet/create-account", {
         method: "POST",
         body: JSON.stringify(credentials),
       });
@@ -134,7 +124,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     },
     onError: (error: Error) => {
       toast({
-        title: "Registration failed",
+        title: "Account creation failed",
         description: error.message,
         variant: "destructive",
       });
@@ -219,11 +209,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   return (
     <AuthContext.Provider
       value={{
-        user,
+        user: user ?? null,
         isLoading,
         error,
-        loginMutation,
-        registerMutation,
+        walletLoginMutation,
+        createAccountMutation,
         logoutMutation,
         connectDiscordMutation,
         connectXMutation,
