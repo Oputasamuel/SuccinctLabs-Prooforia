@@ -673,6 +673,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Accept bid
+  app.post("/api/bids/:id/accept", async (req, res) => {
+    if (!req.session.userId) {
+      return res.status(401).json({ message: "Authentication required" });
+    }
+
+    try {
+      const bidId = parseInt(req.params.id);
+      const sellerId = req.session.userId;
+      
+      const transaction = await storage.acceptBid(bidId, sellerId);
+      res.status(201).json(transaction);
+    } catch (error) {
+      console.error("Accept bid error:", error);
+      res.status(500).json({ message: "Failed to accept bid" });
+    }
+  });
+
   // Listing Routes
   app.post("/api/listings", async (req, res) => {
     if (!req.isAuthenticated() || !req.user) {
