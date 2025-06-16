@@ -160,6 +160,11 @@ The application uses a PostgreSQL database with the following core entities:
 - **June 16, 2025**: Fixed profile page navigation tabs - marketplace, community, and upload art buttons now properly redirect to home with correct tab selection
 - **June 16, 2025**: Added multer middleware for profile image handling with 5MB file size limit and image type validation
 - **June 16, 2025**: Enhanced wallet auth page with drag-and-drop profile picture upload interface and preview functionality
+- **June 16, 2025**: Completed comprehensive NFT marketplace bidding system with accept/reject functionality
+- **June 16, 2025**: Added bid rejection API route with proper authorization checks and storage methods
+- **June 16, 2025**: Created received bids API endpoint to fetch bids on user's NFTs with bidder information
+- **June 16, 2025**: Integrated received bids section into profile page with dedicated "My Bids" and "Received Bids" tabs
+- **June 16, 2025**: Implemented complete bid management workflow allowing users to view, accept, and reject bids on their NFTs
 
 ## Changelog
 - June 15, 2025: Complete SP1Mint rebranding and authentication system migration
