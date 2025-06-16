@@ -71,6 +71,7 @@ export default function NFTCard({ nft, viewMode = "grid", onViewDetails }: NFTCa
       refreshUser(); // Update user credits in real-time
     },
     onError: (error: any) => {
+      console.log("Purchase error details:", error);
       toast({
         title: "Purchase Failed",
         description: error.message || "Failed to purchase NFT",
