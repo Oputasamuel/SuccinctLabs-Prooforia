@@ -178,124 +178,33 @@ export default function WalletAuthPage() {
     }
   };
 
-  // Check if user is already logged in
+  // Check if user is already logged in and no wallet was just created
   const userData = queryClient.getQueryData(["/api/user"]);
-  if (userData) {
+  if (userData && !createdWallet) {
     return <Redirect to="/" />;
-  }
-
-  if (createdWallet) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-background to-secondary/20">
-        <Header activeTab="marketplace" onTabChange={() => {}} />
-        <div className="container mx-auto px-4 pt-24 pb-12">
-          <div className="max-w-2xl mx-auto">
-            <Card className="border-2 border-primary/20">
-              <CardHeader className="text-center">
-                <CardTitle className="text-2xl text-primary">Account Created Successfully!</CardTitle>
-                <CardDescription>
-                  Your wallet has been generated. Please save your private key securely - this is your only way to access your account.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <Alert className="border-orange-200 bg-orange-50">
-                  <AlertDescription className="text-orange-800">
-                    <strong>Important:</strong> Your private key is the only way to access your account. Store it in a secure location and never share it with anyone.
-                  </AlertDescription>
-                </Alert>
-
-                <div className="space-y-3">
-                  <Label className="text-sm font-medium">Your Private Key</Label>
-                  <div className="relative">
-                    <Textarea
-                      value={createdWallet.privateKey}
-                      readOnly
-                      className="font-mono text-sm pr-20"
-                      rows={3}
-                      style={{ 
-                        WebkitTextSecurity: showPrivateKey ? 'none' : 'disc',
-                        textSecurity: showPrivateKey ? 'none' : 'disc'
-                      }}
-                    />
-                    <div className="absolute right-2 top-2 flex gap-1">
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setShowPrivateKey(!showPrivateKey)}
-                      >
-                        {showPrivateKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={copyPrivateKey}
-                        disabled={copied}
-                      >
-                        <Copy className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="space-y-3 text-sm text-muted-foreground">
-                  <h3 className="font-medium text-foreground">Account Details:</h3>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <span className="font-medium">Display Name:</span>
-                      <p>{createdWallet.user.displayName}</p>
-                    </div>
-                    <div>
-                      <span className="font-medium">Wallet Address:</span>
-                      <p className="font-mono text-xs break-all">{createdWallet.user.walletAddress}</p>
-                    </div>
-                    <div>
-                      <span className="font-medium">Credits:</span>
-                      <p>{createdWallet.user.credits}</p>
-                    </div>
-                  </div>
-                </div>
-
-                <Button 
-                  onClick={() => setCreatedWallet(null)} 
-                  className="w-full"
-                  size="lg"
-                >
-                  Continue to SP1Mint
-                </Button>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      </div>
-    );
   }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-secondary/20">
       <Header activeTab="marketplace" onTabChange={() => {}} />
       <div className="container mx-auto px-4 pt-24 pb-12">
-        <div className="max-w-4xl mx-auto grid lg:grid-cols-2 gap-8 items-center">
-          {/* Left Side - Form */}
-          <div className="space-y-6">
-            <div className="text-center lg:text-left">
-              <h1 className="text-3xl font-bold tracking-tight text-primary mb-2">
-                Welcome to SP1Mint
-              </h1>
-              <p className="text-muted-foreground">
-                Create your account or login with your wallet private key
-              </p>
-            </div>
-
+        <div className="grid lg:grid-cols-2 gap-12 items-center max-w-6xl mx-auto">
+          {/* Left Side - Authentication Forms */}
+          <div className="order-2 lg:order-1">
             <Card className="border-2 border-primary/20">
-              <CardContent className="p-6">
+              <CardHeader className="text-center">
+                <CardTitle className="text-2xl text-primary">SP1Mint Access</CardTitle>
+                <CardDescription>
+                  Wallet-only authentication for secure NFT minting and trading
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
                 <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as "create" | "login")}>
                   <TabsList className="grid w-full grid-cols-2">
                     <TabsTrigger value="create">Create Account</TabsTrigger>
                     <TabsTrigger value="login">Login</TabsTrigger>
                   </TabsList>
-
+                  
                   <TabsContent value="create" className="space-y-4">
                     <form onSubmit={createForm.handleSubmit(handleCreateAccount)} className="space-y-4">
                       <div className="space-y-2">
@@ -306,64 +215,60 @@ export default function WalletAuthPage() {
                           placeholder="Enter your display name"
                         />
                         {createForm.formState.errors.displayName && (
-                          <p className="text-sm text-destructive">
-                            {createForm.formState.errors.displayName.message}
-                          </p>
+                          <p className="text-sm text-red-500">{createForm.formState.errors.displayName.message}</p>
                         )}
                       </div>
 
+                      {/* Profile Picture Upload */}
                       <div className="space-y-2">
                         <Label>Profile Picture (Optional)</Label>
-                        <div className="flex flex-col gap-3">
+                        <div 
+                          className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-6 text-center cursor-pointer hover:border-primary/50 transition-colors"
+                          onClick={() => fileInputRef.current?.click()}
+                        >
                           {profileImagePreview ? (
-                            <div className="relative w-24 h-24 mx-auto">
-                              <img
-                                src={profileImagePreview}
-                                alt="Profile preview"
-                                className="w-24 h-24 rounded-full object-cover border-2 border-primary/20"
+                            <div className="space-y-2">
+                              <img 
+                                src={profileImagePreview} 
+                                alt="Profile preview" 
+                                className="w-20 h-20 rounded-full mx-auto object-cover"
                               />
                               <Button
                                 type="button"
-                                variant="destructive"
+                                variant="outline"
                                 size="sm"
-                                className="absolute -top-2 -right-2 h-6 w-6 rounded-full p-0"
-                                onClick={removeProfileImage}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setProfileImageFile(null);
+                                  setProfileImagePreview(null);
+                                }}
                               >
-                                <X className="h-3 w-3" />
+                                <X className="h-4 w-4 mr-2" />
+                                Remove
                               </Button>
                             </div>
                           ) : (
-                            <div 
-                              onClick={() => fileInputRef.current?.click()}
-                              className="w-24 h-24 mx-auto border-2 border-dashed border-primary/30 rounded-full flex items-center justify-center cursor-pointer hover:border-primary/50 transition-colors"
-                            >
-                              <Upload className="h-6 w-6 text-primary/50" />
+                            <div className="space-y-2">
+                              <Upload className="h-8 w-8 mx-auto text-muted-foreground" />
+                              <div>
+                                <p className="text-sm font-medium">Click to upload profile picture</p>
+                                <p className="text-xs text-muted-foreground">PNG, JPG up to 5MB</p>
+                              </div>
                             </div>
                           )}
-                          
-                          <input
-                            ref={fileInputRef}
-                            type="file"
-                            accept="image/*"
-                            onChange={handleFileSelect}
-                            className="hidden"
-                          />
-                          
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            onClick={() => fileInputRef.current?.click()}
-                            className="mx-auto"
-                          >
-                            {profileImagePreview ? "Change Image" : "Upload Image"}
-                          </Button>
                         </div>
+                        <input
+                          ref={fileInputRef}
+                          type="file"
+                          accept="image/*"
+                          onChange={handleFileSelect}
+                          className="hidden"
+                        />
                       </div>
 
                       <Alert>
                         <AlertDescription>
-                          Creating an account will generate a new Ethereum wallet. You'll receive a private key that's your only way to access this account.
+                          A secure Ethereum wallet will be automatically generated for you. Save the private key securely after creation.
                         </AlertDescription>
                       </Alert>
 
@@ -386,13 +291,11 @@ export default function WalletAuthPage() {
                           id="privateKey"
                           {...loginForm.register("privateKey")}
                           placeholder="Enter your wallet private key"
-                          className="font-mono"
+                          className="font-mono text-sm"
                           rows={3}
                         />
                         {loginForm.formState.errors.privateKey && (
-                          <p className="text-sm text-destructive">
-                            {loginForm.formState.errors.privateKey.message}
-                          </p>
+                          <p className="text-sm text-red-500">{loginForm.formState.errors.privateKey.message}</p>
                         )}
                       </div>
 
@@ -494,13 +397,7 @@ export default function WalletAuthPage() {
                     </Button>
                   </div>
                 </div>
-                <div 
-                  className="font-mono text-sm break-all p-2 bg-white border rounded"
-                  style={{ 
-                    WebkitTextSecurity: showPrivateKey ? 'none' : 'disc',
-                    textSecurity: showPrivateKey ? 'none' : 'disc'
-                  }}
-                >
+                <div className="font-mono text-sm break-all p-2 bg-white border rounded">
                   {showPrivateKey ? createdWallet.privateKey : '••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••'}
                 </div>
               </div>
