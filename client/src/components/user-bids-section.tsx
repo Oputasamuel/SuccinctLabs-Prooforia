@@ -28,24 +28,26 @@ interface NftWithBid extends Bid {
 export default function UserBidsSection() {
   const [activeFilter, setActiveFilter] = useState<"all" | "active" | "outbid">("all");
 
-  const { data: userBids = [], isLoading } = useQuery({
+  const { data: userBids = [], isLoading } = useQuery<Bid[]>({
     queryKey: ["/api/user/bids"],
-    refetchInterval: 5000, // Refresh every 5 seconds
+    refetchInterval: 5000,
   });
 
   const { data: nftDetails = {} } = useQuery({
-    queryKey: ["/api/nfts/details", userBids.map((bid: Bid) => bid.nftId)],
+    queryKey: ["/api/nfts/details", userBids.map(bid => bid.nftId).sort().join(",")],
     queryFn: async () => {
       const details: Record<number, any> = {};
-      for (const bid of userBids) {
+      const uniqueNftIds = Array.from(new Set(userBids.map(bid => bid.nftId)));
+      
+      for (const nftId of uniqueNftIds) {
         try {
-          const response = await fetch(`/api/nfts/${bid.nftId}`);
+          const response = await fetch(`/api/nfts/${nftId}`);
           if (response.ok) {
             const nft = await response.json();
-            details[bid.nftId] = nft;
+            details[nftId] = nft;
           }
         } catch (error) {
-          console.error(`Error fetching NFT ${bid.nftId}:`, error);
+          console.error(`Error fetching NFT ${nftId}:`, error);
         }
       }
       return details;
@@ -54,20 +56,22 @@ export default function UserBidsSection() {
   });
 
   const { data: currentHighestBids = {} } = useQuery({
-    queryKey: ["/api/nfts/highest-bids", userBids.map((bid: Bid) => bid.nftId)],
+    queryKey: ["/api/nfts/highest-bids", userBids.map(bid => bid.nftId).sort().join(",")],
     queryFn: async () => {
       const highestBids: Record<number, number> = {};
-      for (const bid of userBids) {
+      const uniqueNftIds = Array.from(new Set(userBids.map(bid => bid.nftId)));
+      
+      for (const nftId of uniqueNftIds) {
         try {
-          const response = await fetch(`/api/nfts/${bid.nftId}/bids`);
+          const response = await fetch(`/api/nfts/${nftId}/bids`);
           if (response.ok) {
             const bids = await response.json();
             if (bids.length > 0) {
-              highestBids[bid.nftId] = Math.max(...bids.map((b: Bid) => b.amount));
+              highestBids[nftId] = Math.max(...bids.map((b: Bid) => b.amount));
             }
           }
         } catch (error) {
-          console.error(`Error fetching bids for NFT ${bid.nftId}:`, error);
+          console.error(`Error fetching bids for NFT ${nftId}:`, error);
         }
       }
       return highestBids;
