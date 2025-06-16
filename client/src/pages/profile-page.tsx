@@ -594,9 +594,21 @@ export default function ProfilePage() {
                         </p>
                       </div>
                     </div>
-                    <Badge variant={user.discordConnected ? "default" : "outline"}>
-                      {user.discordConnected ? 'Connected' : 'Disconnected'}
-                    </Badge>
+                    <div className="flex items-center gap-2">
+                      <Badge variant={user.discordConnected ? "default" : "outline"}>
+                        {user.discordConnected ? 'Connected' : 'Disconnected'}
+                      </Badge>
+                      {!user.discordConnected && (
+                        <Button
+                          size="sm"
+                          onClick={() => connectDiscordMutation.mutate()}
+                          disabled={connectDiscordMutation.isPending}
+                        >
+                          <LinkIcon className="h-3 w-3 mr-1" />
+                          Connect
+                        </Button>
+                      )}
+                    </div>
                   </div>
 
                   <div className="flex items-center justify-between p-3 border rounded">
@@ -607,13 +619,59 @@ export default function ProfilePage() {
                       <div>
                         <p className="font-medium">X (Twitter)</p>
                         <p className="text-sm text-muted-foreground">
-                          {user.xConnected ? user.xUsername || 'Connected' : 'Not connected'}
+                          {user.xConnected ? `@${user.xUsername}` : 'Not connected'}
                         </p>
                       </div>
                     </div>
-                    <Badge variant={user.xConnected ? "default" : "outline"}>
-                      {user.xConnected ? 'Connected' : 'Disconnected'}
-                    </Badge>
+                    <div className="flex items-center gap-2">
+                      <Badge variant={user.xConnected ? "default" : "outline"}>
+                        {user.xConnected ? 'Connected' : 'Disconnected'}
+                      </Badge>
+                      {!user.xConnected && (
+                        <Dialog open={xDialogOpen} onOpenChange={setXDialogOpen}>
+                          <DialogTrigger asChild>
+                            <Button size="sm">
+                              <LinkIcon className="h-3 w-3 mr-1" />
+                              Connect
+                            </Button>
+                          </DialogTrigger>
+                          <DialogContent>
+                            <DialogHeader>
+                              <DialogTitle>Connect Your X Account</DialogTitle>
+                              <DialogDescription>
+                                Enter your X (Twitter) username to connect your account
+                              </DialogDescription>
+                            </DialogHeader>
+                            <div className="space-y-4">
+                              <div className="space-y-2">
+                                <label className="text-sm font-medium">X Username</label>
+                                <Input
+                                  placeholder="Enter your X username (without @)"
+                                  value={xUsername}
+                                  onChange={(e) => setXUsername(e.target.value)}
+                                />
+                              </div>
+                              <div className="flex gap-2">
+                                <Button
+                                  variant="outline"
+                                  onClick={() => setXDialogOpen(false)}
+                                  className="flex-1"
+                                >
+                                  Cancel
+                                </Button>
+                                <Button
+                                  onClick={() => connectXMutation.mutate(xUsername)}
+                                  disabled={!xUsername.trim() || connectXMutation.isPending}
+                                  className="flex-1"
+                                >
+                                  {connectXMutation.isPending ? "Connecting..." : "Connect"}
+                                </Button>
+                              </div>
+                            </div>
+                          </DialogContent>
+                        </Dialog>
+                      )}
+                    </div>
                   </div>
                 </CardContent>
               </Card>
