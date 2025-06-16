@@ -61,6 +61,21 @@ export async function seedDatabase() {
       xUsername: "@ZKArtist",
     }).returning();
 
+    // Create demo account from replit.md
+    const demoWallet = walletService.generateWallet();
+    const { hashPassword } = await import("./auth");
+    const [demoUser] = await db.insert(users).values({
+      username: "sam",
+      email: "zedef0808@gmail.com",
+      password: await hashPassword("1234"),
+      walletAddress: demoWallet.address,
+      walletPrivateKey: walletService.encryptPrivateKey(demoWallet.privateKey),
+      walletPublicKey: demoWallet.publicKey,
+      credits: 25,
+      discordConnected: false,
+      xConnected: false,
+    }).returning();
+
     // Create sample NFTs
     const nftData = [
       {

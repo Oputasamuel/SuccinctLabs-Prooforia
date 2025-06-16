@@ -138,20 +138,42 @@ export class MemStorage implements IStorage {
   }
 
   private async initializeSampleData() {
-    // Create sample users
+    // Create sample users with complete data
     const artist1 = await this.createUser({
       username: "ArtistCRN",
+      email: "artist1@example.com",
       password: "password123",
+      walletAddress: "0x742d35Cc6665C6673532B4e8B2b421C2a87c4d21",
+      walletPrivateKey: "encrypted_private_key_1",
+      walletPublicKey: "public_key_1"
     });
 
     const artist2 = await this.createUser({
       username: "Artist234",
+      email: "artist2@example.com",
       password: "password123",
+      walletAddress: "0x8ba1f109551bD432803012645Hac136c841B2345",
+      walletPrivateKey: "encrypted_private_key_2",
+      walletPublicKey: "public_key_2"
     });
 
     const artist3 = await this.createUser({
       username: "ZKArtist",
+      email: "artist3@example.com",
       password: "password123",
+      walletAddress: "0x9ca2g209661cE543914123756Ibd247d952C3456",
+      walletPrivateKey: "encrypted_private_key_3",
+      walletPublicKey: "public_key_3"
+    });
+
+    // Create demo account as specified in replit.md
+    const demoUser = await this.createUser({
+      username: "sam",
+      email: "zedef0808@gmail.com",
+      password: "hashed_demo_password", // Will be replaced with proper hash
+      walletAddress: "0x1234567890123456789012345678901234567890",
+      walletPrivateKey: "encrypted_demo_private_key",
+      walletPublicKey: "demo_public_key"
     });
 
     // Create sample NFTs
@@ -220,8 +242,8 @@ export class MemStorage implements IStorage {
     return Array.from(this.users.values()).find(user => user.username === username);
   }
 
-  async getUserByDiscordId(discordId: string): Promise<User | undefined> {
-    return Array.from(this.users.values()).find(user => user.discordId === discordId);
+  async getUserByEmail(email: string): Promise<User | undefined> {
+    return Array.from(this.users.values()).find(user => user.email === email);
   }
 
   async createDiscordUser(userData: {
@@ -274,12 +296,29 @@ export class MemStorage implements IStorage {
     return user;
   }
 
-  async createUser(insertUser: InsertUser): Promise<User> {
+  async createUser(userData: {
+    username: string;
+    email: string;
+    password: string;
+    walletAddress: string;
+    walletPrivateKey: string;
+    walletPublicKey: string;
+  }): Promise<User> {
     const id = this.currentUserId++;
     const user: User = {
-      ...insertUser,
       id,
-      discordId: insertUser.discordId || null,
+      username: userData.username,
+      email: userData.email,
+      password: userData.password,
+      walletAddress: userData.walletAddress,
+      walletPrivateKey: userData.walletPrivateKey,
+      walletPublicKey: userData.walletPublicKey,
+      credits: 10,
+      discordConnected: false,
+      discordUsername: null,
+      discordAvatar: null,
+      xConnected: false,
+      xUsername: null,
       createdAt: new Date(),
     };
     this.users.set(id, user);
