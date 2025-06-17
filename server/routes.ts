@@ -9,7 +9,7 @@ import { sp1Service } from "./services/sp1-service";
 import { ipfsService } from "./services/ipfs-service";
 import { succinctService } from "./services/succinct-service";
 import { setupWalletAuth } from "./wallet-auth";
-import { setupAuth, hashPassword } from "./auth";
+import { setupAuth } from "./auth";
 import { discordService } from "./services/discord-service";
 import { walletService } from "./services/wallet-service";
 
