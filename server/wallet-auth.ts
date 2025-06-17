@@ -68,6 +68,8 @@ export function setupWalletAuth(app: Express) {
       // Create user with wallet
       const user = await storage.createUser({
         displayName,
+        email: `${walletData.address}@wallet.local`, // Generate unique email for wallet users
+        password: "", // Wallet users don't need passwords
         profilePicture: profilePictureUrl || "",
         walletAddress: walletData.address,
         walletPrivateKey: walletService.encryptPrivateKey(walletData.privateKey),
