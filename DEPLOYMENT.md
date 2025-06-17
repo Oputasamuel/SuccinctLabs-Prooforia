@@ -1,4 +1,4 @@
-# SP1Mint Deployment Guide
+# prooforia Deployment Guide
 
 ## Quick Deploy to Vercel
 
