@@ -846,6 +846,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Cancel bid (for bidders)
+  app.post("/api/bids/:id/cancel", async (req, res) => {
+    if (!req.session.userId) {
+      return res.status(401).json({ message: "Authentication required" });
+    }
+
+    try {
+      const bidId = parseInt(req.params.id);
+      await storage.cancelBid(bidId, req.session.userId);
+      res.json({ message: "Bid cancelled successfully" });
+    } catch (error) {
+      console.error("Cancel bid error:", error);
+      res.status(500).json({ 
+        message: error instanceof Error ? error.message : "Failed to cancel bid" 
+      });
+    }
+  });
+
   // Listing Routes
   app.post("/api/listings", async (req, res) => {
     if (!req.isAuthenticated() || !req.user) {

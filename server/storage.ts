@@ -72,6 +72,7 @@ export interface IStorage {
   getBid(bidId: number): Promise<Bid | undefined>;
   acceptBid(bidId: number, sellerId: number): Promise<Transaction>;
   rejectBid(bidId: number): Promise<void>;
+  cancelBid(bidId: number, userId: number): Promise<void>;
   
   // Listing operations
   createListing(listing: InsertListing): Promise<Listing>;
@@ -511,6 +512,21 @@ export class MemStorage implements IStorage {
       bid.isActive = false;
       this.bids.set(bidId, bid);
     }
+  }
+
+  async cancelBid(bidId: number, userId: number): Promise<void> {
+    const bid = this.bids.get(bidId);
+    if (!bid) {
+      throw new Error("Bid not found");
+    }
+    if (bid.bidderId !== userId) {
+      throw new Error("You can only cancel your own bids");
+    }
+    if (!bid.isActive) {
+      throw new Error("Bid is already inactive");
+    }
+    bid.isActive = false;
+    this.bids.set(bidId, bid);
   }
 
   async acceptBid(bidId: number, sellerId: number): Promise<Transaction> {
@@ -1021,6 +1037,20 @@ export class DatabaseStorage implements IStorage {
   }
 
   async rejectBid(bidId: number): Promise<void> {
+    await db.update(bids).set({ isActive: false }).where(eq(bids.id, bidId));
+  }
+
+  async cancelBid(bidId: number, userId: number): Promise<void> {
+    const [bid] = await db.select().from(bids).where(eq(bids.id, bidId)).limit(1);
+    if (!bid) {
+      throw new Error("Bid not found");
+    }
+    if (bid.bidderId !== userId) {
+      throw new Error("You can only cancel your own bids");
+    }
+    if (!bid.isActive) {
+      throw new Error("Bid is already inactive");
+    }
     await db.update(bids).set({ isActive: false }).where(eq(bids.id, bidId));
   }
 

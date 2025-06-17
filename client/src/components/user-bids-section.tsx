@@ -1,9 +1,11 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Gavel, Clock, TrendingUp } from "lucide-react";
+import { Gavel, Clock, TrendingUp, X } from "lucide-react";
 import { useState, useMemo } from "react";
+import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 
 interface Bid {
   id: number;
@@ -27,10 +29,34 @@ interface NftWithBid extends Bid {
 
 export default function UserBidsSection() {
   const [activeFilter, setActiveFilter] = useState<"all" | "active" | "outbid">("all");
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
 
   const { data: userBids = [], isLoading } = useQuery<Bid[]>({
     queryKey: ["/api/user/bids"],
     refetchInterval: 5000,
+  });
+
+  // Cancel bid mutation
+  const cancelBidMutation = useMutation({
+    mutationFn: async (bidId: number) => {
+      const response = await apiRequest("POST", `/api/bids/${bidId}/cancel`, {});
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/user/bids"] });
+      toast({
+        title: "Bid cancelled",
+        description: "Your bid has been successfully cancelled",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Failed to cancel bid",
+        description: error.message || "An error occurred while cancelling the bid",
+        variant: "destructive",
+      });
+    },
   });
 
   const { data: nftDetails = {} } = useQuery({
