@@ -87,6 +87,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         throw error;
       }
     },
+    retry: false,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    refetchOnWindowFocus: false,
   });
 
   const walletLoginMutation = useMutation({
