@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useToast } from "@/hooks/use-toast";
-import { Wallet, ShoppingBag, Palette, TrendingUp, Copy, Share, Heart, HeartOff, Settings, Users, Eye, EyeOff, Key, CheckCircle, Link as LinkIcon, ExternalLink, Shield } from "lucide-react";
+import { Wallet, ShoppingBag, Palette, TrendingUp, Copy, Share, Heart, HeartOff, Settings, Users, Eye, EyeOff, Key, CheckCircle, Link as LinkIcon, ExternalLink, Shield, AlertTriangle } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { Nft, Transaction, ZkProof } from "@shared/schema";
 import Header from "@/components/header";
@@ -177,14 +177,19 @@ export default function ProfilePage() {
   });
 
   // Fetch decrypted private key from server when needed
-  const { data: privateKeyData } = useQuery<{ privateKey: string }>({
+  const { data: privateKeyData, error: privateKeyError } = useQuery<{ privateKey: string }>({
     queryKey: ["/api/wallet/private-key"],
     enabled: !!user && showPrivateKey,
     staleTime: 0, // Always fetch fresh
+    retry: false, // Don't retry on failure
   });
 
   const getDecryptedPrivateKey = () => {
     if (!showPrivateKey) return null;
+    if (privateKeyError) {
+      // If API fails, show the encrypted key with a warning
+      return user?.walletPrivateKey || null;
+    }
     return privateKeyData?.privateKey || null;
   };
 
@@ -870,10 +875,19 @@ export default function ProfilePage() {
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
+                      {privateKeyError && showPrivateKey && (
+                        <div className="mb-3 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                          <p className="text-sm text-yellow-800">
+                            <AlertTriangle className="h-4 w-4 inline mr-1" />
+                            Session expired. Please log in again to view your private key.
+                          </p>
+                        </div>
+                      )}
                       <div className="bg-gray-100 p-3 rounded-lg font-mono text-sm break-all">
                         {showPrivateKey ? (
                           privateKeyData?.privateKey ? 
                             privateKeyData.privateKey : 
+                            privateKeyError ? 'Private key unavailable - please log in again' :
                             'Loading private key...'
                         ) : '••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••'}
                       </div>
@@ -891,6 +905,7 @@ export default function ProfilePage() {
                           variant="outline"
                           size="sm"
                           className="flex-1"
+                          disabled={!privateKeyData?.privateKey}
                           onClick={() => {
                             const privateKey = getDecryptedPrivateKey();
                             if (privateKey) {
