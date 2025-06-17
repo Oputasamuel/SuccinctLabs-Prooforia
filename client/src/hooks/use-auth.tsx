@@ -88,8 +88,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     },
     retry: false,
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 30000, // 30 seconds
     refetchOnWindowFocus: false,
+    gcTime: 5 * 60 * 1000 // 5 minutes garbage collection
   });
 
   const walletLoginMutation = useMutation({

@@ -68,7 +68,7 @@ export function setupWalletAuth(app: Express) {
       // Create user with wallet
       const user = await storage.createUser({
         displayName,
-        profilePicture: profilePictureUrl,
+        profilePicture: profilePictureUrl || "",
         walletAddress: walletData.address,
         walletPrivateKey: walletService.encryptPrivateKey(walletData.privateKey),
         walletPublicKey: walletData.publicKey,
