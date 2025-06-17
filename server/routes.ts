@@ -1008,6 +1008,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Social Connection Routes
+  app.post("/api/connect-discord", async (req, res) => {
+    if (!req.isAuthenticated() || !req.user) {
+      return res.status(401).json({ message: "Authentication required" });
+    }
+
+    try {
+      const { username } = req.body;
+      
+      if (!username) {
+        return res.status(400).json({ message: "Discord username is required" });
+      }
+
+      const updatedUser = await storage.connectDiscord(req.user.id, username);
+      res.json({ message: "Discord connected successfully", user: updatedUser });
+    } catch (error) {
+      console.error("Discord connection error:", error);
+      res.status(500).json({ message: "Failed to connect Discord" });
+    }
+  });
+
+  app.post("/api/connect-x", async (req, res) => {
+    if (!req.isAuthenticated() || !req.user) {
+      return res.status(401).json({ message: "Authentication required" });
+    }
+
+    try {
+      const { username } = req.body;
+      
+      if (!username) {
+        return res.status(400).json({ message: "X username is required" });
+      }
+
+      const cleanUsername = username.startsWith('@') ? username.slice(1) : username;
+      const updatedUser = await storage.connectX(req.user.id, cleanUsername);
+      res.json({ message: "X connected successfully", user: updatedUser });
+    } catch (error) {
+      console.error("X connection error:", error);
+      res.status(500).json({ message: "Failed to connect X" });
+    }
+  });
+
   // Stats Route
   app.get("/api/stats", async (req, res) => {
     try {
