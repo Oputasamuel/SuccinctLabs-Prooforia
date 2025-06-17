@@ -448,28 +448,28 @@ export class MemStorage implements IStorage {
     return Array.from(this.users.values()).find(user => user.displayName === displayName);
   }
 
-  async connectDiscord(userId: number, discordUsername: string, discordAvatar?: string): Promise<User> {
+  async connectDiscord(userId: number, discordUsername: string | null, discordAvatar?: string): Promise<User> {
     const user = this.users.get(userId);
     if (!user) throw new Error("User not found");
     
     const updatedUser = {
       ...user,
-      discordConnected: true,
-      discordUsername,
-      discordAvatar: discordAvatar || null,
+      discordConnected: discordUsername !== null,
+      discordUsername: discordUsername,
+      discordAvatar: discordUsername !== null ? (discordAvatar || null) : null,
     };
     this.users.set(userId, updatedUser);
     return updatedUser;
   }
 
-  async connectX(userId: number, xUsername: string): Promise<User> {
+  async connectX(userId: number, xUsername: string | null): Promise<User> {
     const user = this.users.get(userId);
     if (!user) throw new Error("User not found");
     
     const updatedUser = {
       ...user,
-      xConnected: true,
-      xUsername,
+      xConnected: xUsername !== null,
+      xUsername: xUsername,
     };
     this.users.set(userId, updatedUser);
     return updatedUser;
@@ -803,19 +803,22 @@ export class DatabaseStorage implements IStorage {
     return user;
   }
 
-  async connectDiscord(userId: number, discordUsername: string, discordAvatar?: string): Promise<User> {
+  async connectDiscord(userId: number, discordUsername: string | null, discordAvatar?: string): Promise<User> {
     // First get current user to calculate new credits
     const currentUser = await this.getUser(userId);
     if (!currentUser) throw new Error("User not found");
     
-    const newCredits = (currentUser.credits || 10) + (currentUser.discordConnected ? 0 : 4);
+    const isConnecting = discordUsername !== null;
+    const newCredits = isConnecting 
+      ? (currentUser.credits || 10) + (currentUser.discordConnected ? 0 : 4)
+      : (currentUser.credits || 10);
     
     const [user] = await db
       .update(users)
       .set({ 
-        discordConnected: true,
+        discordConnected: isConnecting,
         discordUsername: discordUsername,
-        discordAvatar: discordAvatar || null,
+        discordAvatar: isConnecting ? (discordAvatar || null) : null,
         credits: newCredits
       })
       .where(eq(users.id, userId))
@@ -824,17 +827,20 @@ export class DatabaseStorage implements IStorage {
     return user;
   }
 
-  async connectX(userId: number, xUsername: string): Promise<User> {
+  async connectX(userId: number, xUsername: string | null): Promise<User> {
     // First get current user to calculate new credits
     const currentUser = await this.getUser(userId);
     if (!currentUser) throw new Error("User not found");
     
-    const newCredits = (currentUser.credits || 10) + (currentUser.xConnected ? 0 : 6);
+    const isConnecting = xUsername !== null;
+    const newCredits = isConnecting 
+      ? (currentUser.credits || 10) + (currentUser.xConnected ? 0 : 6)
+      : (currentUser.credits || 10);
     
     const [user] = await db
       .update(users)
       .set({ 
-        xConnected: true,
+        xConnected: isConnecting,
         xUsername: xUsername,
         credits: newCredits
       })

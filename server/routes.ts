@@ -1021,7 +1021,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Discord username is required" });
       }
 
-      const updatedUser = await storage.connectDiscord(userId, username);
+      const updatedUser = await storage.connectDiscord(req.user.id, username);
       res.json({ message: "Discord connected successfully", user: updatedUser });
     } catch (error) {
       console.error("Discord connection error:", error);
@@ -1030,9 +1030,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   app.post("/api/connect-x", async (req, res) => {
-    // Support both session-based and passport authentication
-    const userId = req.session.userId || (req.isAuthenticated() && req.user?.id);
-    if (!userId) {
+    if (!req.isAuthenticated() || !req.user) {
       return res.status(401).json({ message: "Authentication required" });
     }
 
@@ -1044,11 +1042,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const cleanUsername = username.startsWith('@') ? username.slice(1) : username;
-      const updatedUser = await storage.connectX(userId, cleanUsername);
+      const updatedUser = await storage.connectX(req.user.id, cleanUsername);
       res.json({ message: "X connected successfully", user: updatedUser });
     } catch (error) {
       console.error("X connection error:", error);
       res.status(500).json({ message: "Failed to connect X" });
+    }
+  });
+
+  // Social Disconnect Routes
+  app.post("/api/disconnect-discord", async (req, res) => {
+    if (!req.isAuthenticated() || !req.user) {
+      return res.status(401).json({ message: "Authentication required" });
+    }
+
+    try {
+      const updatedUser = await storage.connectDiscord(req.user.id, null);
+      res.json({ message: "Discord disconnected successfully", user: updatedUser });
+    } catch (error) {
+      console.error("Discord disconnection error:", error);
+      res.status(500).json({ message: "Failed to disconnect Discord" });
+    }
+  });
+
+  app.post("/api/disconnect-x", async (req, res) => {
+    if (!req.isAuthenticated() || !req.user) {
+      return res.status(401).json({ message: "Authentication required" });
+    }
+
+    try {
+      const updatedUser = await storage.connectX(req.user.id, null);
+      res.json({ message: "X disconnected successfully", user: updatedUser });
+    } catch (error) {
+      console.error("X disconnection error:", error);
+      res.status(500).json({ message: "Failed to disconnect X" });
     }
   });
 
