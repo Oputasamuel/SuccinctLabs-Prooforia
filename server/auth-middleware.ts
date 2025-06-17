@@ -17,9 +17,14 @@ export async function requireAuth(req: AuthenticatedRequest, res: Response, next
     // Get user from storage
     const user = await storage.getUser(userId);
     if (!user) {
-      return res.status(404).json({ message: "User not found" });
+      // Clear invalid session
+      req.session.destroy(() => {});
+      return res.status(401).json({ message: "Session expired" });
     }
 
+    // Refresh session to extend expiry
+    req.session.save(() => {});
+    
     // Attach user to request
     req.currentUser = user;
     next();

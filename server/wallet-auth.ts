@@ -76,13 +76,21 @@ export function setupWalletAuth(app: Express) {
         walletPublicKey: walletData.publicKey,
       });
 
-      // Set session
+      // Set session and save it explicitly
       req.session.userId = user.id;
-
-      res.status(201).json({
-        user,
-        privateKey: walletData.privateKey, // Return unencrypted private key for user to save
-        message: "Account created successfully. Please save your private key securely!"
+      req.session.walletAddress = user.walletAddress;
+      
+      // Explicitly save the session to ensure persistence
+      req.session.save((err) => {
+        if (err) {
+          console.error("Session save error:", err);
+          return res.status(500).json({ message: "Session creation failed" });
+        }
+        res.status(201).json({
+          user,
+          privateKey: walletData.privateKey, // Return unencrypted private key for user to save
+          message: "Account created successfully. Please save your private key securely!"
+        });
       });
     } catch (error) {
       console.error("Account creation error:", error);
@@ -117,10 +125,18 @@ export function setupWalletAuth(app: Express) {
         return res.status(401).json({ message: "Invalid private key" });
       }
 
-      // Set session
+      // Set session and save it explicitly
       req.session.userId = user.id;
-
-      res.json({ user, message: "Login successful" });
+      req.session.walletAddress = user.walletAddress;
+      
+      // Explicitly save the session to ensure persistence
+      req.session.save((err) => {
+        if (err) {
+          console.error("Session save error:", err);
+          return res.status(500).json({ message: "Session creation failed" });
+        }
+        res.json({ user, message: "Login successful" });
+      });
     } catch (error) {
       console.error("Login error:", error);
       res.status(500).json({ message: "Login failed" });

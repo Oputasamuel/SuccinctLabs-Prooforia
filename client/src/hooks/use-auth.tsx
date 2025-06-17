@@ -159,6 +159,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     },
     onSuccess: (user: AuthUser) => {
       queryClient.setQueryData(["/api/user"], user);
+      // Invalidate and refetch to ensure fresh data
+      queryClient.invalidateQueries({ queryKey: ["/api/user"] });
       toast({
         title: "Welcome to prooforia!",
         description: `Account created successfully. You have ${user.credits} credits to start minting.`,
