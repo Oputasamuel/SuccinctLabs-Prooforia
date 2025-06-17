@@ -703,11 +703,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Bidding Routes
   app.post("/api/bids", async (req, res) => {
-    if (!req.session.userId) {
+    // Support both session-based and passport authentication
+    const userId = req.session.userId || (req.isAuthenticated() && req.user?.id);
+    if (!userId) {
       return res.status(401).json({ message: "Authentication required" });
     }
 
-    const user = await storage.getUser(req.session.userId);
+    const user = await storage.getUser(userId);
     if (!user) {
       return res.status(401).json({ message: "User not found" });
     }
@@ -748,12 +750,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Get user's bids
   app.get("/api/user/bids", async (req, res) => {
-    if (!req.session.userId) {
+    const userId = req.session.userId || (req.isAuthenticated() && req.user?.id);
+    if (!userId) {
       return res.status(401).json({ message: "Authentication required" });
     }
 
     try {
-      const userBids = await storage.getUserBids(req.session.userId);
+      const userBids = await storage.getUserBids(userId);
       res.json(userBids);
     } catch (error) {
       console.error("Get user bids error:", error);
@@ -763,13 +766,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Get received bids (bids on user's NFTs)
   app.get("/api/user/received-bids", async (req, res) => {
-    if (!req.session.userId) {
+    const userId = req.session.userId || (req.isAuthenticated() && req.user?.id);
+    if (!userId) {
       return res.status(401).json({ message: "Authentication required" });
     }
 
     try {
       // Get all NFTs created by the current user
-      const userNfts = await storage.getNfts({ creatorId: req.session.userId });
+      const userNfts = await storage.getNfts({ creatorId: userId });
       
       // Get all active bids for these NFTs
       const receivedBidsPromises = userNfts.map(async (nft) => {

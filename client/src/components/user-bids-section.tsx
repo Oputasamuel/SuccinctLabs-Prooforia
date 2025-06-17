@@ -234,8 +234,22 @@ export default function UserBidsSection() {
                           )}
                         </div>
                         
-                        <div className="text-xs text-gray-500">
-                          {new Date(bid.createdAt).toLocaleDateString()}
+                        <div className="flex items-center gap-2">
+                          {bid.isActive && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => cancelBidMutation.mutate(bid.id)}
+                              disabled={cancelBidMutation.isPending}
+                              className="text-red-600 hover:text-red-700 border-red-200 hover:border-red-300"
+                            >
+                              <X className="h-3 w-3 mr-1" />
+                              {cancelBidMutation.isPending ? "Cancelling..." : "Cancel"}
+                            </Button>
+                          )}
+                          <div className="text-xs text-gray-500">
+                            {new Date(bid.createdAt).toLocaleDateString()}
+                          </div>
                         </div>
                       </div>
                     </div>
