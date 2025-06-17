@@ -1021,7 +1021,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Discord username is required" });
       }
 
-      const updatedUser = await storage.connectDiscord(req.user.id, username);
+      const updatedUser = await storage.connectDiscord(userId, username);
       res.json({ message: "Discord connected successfully", user: updatedUser });
     } catch (error) {
       console.error("Discord connection error:", error);
@@ -1030,7 +1030,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   app.post("/api/connect-x", async (req, res) => {
-    if (!req.isAuthenticated() || !req.user) {
+    // Support both session-based and passport authentication
+    const userId = req.session.userId || (req.isAuthenticated() && req.user?.id);
+    if (!userId) {
       return res.status(401).json({ message: "Authentication required" });
     }
 
@@ -1042,7 +1044,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const cleanUsername = username.startsWith('@') ? username.slice(1) : username;
-      const updatedUser = await storage.connectX(req.user.id, cleanUsername);
+      const updatedUser = await storage.connectX(userId, cleanUsername);
       res.json({ message: "X connected successfully", user: updatedUser });
     } catch (error) {
       console.error("X connection error:", error);
