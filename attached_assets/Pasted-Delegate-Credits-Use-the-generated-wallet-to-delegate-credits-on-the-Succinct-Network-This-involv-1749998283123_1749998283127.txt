@@ -1,84 +1,0 @@
-Delegate Credits:
-Use the generated wallet to delegate credits on the Succinct Network. This involves interacting with the Succinct Network’s API or smart contracts to allocate a fixed amount of credits (e.g., 10 credits) to the user’s wallet.
-
-Example command (inspired by the video): RUST_LOG=info cargo run --release -- --execute to set up the wallet and delegate credits.
-
-Ensure the credits are sufficient for minting and proving NFTs, as per your marketplace’s requirements.
-NFT Minting and Proving
-Upload Art and Specify Editions:
-Users upload their digital art (JPEG, PNG, GIF) via a frontend interface (e.g., React with react-dropzone).
-
-Users specify the number of NFT editions (e.g., 1 for unique, 10 for limited editions) and provide metadata (title, description).
-
-Store the art file and thumbnail on IPFS using ipfs-http-client for decentralized access.
-Mint NFT with Test Token:
-When a user clicks “Mint NFT,” trigger a backend process to mint the NFT on a testnet (e.g., Ethereum Sepolia or Flow Testnet) using the user’s wallet and test tokens.
-
-Use the test token (e.g., a dummy ERC-20 token) to pay for minting costs. The amount (e.g., 10 test tokens) is deducted from the user’s wallet balance.
-
-Example smart contract interaction (Ethereum):
-solidity
-function mintNFT(address recipient, uint256 editionCount, string memory tokenURI) public {
-    require(balanceOf[msg.sender] >= mintCost * editionCount, "Insufficient balance");
-    balanceOf[msg.sender] -= mintCost * editionCount;
-    for (uint256 i = 0; i < editionCount; i++) {
-        _mint(recipient, totalSupply++);
-        _setTokenURI(totalSupply - 1, tokenURI);
-    }
-}
-Ensure the minting process is verified by SP1 to prove the transaction’s integrity.
-Generate SP1 Proof for Minting:
-Use SP1 to generate a zero-knowledge proof (ZKP) for the minting transaction. This proves that the NFT was minted correctly without revealing sensitive data (e.g., wallet balance, art file).
-
-Run the SP1 prover CLI in your backend:
-bash
-RUST_LOG=info cargo run --release -- --prove
-The proof generation process includes:
-Compiling the Rust program that defines the minting logic.
-
-Executing the program to generate the proof.
-
-Verifying the proof to ensure it’s valid.
-Store the proof artifact (e.g., proof ID, size, verification time) on IPFS or in your database.
-Verify Proof:
-After minting, verify the SP1 proof to confirm the transaction’s validity. This can be done on-chain or off-chain.
-
-Example verification command (inspired by the video):
-bash
-RUST_LOG=info cargo run --release -- --verify
-Display the verification result to the user (e.g., “Proof Verified Successfully!” with a confetti animation).
-Marketplace Trading
-List NFT for Sale:
-Users list their minted NFTs for sale at a specified price (in test tokens).
-
-The listing process is also verified by SP1 to prove ownership and price integrity.
-
-Store the listing details (NFT ID, price, seller’s wallet address) in your database.
-Buy or Bid on NFTs:
-Users browse the marketplace and select NFTs to buy or bid on.
-
-When a user buys an NFT, deduct the test tokens from their wallet and transfer ownership via the smart contract.
-
-Generate an SP1 proof for the transaction to ensure fairness and privacy.
-
-Verify the proof before finalizing the trade.
-Update User Credits:
-After each minting or trading action, update the user’s delegated credits on the Succinct Network.
-
-Ensure the user has sufficient credits for future actions, prompting them to delegate more if needed.
-Community and Sharing
-Share on X:
-After minting or purchasing an NFT, provide a “Share on X” button.
-
-Use the X API to post a precomposed tweet with the NFT thumbnail, proof ID, and a link to the marketplace, tagging Succinct Labs (e.g., “I minted my ZK-powered NFT on [Platform]!  Check it out: [link] #SuccinctLabs”).
-
-This boosts community engagement and visibility for Succinct Labs.
-View Proof Details:
-Display SP1 proof metadata (e.g., proof size, generation time) for each minted or traded NFT.
-
-Educate users on how SP1 ensures transaction security without revealing private data.
-Contribute to Open Source:
-Host the project on Succinct Labs’ GitHub, inviting the community to contribute features like new proof types or marketplace enhancements.
-
-Link to Succinct’s Discord for discussions and support.
-
