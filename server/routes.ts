@@ -560,13 +560,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         await storage.updateUserCredits(nft.creatorId, sellerForUpdate.credits + requiredCredits);
       }
 
-      // Ensure session remains valid after purchase
-      req.session.save((err) => {
-        if (err) {
-          console.error('Session save error after purchase:', err);
-        }
-      });
-
       // Store ZK proof
       await storage.createZkProof({
         userId: buyerId,
@@ -575,9 +568,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         proofHash: zkProof.proofHash,
       });
 
-      res.json({
-        transaction,
-        message: `NFT purchased successfully! ${requiredCredits} credits transferred.`
+      // Ensure session remains valid after purchase
+      req.session.save((err) => {
+        if (err) {
+          console.error('Session save error after purchase:', err);
+          return res.status(500).json({ message: "Session save failed" });
+        }
+        
+        res.json({
+          transaction,
+          message: `NFT purchased successfully! ${requiredCredits} credits transferred.`
+        });
       });
     } catch (error) {
       console.error("NFT purchase error:", error);
@@ -636,8 +637,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/listings", async (req, res) => {
     try {
-      if (!req.isAuthenticated() || !req.user) {
+      if (!req.session.userId) {
         return res.status(401).json({ message: "Authentication required" });
+      }
+
+      const user = await storage.getUser(req.session.userId);
+      if (!user) {
+        return res.status(401).json({ message: "User not found" });
       }
 
       const { nftId, price } = req.body;
@@ -654,8 +660,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Check ownership via NFT creator or ownership records
       const ownerships = await storage.getOwnershipsForNft(nftId);
-      const userOwnsNft = nft.creatorId === req.user.id || 
-                         ownerships.some(o => o.ownerId === req.user.id);
+      const userOwnsNft = nft.creatorId === user.id || 
+                         ownerships.some(o => o.ownerId === user.id);
 
       if (!userOwnsNft) {
         return res.status(403).json({ message: "You don't own this NFT" });
@@ -663,7 +669,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const listing = await storage.createListing({
         nftId,
-        sellerId: req.user.id,
+        sellerId: user.id,
         price
       });
 
@@ -676,12 +682,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/listings/:id/buy", async (req, res) => {
     try {
-      if (!req.isAuthenticated() || !req.user) {
+      if (!req.session.userId) {
         return res.status(401).json({ message: "Authentication required" });
       }
 
+      const user = await storage.getUser(req.session.userId);
+      if (!user) {
+        return res.status(401).json({ message: "User not found" });
+      }
+
       const listingId = parseInt(req.params.id);
-      const buyerId = req.user.id;
+      const buyerId = user.id;
 
       const transaction = await storage.buyFromListing(listingId, buyerId);
       res.json(transaction);
