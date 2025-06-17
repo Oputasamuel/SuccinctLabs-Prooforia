@@ -62,17 +62,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     data: user,
     error,
     isLoading,
-  } = useQuery<AuthUser | undefined, Error>({
+  } = useQuery<AuthUser | null, Error>({
     queryKey: ["/api/user"],
     queryFn: async () => {
       try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 2000); // 2 second timeout
+        
         const response = await fetch("/api/user", {
           method: "GET",
           credentials: "include",
+          signal: controller.signal,
         });
         
+        clearTimeout(timeoutId);
+        
         if (response.status === 401) {
-          return undefined;
+          return null;
         }
         
         if (!response.ok) {
@@ -81,14 +87,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         
         return await response.json();
       } catch (error: any) {
-        if (error.message.includes("401") || error.message.includes("Not authenticated")) {
-          return undefined;
+        if (error.name === 'AbortError') {
+          console.warn('Authentication request timed out');
+          return null;
         }
-        throw error;
+        if (error.message.includes("401") || error.message.includes("Not authenticated")) {
+          return null;
+        }
+        console.error('Auth query error:', error);
+        return null;
       }
     },
-    retry: false,
-    staleTime: 30000, // 30 seconds
+    retry: 1,
+    retryDelay: 500,
+    staleTime: 60000, // 1 minute
     refetchOnWindowFocus: false,
     gcTime: 5 * 60 * 1000 // 5 minutes garbage collection
   });
