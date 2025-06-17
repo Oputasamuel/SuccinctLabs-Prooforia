@@ -560,6 +560,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         await storage.updateUserCredits(nft.creatorId, sellerForUpdate.credits + requiredCredits);
       }
 
+      // Ensure session remains valid after purchase
+      req.session.save((err) => {
+        if (err) {
+          console.error('Session save error after purchase:', err);
+        }
+      });
+
       // Store ZK proof
       await storage.createZkProof({
         userId: buyerId,
