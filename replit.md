@@ -1,4 +1,4 @@
-# prooforia - NFT Marketplace with Zero-Knowledge Proofs
+# prooforia - Zero-Knowledge NFT Marketplace
 
 ## Overview
 

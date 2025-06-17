@@ -129,7 +129,7 @@ export default function ProfilePage() {
 
   const shareToX = (nft: NftWithCreator) => {
     const url = `${window.location.origin}/nft/${nft.id}`;
-    const text = `Check out this amazing NFT: "${nft.title}" on SP1Mint! 🎨✨`;
+    const text = `Check out this amazing NFT: "${nft.title}" on prooforia! 🎨✨`;
     const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`;
     window.open(twitterUrl, '_blank');
   };

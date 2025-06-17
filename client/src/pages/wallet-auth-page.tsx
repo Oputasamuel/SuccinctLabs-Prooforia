@@ -149,7 +149,7 @@ export default function WalletAuthPage() {
       queryClient.setQueryData(["/api/user"], data.user);
       toast({
         title: "Login Successful",
-        description: "Welcome back to SP1Mint!",
+        description: "Welcome back to prooforia!",
       });
     },
     onError: (error: any) => {
