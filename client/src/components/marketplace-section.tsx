@@ -71,11 +71,11 @@ export default function MarketplaceSection() {
       );
     }
     
-    // Filter by creator
-    if (creatorFilter !== "all") {
+    // Filter by creator (searchable with partial matching)
+    if (creatorFilter !== "all" && creatorFilter.trim()) {
       filtered = filtered.filter(nft => {
         const creatorName = nft.creator?.username || `Creator ${nft.creatorId}`;
-        return creatorName === creatorFilter;
+        return creatorName.toLowerCase().includes(creatorFilter.toLowerCase());
       });
     }
     
@@ -142,19 +142,19 @@ export default function MarketplaceSection() {
               
               <div className="relative">
                 <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                <Select value={creatorFilter} onValueChange={setCreatorFilter}>
-                  <SelectTrigger className="pl-10 w-full sm:w-48">
-                    <SelectValue placeholder="All Creators" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Creators</SelectItem>
-                    {uniqueCreators.map((creator) => (
-                      <SelectItem key={creator} value={creator}>
-                        {creator}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <Input
+                  placeholder="Search creator or type 'all' for everyone..."
+                  value={creatorFilter === "all" ? "" : creatorFilter}
+                  onChange={(e) => {
+                    const value = e.target.value.trim();
+                    if (value === "" || value.toLowerCase() === "all") {
+                      setCreatorFilter("all");
+                    } else {
+                      setCreatorFilter(value);
+                    }
+                  }}
+                  className="pl-10 w-full sm:w-64"
+                />
               </div>
             </div>
 
@@ -247,8 +247,8 @@ export default function MarketplaceSection() {
             <p className="text-gray-600">
               {searchQuery 
                 ? `No NFTs found matching "${searchQuery}"`
-                : creatorFilter !== "all" 
-                  ? `No NFTs found by ${creatorFilter}` 
+                : creatorFilter !== "all" && creatorFilter.trim()
+                  ? `No NFTs found by creators matching "${creatorFilter}"` 
                   : category !== "all" 
                     ? `No NFTs found in ${category} category` 
                     : "No NFTs available yet"
