@@ -177,6 +177,10 @@ The application uses a PostgreSQL database with the following core entities:
 - **June 17, 2025**: Enhanced frontend with red "Cancel" buttons on active bids in user profile section
 - **June 17, 2025**: Unified authentication systems across all bidding endpoints supporting both session and Passport auth
 - **June 17, 2025**: Completed comprehensive function testing of entire marketplace workflow including listings and bid management
+- **June 17, 2025**: Implemented social media disconnect functionality for Discord and X accounts
+- **June 17, 2025**: Added disconnect API endpoints with proper authentication and database updates
+- **June 17, 2025**: Connected frontend disconnect buttons to backend with loading states and success notifications
+- **June 17, 2025**: Fixed all social connection authentication issues - both connect and disconnect now fully operational
 
 ## Changelog
 - June 15, 2025: Complete SP1Mint rebranding and authentication system migration

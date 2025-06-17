@@ -242,6 +242,58 @@ export default function ProfilePage() {
     },
   });
 
+  const disconnectXMutation = useMutation({
+    mutationFn: async () => {
+      const response = await apiRequest("POST", "/api/disconnect-x", {});
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ message: "Failed to disconnect X account" }));
+        throw new Error(errorData.message);
+      }
+      return response.json();
+    },
+    onSuccess: (data) => {
+      queryClient.setQueryData(["/api/user"], data.user);
+      queryClient.invalidateQueries({ queryKey: ["/api/profile"] });
+      toast({
+        title: "Success",
+        description: "X account disconnected successfully",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Disconnect failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const disconnectDiscordMutation = useMutation({
+    mutationFn: async () => {
+      const response = await apiRequest("POST", "/api/disconnect-discord", {});
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ message: "Failed to disconnect Discord account" }));
+        throw new Error(errorData.message);
+      }
+      return response.json();
+    },
+    onSuccess: (data) => {
+      queryClient.setQueryData(["/api/user"], data.user);
+      queryClient.invalidateQueries({ queryKey: ["/api/profile"] });
+      toast({
+        title: "Success",
+        description: "Discord account disconnected successfully",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Disconnect failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
   if (!user) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
@@ -906,8 +958,13 @@ export default function ProfilePage() {
                               Connected
                             </Badge>
                           </div>
-                          <Button variant="outline" size="sm">
-                            Disconnect
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => disconnectXMutation.mutate()}
+                            disabled={disconnectXMutation.isPending}
+                          >
+                            {disconnectXMutation.isPending ? "Disconnecting..." : "Disconnect"}
                           </Button>
                         </div>
                       ) : (
@@ -966,8 +1023,13 @@ export default function ProfilePage() {
                               Connected
                             </Badge>
                           </div>
-                          <Button variant="outline" size="sm">
-                            Disconnect
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => disconnectDiscordMutation.mutate()}
+                            disabled={disconnectDiscordMutation.isPending}
+                          >
+                            {disconnectDiscordMutation.isPending ? "Disconnecting..." : "Disconnect"}
                           </Button>
                         </div>
                       ) : (
