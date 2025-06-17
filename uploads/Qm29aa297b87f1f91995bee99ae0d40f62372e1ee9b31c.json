@@ -1,0 +1,19 @@
+{
+  "name": "Succinct Lgo",
+  "description": "succinct_labs",
+  "image": "/uploads/Qm3930cb723185a363d4d28875574796149b09868999ba.png",
+  "attributes": [
+    {
+      "trait_type": "Category",
+      "value": "Digital Art"
+    },
+    {
+      "trait_type": "Edition Size",
+      "value": 10
+    },
+    {
+      "trait_type": "Creator",
+      "value": "testuser"
+    }
+  ]
+}
