@@ -1,8 +1,8 @@
-# SP1Mint - NFT Marketplace with Zero-Knowledge Proofs
+# prooforia - NFT Marketplace with Zero-Knowledge Proofs
 
 ## Overview
 
-SP1Mint is a modern NFT marketplace platform that leverages zero-knowledge proof technology through Succinct Labs' SP1 zkVM. The application allows users to create, mint, trade, and verify digital art NFTs with cryptographic certainty. Built as a full-stack TypeScript application, it features a React frontend with Vite, an Express.js backend, and PostgreSQL database with Drizzle ORM.
+prooforia is a modern NFT marketplace platform that leverages zero-knowledge proof technology through Succinct Labs' SP1 zkVM. The application allows users to create, mint, trade, and verify digital art NFTs with cryptographic certainty. Built as a full-stack TypeScript application, it features a React frontend with Vite, an Express.js backend, and PostgreSQL database with Drizzle ORM.
 
 ## System Architecture
 

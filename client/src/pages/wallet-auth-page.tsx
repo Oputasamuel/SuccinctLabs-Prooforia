@@ -196,7 +196,7 @@ export default function WalletAuthPage() {
           <div className="order-2 lg:order-1">
             <Card className="border-2 border-primary/20">
               <CardHeader className="text-center">
-                <CardTitle className="text-2xl text-primary">SP1Mint Access</CardTitle>
+                <CardTitle className="text-2xl text-primary">prooforia Access</CardTitle>
                 <CardDescription>
                   Wallet-only authentication for secure NFT minting and trading
                 </CardDescription>

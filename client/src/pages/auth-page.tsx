@@ -83,7 +83,7 @@ export default function AuthPage() {
         <div className="w-full max-w-md mx-auto lg:mx-0">
           <div className="text-center mb-8">
             <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-pink-600 bg-clip-text text-transparent">
-              SP1Mint
+              prooforia
             </h1>
             <p className="text-muted-foreground mt-2">
               Zero-knowledge proof powered NFT minting platform
@@ -174,7 +174,7 @@ export default function AuthPage() {
                 <CardHeader>
                   <CardTitle>Create your account</CardTitle>
                   <CardDescription>
-                    Join SP1Mint and create NFTs with zero-knowledge proof technology
+                    Join prooforia and create NFTs with zero-knowledge proof technology
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
