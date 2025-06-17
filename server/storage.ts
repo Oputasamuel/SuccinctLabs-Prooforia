@@ -544,6 +544,22 @@ export class MemStorage implements IStorage {
       throw new Error("Buyer has insufficient credits");
     }
     
+    // Get NFT details for proof generation
+    const nft = this.nfts.get(bid.nftId);
+    if (!nft) throw new Error("NFT not found");
+    
+    // Generate ZK proof for bid acceptance and ownership transfer
+    const { sp1Service } = await import("./services/sp1-service");
+    const zkProof = await sp1Service.generateTransferProof({
+      nftId: bid.nftId,
+      sellerId: sellerId,
+      buyerId: bid.bidderId,
+      price: bid.amount,
+      sellerWallet: seller.walletAddress,
+      buyerWallet: buyer.walletAddress,
+      timestamp: Date.now(),
+    });
+    
     // Transfer credits
     const updatedBuyer = {
       ...buyer,
@@ -563,15 +579,35 @@ export class MemStorage implements IStorage {
       buyerId: bid.bidderId,
       sellerId,
       price: bid.amount,
-      zkProofHash: `proof_${Date.now()}`,
+      zkProofHash: zkProof.proofHash,
+      transactionHash: `0x${Date.now().toString(16)}`
+    });
+
+    // Store ZK proof for the transfer
+    await this.createZkProof({
+      userId: bid.bidderId,
+      proofType: "bid_acceptance_transfer",
+      proofData: zkProof.proofData,
+      proofHash: zkProof.proofHash,
     });
 
     // Transfer ownership
     await this.transferOwnership(bid.nftId, sellerId, bid.bidderId, 1);
 
-    // Deactivate bid
-    bid.isActive = false;
-    this.bids.set(bidId, bid);
+    // Update NFT current edition to reflect sale
+    const updatedNft = {
+      ...nft,
+      currentEdition: nft.currentEdition + 1,
+    };
+    this.nfts.set(bid.nftId, updatedNft);
+
+    // Deactivate the accepted bid and all other bids for this NFT
+    Array.from(this.bids.values()).forEach(b => {
+      if (b.nftId === bid.nftId) {
+        b.isActive = false;
+        this.bids.set(b.id, b);
+      }
+    });
 
     return transaction;
   }
@@ -1075,6 +1111,22 @@ export class DatabaseStorage implements IStorage {
       throw new Error("Buyer has insufficient credits");
     }
     
+    // Get NFT details for proof generation
+    const nft = await this.getNft(bid[0].nftId);
+    if (!nft) throw new Error("NFT not found");
+    
+    // Generate ZK proof for bid acceptance and ownership transfer
+    const { sp1Service } = await import("../services/sp1-service");
+    const zkProof = await sp1Service.generateTransferProof({
+      nftId: bid[0].nftId,
+      sellerId: sellerId,
+      buyerId: bid[0].bidderId,
+      price: bid[0].amount,
+      sellerWallet: seller.walletAddress,
+      buyerWallet: buyer.walletAddress,
+      timestamp: Date.now(),
+    });
+    
     // Transfer credits
     await db.update(users)
       .set({ credits: (buyer.credits || 0) - bid[0].amount })
@@ -1089,14 +1141,28 @@ export class DatabaseStorage implements IStorage {
       sellerId,
       nftId: bid[0].nftId,
       price: bid[0].amount,
-      zkProofHash: `proof_${Date.now()}`
+      zkProofHash: zkProof.proofHash,
+      transactionHash: `0x${Date.now().toString(16)}`
+    });
+
+    // Store ZK proof for the transfer
+    await this.createZkProof({
+      userId: bid[0].bidderId,
+      proofType: "bid_acceptance_transfer",
+      proofData: zkProof.proofData,
+      proofHash: zkProof.proofHash,
     });
 
     // Transfer ownership
     await this.transferOwnership(bid[0].nftId, sellerId, bid[0].bidderId, 1);
 
-    // Deactivate the accepted bid
-    await db.update(bids).set({ isActive: false }).where(eq(bids.id, bidId));
+    // Update NFT current edition to reflect sale
+    await this.updateNft(bid[0].nftId, {
+      currentEdition: nft.currentEdition + 1,
+    });
+
+    // Deactivate the accepted bid and all other bids for this NFT
+    await db.update(bids).set({ isActive: false }).where(eq(bids.nftId, bid[0].nftId));
 
     return transaction;
   }

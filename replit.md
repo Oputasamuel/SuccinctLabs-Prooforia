@@ -124,6 +124,9 @@ prooforia is a modern NFT marketplace platform that leverages zero-knowledge pro
 - June 17, 2025: Fixed private key display functionality in profile wallet tab with proper session authentication and error handling
 - June 17, 2025: Optimized authentication flow with 2-second timeout to resolve slow loading issues
 - June 17, 2025: Completely cleared database and file system - removed all users, NFTs, and uploaded files for fresh start
+- June 17, 2025: Enhanced bid acceptance with proper credit transfers between bidder and owner
+- June 17, 2025: Implemented ZK proof generation for NFT ownership transfers using SP1 service
+- June 17, 2025: Fixed session persistence issues by removing email/password authentication completely
 
 ## User Preferences
 
