@@ -127,6 +127,8 @@ prooforia is a modern NFT marketplace platform that leverages zero-knowledge pro
 - June 17, 2025: Enhanced bid acceptance with proper credit transfers between bidder and owner
 - June 17, 2025: Implemented ZK proof generation for NFT ownership transfers using SP1 service
 - June 17, 2025: Fixed session persistence issues by removing email/password authentication completely
+- June 17, 2025: Implemented ownership-based bid system - bids always go to current NFT owner, not original creator
+- June 17, 2025: Added getCurrentNftOwner functionality to track ownership through transfers and sales
 
 ## User Preferences
 
