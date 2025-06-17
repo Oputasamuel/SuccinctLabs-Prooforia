@@ -1187,19 +1187,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Get decrypted private key
   app.get("/api/wallet/private-key", async (req: Request, res) => {
-    // Check both session types for authentication
-    const userId = req.session.userId || (req.session as any).userId;
-    
-    if (!userId) {
-      return res.status(401).json({ message: "Authentication required" });
-    }
-
     try {
+      // Check all possible authentication sources
+      const userId = req.session.userId || (req.session as any).userId || req.user?.id;
+      
+      if (!userId) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+
       const user = await storage.getUser(userId);
       if (!user) {
         return res.status(404).json({ message: "User not found" });
       }
 
+      // Import wallet service and decrypt the private key
       const { walletService } = await import("./services/wallet-service");
       const decryptedPrivateKey = walletService.decryptPrivateKey(user.walletPrivateKey);
       
