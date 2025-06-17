@@ -804,13 +804,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Accept bid
   app.post("/api/bids/:id/accept", async (req, res) => {
-    if (!req.session.userId) {
+    const userId = req.session.userId || (req.isAuthenticated() && req.user?.id);
+    if (!userId) {
       return res.status(401).json({ message: "Authentication required" });
     }
 
     try {
       const bidId = parseInt(req.params.id);
-      const sellerId = req.session.userId;
+      const sellerId = userId;
       
       const transaction = await storage.acceptBid(bidId, sellerId);
       res.status(201).json({ transaction });
@@ -822,7 +823,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Reject bid
   app.post("/api/bids/:id/reject", async (req, res) => {
-    if (!req.session.userId) {
+    const userId = req.session.userId || (req.isAuthenticated() && req.user?.id);
+    if (!userId) {
       return res.status(401).json({ message: "Authentication required" });
     }
 
@@ -837,7 +839,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Get the NFT to verify the current user is the creator
       const nft = await storage.getNft(bid.nftId);
-      if (!nft || nft.creatorId !== req.session.userId) {
+      if (!nft || nft.creatorId !== userId) {
         return res.status(403).json({ message: "Not authorized to reject this bid" });
       }
       
@@ -852,13 +854,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Cancel bid (for bidders)
   app.post("/api/bids/:id/cancel", async (req, res) => {
-    if (!req.session.userId) {
+    const userId = req.session.userId || (req.isAuthenticated() && req.user?.id);
+    if (!userId) {
       return res.status(401).json({ message: "Authentication required" });
     }
 
     try {
       const bidId = parseInt(req.params.id);
-      await storage.cancelBid(bidId, req.session.userId);
+      await storage.cancelBid(bidId, userId);
       res.json({ message: "Bid cancelled successfully" });
     } catch (error) {
       console.error("Cancel bid error:", error);
