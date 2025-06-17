@@ -19,18 +19,7 @@ declare global {
 }
 
 export function setupWalletAuth(app: Express) {
-  const sessionSettings: session.SessionOptions = {
-    secret: process.env.SESSION_SECRET || 'wallet-auth-secret',
-    resave: false,
-    saveUninitialized: false,
-    cookie: {
-      secure: false, // Set to true in production with HTTPS
-      maxAge: 24 * 60 * 60 * 1000 // 24 hours
-    }
-  };
-
-  app.set("trust proxy", 1);
-  app.use(session(sessionSettings));
+  // Don't set up session here - let the main auth handle it
 
   // Configure multer for profile image uploads
   const upload = multer({
@@ -87,7 +76,7 @@ export function setupWalletAuth(app: Express) {
       });
 
       // Set session
-      (req.session as any).userId = user.id;
+      req.session.userId = user.id;
 
       res.status(201).json({
         user,
@@ -128,7 +117,7 @@ export function setupWalletAuth(app: Express) {
       }
 
       // Set session
-      (req.session as any).userId = user.id;
+      req.session.userId = user.id;
 
       res.json({ user, message: "Login successful" });
     } catch (error) {
@@ -140,7 +129,7 @@ export function setupWalletAuth(app: Express) {
   // Get current user
   app.get("/api/user", async (req, res) => {
     try {
-      const userId = (req.session as any).userId;
+      const userId = req.session.userId;
       if (!userId) {
         return res.status(401).json({ message: "Not authenticated" });
       }

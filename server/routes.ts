@@ -20,7 +20,7 @@ interface MulterRequest extends Request {
 const upload = multer({ storage: multer.memoryStorage() });
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Setup authentication
+  // Setup authentication - main auth handles session config
   setupAuth(app);
   setupWalletAuth(app);
 
