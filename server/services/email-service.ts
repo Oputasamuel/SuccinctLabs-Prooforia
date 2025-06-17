@@ -32,12 +32,12 @@ class EmailService {
       const result = await this.mailService.send({
         to: email,
         from: this.fromEmail, // Use verified sender email
-        subject: 'SP1Mint - Password Reset Code',
+        subject: 'prooforia - Password Reset Code',
         text: `Your password reset code is: ${code}. This code will expire in 15 minutes.`,
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-            <h2 style="color: #FE11C5;">SP1Mint - Password Reset</h2>
-            <p>You requested a password reset for your SP1Mint account.</p>
+            <h2 style="color: #FE11C5;">prooforia - Password Reset</h2>
+            <p>You requested a password reset for your prooforia account.</p>
             <div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; text-align: center; margin: 20px 0;">
               <h3 style="margin: 0; font-size: 32px; letter-spacing: 4px; color: #333;">${code}</h3>
             </div>
@@ -45,7 +45,7 @@ class EmailService {
             <p><strong>This code will expire in 15 minutes.</strong></p>
             <p>If you didn't request this password reset, please ignore this email.</p>
             <hr style="margin: 30px 0; border: none; border-top: 1px solid #eee;">
-            <p style="color: #666; font-size: 12px;">SP1Mint - Zero-Knowledge NFT Platform</p>
+            <p style="color: #666; font-size: 12px;">prooforia - Zero-Knowledge NFT Platform</p>
           </div>
         `,
       });

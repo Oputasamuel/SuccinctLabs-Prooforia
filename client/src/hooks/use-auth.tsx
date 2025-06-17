@@ -142,7 +142,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     onSuccess: (user: AuthUser) => {
       queryClient.setQueryData(["/api/user"], user);
       toast({
-        title: "Welcome to SP1Mint!",
+        title: "Welcome to prooforia!",
         description: `Account created successfully. You have ${user.credits} credits to start minting.`,
       });
     },
