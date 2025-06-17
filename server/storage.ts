@@ -304,6 +304,12 @@ export class MemStorage implements IStorage {
     walletPrivateKey: string;
     walletPublicKey: string;
   }): Promise<User> {
+    // Check for duplicate username
+    const existingUser = await this.getUserByDisplayName(userData.displayName);
+    if (existingUser) {
+      throw new Error("Username already exists. Please choose a different username.");
+    }
+
     const id = this.currentUserId++;
     const user: User = {
       id,
@@ -824,6 +830,12 @@ export class DatabaseStorage implements IStorage {
     walletPrivateKey: string;
     walletPublicKey: string;
   }): Promise<User> {
+    // Check for duplicate username
+    const existingUser = await this.getUserByDisplayName(userData.displayName);
+    if (existingUser) {
+      throw new Error("Username already exists. Please choose a different username.");
+    }
+
     const [user] = await db
       .insert(users)
       .values({

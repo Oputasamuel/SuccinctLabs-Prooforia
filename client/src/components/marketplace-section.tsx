@@ -5,7 +5,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ShoppingBag, Grid3X3, List } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { ShoppingBag, Grid3X3, List, Search, User } from "lucide-react";
 import NFTCard from "@/components/nft-card";
 import NFTDetailPopup from "@/components/nft-detail-popup";
 import type { Nft } from "@shared/schema";
@@ -25,6 +26,8 @@ export default function MarketplaceSection() {
   const [showDetailPopup, setShowDetailPopup] = useState(false);
   const [defaultTab, setDefaultTab] = useState<string>("overview");
   const [marketFilter, setMarketFilter] = useState<string>("all");
+  const [searchQuery, setSearchQuery] = useState<string>("");
+  const [creatorFilter, setCreatorFilter] = useState<string>("all");
 
   const handleViewDetails = (nft: NftWithCreator, tab: string = "overview") => {
     setSelectedNft(nft);
@@ -48,6 +51,15 @@ export default function MarketplaceSection() {
     queryKey: ["/api/listings"],
     refetchInterval: 5000,
   });
+
+  // Get unique creators for the creator filter dropdown
+  const uniqueCreators = Array.from(
+    new Set(
+      (nfts || [])
+        .map(nft => nft.creator?.username || `Creator ${nft.creatorId}`)
+        .filter(Boolean)
+    )
+  ).sort();
 
   const filteredAndSortedNfts = (() => {
     let filtered = nfts || [];
