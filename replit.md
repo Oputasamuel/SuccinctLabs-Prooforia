@@ -122,6 +122,8 @@ prooforia is a modern NFT marketplace platform that leverages zero-knowledge pro
 - June 17, 2025: Complete rebranding from SP1Mint to prooforia across entire application
 - June 17, 2025: Updated all frontend components, backend services, documentation, and assets with new prooforia branding
 - June 17, 2025: Fixed private key display functionality in profile wallet tab with proper session authentication and error handling
+- June 17, 2025: Optimized authentication flow with 2-second timeout to resolve slow loading issues
+- June 17, 2025: Completely cleared database and file system - removed all users, NFTs, and uploaded files for fresh start
 
 ## User Preferences
 
