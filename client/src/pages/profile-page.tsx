@@ -878,7 +878,7 @@ export default function ProfilePage() {
                       {privateKeyError && showPrivateKey && (
                         <div className="mb-3 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
                           <p className="text-sm text-yellow-800">
-                            <AlertTriangle className="h-4 w-4 inline mr-1" />
+                            <Shield className="h-4 w-4 inline mr-1" />
                             Session expired. Please log in again to view your private key.
                           </p>
                         </div>

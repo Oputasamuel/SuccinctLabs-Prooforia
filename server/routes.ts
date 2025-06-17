@@ -1120,11 +1120,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // User Profile Route
   app.get("/api/profile", async (req, res) => {
     try {
-      if (!req.isAuthenticated() || !req.user) {
+      // Check both authentication methods
+      const userId = req.session.userId || (req.session as any).userId || (req.user?.id);
+      
+      if (!userId) {
         return res.status(401).json({ message: "Authentication required" });
       }
 
-      const userId = req.user.id;
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
 
       // Get user's created NFTs
       const createdNfts = await storage.getNfts({ creatorId: userId });
@@ -1159,7 +1165,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const profile = {
         createdNfts: createdNfts.map(nft => ({
           ...nft,
-          creator: { id: req.user!.id, username: req.user!.displayName }
+          creator: { id: user.id, username: user.displayName }
         })),
         purchasedNfts,
         transactions: userTransactions,
@@ -1181,12 +1187,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Get decrypted private key
   app.get("/api/wallet/private-key", async (req: Request, res) => {
-    if (!req.session.userId) {
+    // Check both session types for authentication
+    const userId = req.session.userId || (req.session as any).userId;
+    
+    if (!userId) {
       return res.status(401).json({ message: "Authentication required" });
     }
 
     try {
-      const user = await storage.getUser(req.session.userId);
+      const user = await storage.getUser(userId);
       if (!user) {
         return res.status(404).json({ message: "User not found" });
       }
