@@ -64,6 +64,21 @@ export default function MarketplaceSection() {
   const filteredAndSortedNfts = (() => {
     let filtered = nfts || [];
     
+    // Filter by search query (NFT name)
+    if (searchQuery.trim()) {
+      filtered = filtered.filter(nft => 
+        nft.title.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    }
+    
+    // Filter by creator
+    if (creatorFilter !== "all") {
+      filtered = filtered.filter(nft => {
+        const creatorName = nft.creator?.username || `Creator ${nft.creatorId}`;
+        return creatorName === creatorFilter;
+      });
+    }
+    
     // Filter by category
     if (category !== "all") {
       filtered = filtered.filter(nft => nft.category === category);
@@ -111,63 +126,96 @@ export default function MarketplaceSection() {
             </p>
           </div>
 
-          {/* Filters */}
-          <div className="flex flex-col sm:flex-row gap-4 mt-6 md:mt-0 w-full md:w-auto">
-            <Select value={marketFilter} onValueChange={setMarketFilter}>
-              <SelectTrigger className="w-full sm:w-48">
-                <SelectValue placeholder="All NFTs" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All NFTs</SelectItem>
-                <SelectItem value="listed">Listed for Sale</SelectItem>
-                <SelectItem value="unlisted">Not Listed</SelectItem>
-              </SelectContent>
-            </Select>
+          {/* Search and Filters */}
+          <div className="flex flex-col gap-4 mt-6 md:mt-0 w-full md:w-auto">
+            {/* Search Bars */}
+            <div className="flex flex-col sm:flex-row gap-4">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                <Input
+                  placeholder="Search NFT by name..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-10 w-full sm:w-64"
+                />
+              </div>
+              
+              <div className="relative">
+                <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                <Select value={creatorFilter} onValueChange={setCreatorFilter}>
+                  <SelectTrigger className="pl-10 w-full sm:w-48">
+                    <SelectValue placeholder="All Creators" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Creators</SelectItem>
+                    {uniqueCreators.map((creator) => (
+                      <SelectItem key={creator} value={creator}>
+                        {creator}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
 
-            <Select value={category} onValueChange={setCategory}>
-              <SelectTrigger className="w-full sm:w-48">
-                <SelectValue placeholder="All Categories" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Categories</SelectItem>
-                <SelectItem value="Digital Art">Digital Art</SelectItem>
-                <SelectItem value="Photography">Photography</SelectItem>
-                <SelectItem value="3D Models">3D Models</SelectItem>
-                <SelectItem value="Generative Art">Generative Art</SelectItem>
-                <SelectItem value="Abstract">Abstract</SelectItem>
-              </SelectContent>
-            </Select>
+            {/* Filters */}
+            <div className="flex flex-col sm:flex-row gap-4">
+              <Select value={marketFilter} onValueChange={setMarketFilter}>
+                <SelectTrigger className="w-full sm:w-48">
+                  <SelectValue placeholder="All NFTs" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All NFTs</SelectItem>
+                  <SelectItem value="listed">Listed for Sale</SelectItem>
+                  <SelectItem value="unlisted">Not Listed</SelectItem>
+                </SelectContent>
+              </Select>
 
-            <Select value={sortBy} onValueChange={setSortBy}>
-              <SelectTrigger className="w-full sm:w-48">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="recent">Recently Created</SelectItem>
-                <SelectItem value="oldest">Oldest First</SelectItem>
-                <SelectItem value="price-low">Price: Low to High</SelectItem>
-                <SelectItem value="price-high">Price: High to Low</SelectItem>
-                <SelectItem value="name">Name: A-Z</SelectItem>
-              </SelectContent>
-            </Select>
+              <Select value={category} onValueChange={setCategory}>
+                <SelectTrigger className="w-full sm:w-48">
+                  <SelectValue placeholder="All Categories" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Categories</SelectItem>
+                  <SelectItem value="Digital Art">Digital Art</SelectItem>
+                  <SelectItem value="Photography">Photography</SelectItem>
+                  <SelectItem value="3D Models">3D Models</SelectItem>
+                  <SelectItem value="Generative Art">Generative Art</SelectItem>
+                  <SelectItem value="Abstract">Abstract</SelectItem>
+                </SelectContent>
+              </Select>
 
-            <div className="flex bg-gray-100 rounded-lg p-1">
-              <Button
-                variant={viewMode === "grid" ? "default" : "ghost"}
-                size="sm"
-                onClick={() => setViewMode("grid")}
-                className="px-3"
-              >
-                <Grid3X3 className="w-4 h-4" />
-              </Button>
-              <Button
-                variant={viewMode === "list" ? "default" : "ghost"}
-                size="sm"
-                onClick={() => setViewMode("list")}
-                className="px-3"
-              >
-                <List className="w-4 h-4" />
-              </Button>
+              <Select value={sortBy} onValueChange={setSortBy}>
+                <SelectTrigger className="w-full sm:w-48">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="recent">Recently Created</SelectItem>
+                  <SelectItem value="oldest">Oldest First</SelectItem>
+                  <SelectItem value="price-low">Price: Low to High</SelectItem>
+                  <SelectItem value="price-high">Price: High to Low</SelectItem>
+                  <SelectItem value="name">Name: A-Z</SelectItem>
+                </SelectContent>
+              </Select>
+
+              <div className="flex bg-gray-100 rounded-lg p-1">
+                <Button
+                  variant={viewMode === "grid" ? "default" : "ghost"}
+                  size="sm"
+                  onClick={() => setViewMode("grid")}
+                  className="px-3"
+                >
+                  <Grid3X3 className="w-4 h-4" />
+                </Button>
+                <Button
+                  variant={viewMode === "list" ? "default" : "ghost"}
+                  size="sm"
+                  onClick={() => setViewMode("list")}
+                  className="px-3"
+                >
+                  <List className="w-4 h-4" />
+                </Button>
+              </div>
             </div>
           </div>
         </div>
@@ -197,7 +245,14 @@ export default function MarketplaceSection() {
             </div>
             <h3 className="text-xl font-semibold text-gray-900 mb-2">No NFTs Found</h3>
             <p className="text-gray-600">
-              {category ? `No NFTs found in ${category} category.` : "No NFTs available yet."}
+              {searchQuery 
+                ? `No NFTs found matching "${searchQuery}"`
+                : creatorFilter !== "all" 
+                  ? `No NFTs found by ${creatorFilter}` 
+                  : category !== "all" 
+                    ? `No NFTs found in ${category} category` 
+                    : "No NFTs available yet"
+              }
             </p>
           </div>
         ) : (
