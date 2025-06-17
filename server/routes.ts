@@ -624,6 +624,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get current NFT owner
+  app.get("/api/nfts/:id/owner", async (req, res) => {
+    try {
+      const nftId = parseInt(req.params.id);
+      const ownerId = await storage.getCurrentNftOwner(nftId);
+      const owner = await storage.getUser(ownerId);
+      
+      if (!owner) {
+        return res.status(404).json({ message: "Owner not found" });
+      }
+      
+      res.json({ 
+        ownerId: owner.id, 
+        ownerName: owner.displayName,
+        walletAddress: owner.walletAddress 
+      });
+    } catch (error) {
+      console.error("Get NFT owner error:", error);
+      res.status(500).json({ message: "Failed to get NFT owner" });
+    }
+  });
+
   // Listings Routes
   app.get("/api/listings", async (req, res) => {
     try {

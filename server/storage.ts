@@ -98,6 +98,9 @@ export interface IStorage {
     isMintedOut?: boolean;
   }>;
   
+  // Ownership helper
+  getCurrentNftOwner(nftId: number): Promise<number>;
+  
   // Stats
   getStats(): Promise<{
     totalNfts: number;
@@ -475,8 +478,26 @@ export class MemStorage implements IStorage {
     return updatedUser;
   }
 
+  // Helper function to get current NFT owner
+  async getCurrentNftOwner(nftId: number): Promise<number> {
+    // First check if there are any ownership records
+    const ownerships = Array.from(this.ownerships.values())
+      .filter(o => o.nftId === nftId)
+      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+    
+    if (ownerships.length > 0) {
+      return ownerships[0].ownerId;
+    }
+    
+    // If no ownership records, fallback to original creator
+    const nft = this.nfts.get(nftId);
+    if (!nft) throw new Error("NFT not found");
+    return nft.creatorId;
+  }
+
   // Bidding operations
   async createBid(bid: InsertBid & { bidderId: number }): Promise<Bid> {
+    // Ensure the bid is created but note that bids go to current owner, not creator
     const newBid: Bid = {
       id: this.currentBidId++,
       nftId: bid.nftId,
@@ -1052,8 +1073,28 @@ export class DatabaseStorage implements IStorage {
     };
   }
 
+  // Helper function to get current NFT owner
+  async getCurrentNftOwner(nftId: number): Promise<number> {
+    // First check if there are any ownership records
+    const ownerships = await db.select()
+      .from(nftOwnerships)
+      .where(eq(nftOwnerships.nftId, nftId))
+      .orderBy(desc(nftOwnerships.createdAt))
+      .limit(1);
+    
+    if (ownerships.length > 0) {
+      return ownerships[0].ownerId;
+    }
+    
+    // If no ownership records, fallback to original creator
+    const nft = await this.getNft(nftId);
+    if (!nft) throw new Error("NFT not found");
+    return nft.creatorId;
+  }
+
   // Bidding operations
   async createBid(bid: InsertBid & { bidderId: number }): Promise<Bid> {
+    // Ensure the bid is created but note that bids go to current owner, not creator
     const [newBid] = await db.insert(bids).values({
       nftId: bid.nftId,
       bidderId: bid.bidderId,
@@ -1189,13 +1230,65 @@ export class DatabaseStorage implements IStorage {
     const listing = await db.select().from(listings).where(eq(listings.id, listingId)).limit(1);
     if (!listing[0] || !listing[0].isActive) throw new Error("Listing not found or inactive");
 
+    // Get buyer and seller for credit transfer
+    const buyer = await this.getUser(buyerId);
+    const seller = await this.getUser(listing[0].sellerId);
+    
+    if (!buyer || !seller) throw new Error("User not found");
+    
+    // Check if buyer has enough credits
+    if ((buyer.credits || 0) < listing[0].price) {
+      throw new Error("Buyer has insufficient credits");
+    }
+    
+    // Get NFT details for proof generation
+    const nft = await this.getNft(listing[0].nftId);
+    if (!nft) throw new Error("NFT not found");
+    
+    // Generate ZK proof for purchase and ownership transfer
+    const { sp1Service } = await import("../services/sp1-service");
+    const zkProof = await sp1Service.generateTransferProof({
+      nftId: listing[0].nftId,
+      sellerId: listing[0].sellerId,
+      buyerId: buyerId,
+      price: listing[0].price,
+      sellerWallet: seller.walletAddress,
+      buyerWallet: buyer.walletAddress,
+      timestamp: Date.now(),
+    });
+    
+    // Transfer credits
+    await db.update(users)
+      .set({ credits: (buyer.credits || 0) - listing[0].price })
+      .where(eq(users.id, buyerId));
+      
+    await db.update(users)
+      .set({ credits: (seller.credits || 0) + listing[0].price })
+      .where(eq(users.id, listing[0].sellerId));
+
     const transaction = await this.createTransaction({
       buyerId,
       sellerId: listing[0].sellerId,
       nftId: listing[0].nftId,
       price: listing[0].price,
-      type: "purchase",
-      zkProofHash: `proof_${Date.now()}`
+      zkProofHash: zkProof.proofHash,
+      transactionHash: `0x${Date.now().toString(16)}`
+    });
+
+    // Store ZK proof for the transfer
+    await this.createZkProof({
+      userId: buyerId,
+      proofType: "purchase_transfer",
+      proofData: zkProof.proofData,
+      proofHash: zkProof.proofHash,
+    });
+
+    // Transfer ownership
+    await this.transferOwnership(listing[0].nftId, listing[0].sellerId, buyerId, 1);
+
+    // Update NFT current edition to reflect sale
+    await this.updateNft(listing[0].nftId, {
+      currentEdition: nft.currentEdition + 1,
     });
 
     // Deactivate the listing
