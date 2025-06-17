@@ -1,5 +1,4 @@
 import { Express, Request } from "express";
-import session from "express-session";
 import multer from "multer";
 import { storage } from "./storage";
 import { walletService } from "./services/wallet-service";

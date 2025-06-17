@@ -177,20 +177,21 @@ export default function ProfilePage() {
   });
 
   // Fetch decrypted private key from server when needed
-  const { data: privateKeyData, error: privateKeyError } = useQuery<{ privateKey: string }>({
+  const { data: privateKeyData, error: privateKeyError, isLoading: privateKeyLoading } = useQuery<{ privateKey: string }>({
     queryKey: ["/api/wallet/private-key"],
     enabled: !!user && showPrivateKey,
     staleTime: 0, // Always fetch fresh
-    retry: false, // Don't retry on failure
+    retry: 3, // Retry a few times
   });
 
   const getDecryptedPrivateKey = () => {
     if (!showPrivateKey) return null;
+    if (privateKeyLoading) return 'Loading...';
     if (privateKeyError) {
-      // If API fails, show the encrypted key with a warning
-      return user?.walletPrivateKey || null;
+      // Fallback: show a message that the key needs to be retrieved differently
+      return 'Unable to decrypt - please contact support or re-login';
     }
-    return privateKeyData?.privateKey || null;
+    return privateKeyData?.privateKey || 'Private key not available';
   };
 
   const connectXMutation = useMutation({
@@ -883,13 +884,8 @@ export default function ProfilePage() {
                           </p>
                         </div>
                       )}
-                      <div className="bg-gray-100 p-3 rounded-lg font-mono text-sm break-all">
-                        {showPrivateKey ? (
-                          privateKeyData?.privateKey ? 
-                            privateKeyData.privateKey : 
-                            privateKeyError ? 'Private key unavailable - please log in again' :
-                            'Loading private key...'
-                        ) : '••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••'}
+                      <div className="bg-gray-100 p-3 rounded-lg font-mono text-sm break-all min-h-[50px] flex items-center">
+                        {showPrivateKey ? getDecryptedPrivateKey() : '••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••'}
                       </div>
                       <div className="flex gap-2 mt-2">
                         <Button
